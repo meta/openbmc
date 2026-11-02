@@ -1,0 +1,40 @@
+From 81a966f5bf3aac025debf00f2c5240f9312b1a40 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Tue, 13 Oct 2026 05:52:50 -0700
+Subject: [PATCH] tests/functional/arm: device_locator: drop the SanMiguel SPI1
+ flash
+
+"hw/arm: sanmiguel: remove the second SPI flash controller" removed the
+flash advertised on the SanMiguel SPI1 controller, as the board only
+populates the FMC one. test_resolve_spi_flashes still expected a
+device on SPI1 chip-select 0 and failed with "no device matches '@0'".
+
+Check only the two FMC flashes.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/functional/arm/test_device_locator.py | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/tests/functional/arm/test_device_locator.py b/tests/functional/arm/test_device_locator.py
+index 3807a49361..3519acb423 100644
+--- a/tests/functional/arm/test_device_locator.py
++++ b/tests/functional/arm/test_device_locator.py
+@@ -93,12 +93,10 @@ def test_resolution_errors(self):
+             self.assertRaises(LocatorError, self.locator.resolve, bad)
+ 
+     def test_resolve_spi_flashes(self):
+-        # The FMC controller carries two flashes on chip-selects 0 and 1; the
+-        # first SPI controller carries one on chip-select 0.
++        # The FMC controller carries two flashes, on chip-selects 0 and 1.
+         for locator, cs in (
+                 ('/machine/soc::aspeed.fmc-ast2600[0]~spi[0]~@0', 0),
+-                ('/machine/soc::aspeed.fmc-ast2600[0]~spi[0]~@1', 1),
+-                ('/machine/soc::aspeed.spi1-ast2600[0]~spi[0]~@0', 0)):
++                ('/machine/soc::aspeed.fmc-ast2600[0]~spi[0]~@1', 1)):
+             path = self.locator.resolve(locator, 'ssi-peripheral')
+             self.assertEqual(self._cs(path), cs)
+ 
+-- 
+2.53.0-Meta
+

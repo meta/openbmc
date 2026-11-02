@@ -22,4 +22,5 @@ SRC_URI += " \
     file://0001-Also-allow-power-policy-when-watchdog-flag-is-raised.patch \
     file://0002-sub-device-manager-Add-shared-entity-manager-discove.patch \
     file://0003-Add-drive-state-manager-daemon.patch \
+    file://0004-systemd-target-monitor-add-important-services.patch \
 "

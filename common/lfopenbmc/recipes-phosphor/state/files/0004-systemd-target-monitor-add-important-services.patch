@@ -1,0 +1,545 @@
+From 44a053edd44812c0d0c881cbee94a85816da65e1 Mon Sep 17 00:00:00 2001
+From: Pete O_o <pmb@meta.com>
+Date: Thu, 29 Oct 2026 14:54:44 -0700
+Subject: [PATCH] systemd-target-monitor: add important services
+
+Add an "important_services" list to the service monitor JSON. A failure
+is logged and dumped like "services", but does not quiesce the BMC;
+optional "start_units" are started instead.
+
+```
+"important_services": [
+    "phosphor-ipmi-net@*.service",
+    {
+        "service": "phosphor-ipmi-host.service",
+        "start_units": ["ipmid-recover.service"]
+    }
+]
+```
+
+The failure is logged at Error severity:
+
+```
+"message": "xyz.openbmc_project.State.Error.ImportantServiceFailure",
+"severity": 3,
+"additionalData": {
+    "SYSTEMD_RESULT": "failed",
+    "SYSTEMD_UNIT": "rsyslog.service"
+}
+```
+
+Each failed start job is reported, so a service that systemd restarts
+is logged (and its start_units run) once per failed attempt, not only
+when systemd gives up on it.
+
+Test Plan:
+Flashed a yosemite4 image with this change. On the BMC, passed this
+extra -s file to phosphor-systemd-target-monitor, with a test
+important-fired.service that appends the date to
+/run/openbmc/important-fired.
+
+```
+{"services": [], "important_services": [{"service": "rsyslog.service",
+    "start_units": ["important-fired.service"]}]}
+```
+
+Then broke rsyslog:
+
+```
+mount --bind /bin/false /usr/sbin/rsyslogd
+systemctl restart rsyslog.service
+
+cat /run/openbmc/important-fired
+Thu Oct 29 15:58:31 PDT 2026
+Thu Oct 29 15:58:33 PDT 2026
+Thu Oct 29 15:58:34 PDT 2026
+
+busctl get-property xyz.openbmc_project.State.BMC \
+    /xyz/openbmc_project/state/bmc0 xyz.openbmc_project.State.BMC \
+    CurrentBMCState
+s "xyz.openbmc_project.State.BMC.BMCState.Ready"
+
+curl -sk --cert $CERT --key $CERT \
+    https://$BMC/redfish/v1/Managers/bmc/LogServices/EventLog/Entries/3057
+{
+  "Id": "3057",
+  "Message": "xyz.openbmc_project.State.Error.ImportantServiceFailure",
+  "Severity": "Critical",
+  ...
+}
+```
+
+The BMC stayed Ready, start_units ran, and each failure was logged.
+
+Change-Id: I061fe8bc5c54bd02289b9aea3a3d060660da0932
+Signed-off-by: Pete O_o <pmb@meta.com>
+---
+ systemd_service_parser.cpp | 28 ++++++++++++++
+ systemd_service_parser.hpp | 29 ++++++++++++++-
+ systemd_target_monitor.cpp |  3 +-
+ systemd_target_signal.cpp  | 46 +++++++++++++++++++----
+ systemd_target_signal.hpp  | 13 ++++++-
+ test/meson.build           |  1 +
+ test/systemd_parser.cpp    | 39 ++++++++++++++++++++
+ test/systemd_signal.cpp    | 75 +++++++++++++++++++++++++++++++++++---
+ 8 files changed, 219 insertions(+), 15 deletions(-)
+
+diff --git a/systemd_service_parser.cpp b/systemd_service_parser.cpp
+index cf3af4f9..f9532ba7 100644
+--- a/systemd_service_parser.cpp
++++ b/systemd_service_parser.cpp
+@@ -3,6 +3,7 @@
+ #include <phosphor-logging/lg2.hpp>
+ 
+ #include <fstream>
++#include <utility>
+ 
+ PHOSPHOR_LOG2_USING;
+ 
+@@ -48,6 +49,33 @@ ServiceMonitorResult parseServiceFiles(
+                 result.immediateQuiesceServices.push_back(service.value());
+             }
+         }
++
++        if (j.contains("important_services"))
++        {
++            for (const auto& entry : j["important_services"])
++            {
++                ImportantService service;
++                if (entry.is_string())
++                {
++                    service.service = entry.get<std::string>();
++                }
++                else
++                {
++                    service.service = entry.at("service").get<std::string>();
++                    service.startUnits =
++                        entry.value("start_units", std::vector<std::string>{});
++                }
++
++                if (gVerbose)
++                {
++                    debug("important service: {SERVICE}, start units: {UNITS}",
++                          "SERVICE", service.service, "UNITS",
++                          service.startUnits.size());
++                }
++
++                result.importantServices.push_back(std::move(service));
++            }
++        }
+     }
+     return result;
+ }
+diff --git a/systemd_service_parser.hpp b/systemd_service_parser.hpp
+index e4229234..741ae97e 100644
+--- a/systemd_service_parser.hpp
++++ b/systemd_service_parser.hpp
+@@ -19,11 +19,33 @@ using ServiceMonitorData = std::vector<std::string>;
+  */
+ using ImmediateQuiesceData = std::vector<std::string>;
+ 
++/** @brief An important service to monitor for final failure.
++ *
++ *  Important services are monitored the same way as "services" (error log
++ *  and BMC dump when systemd gives up on them) but do not quiesce the BMC.
++ *  This is useful for services whose failure needs to be recorded but which
++ *  the BMC can keep operating without (e.g. ipmid). Instead of quiescing,
++ *  the given systemd units are started, which lets a platform choose its own
++ *  recovery or notification action.
++ */
++struct ImportantService
++{
++    /** @brief Service name, may contain wildcards */
++    std::string service;
++
++    /** @brief Systemd units to start when the service fails */
++    std::vector<std::string> startUnits;
++};
++
++/** @brief Array of important services to monitor for final failure */
++using ImportantServiceData = std::vector<ImportantService>;
++
+ /** @brief Combined result of parsing service monitor JSON files */
+ struct ServiceMonitorResult
+ {
+     ServiceMonitorData services;
+     ImmediateQuiesceData immediateQuiesceServices;
++    ImportantServiceData importantServices;
+ };
+ 
+ using json = nlohmann::json;
+@@ -37,10 +59,15 @@ extern bool gVerbose;
+  *       format
+  * @note An optional "immediate_quiesce_services" key is also read from each
+  *       json file. Files without this key are silently skipped for that part.
++ * @note An optional "important_services" key is also read from each json
++ *       file, in the same way as "immediate_quiesce_services". Each entry is
++ *       either a service name or an object of the form
++ *       {"service": "<name>", "start_units": ["<unit>", ...]}.
+  *
+  * @param[in] filePaths - The file(s) to parse
+  *
+- * @return  Combined service monitor data (services + immediateQuiesceServices)
++ * @return  Combined service monitor data (services, immediateQuiesceServices
++ *          and importantServices)
+  */
+ ServiceMonitorResult parseServiceFiles(
+     const std::vector<std::string>& filePaths);
+diff --git a/systemd_target_monitor.cpp b/systemd_target_monitor.cpp
+index 6952f313..cc161d20 100644
+--- a/systemd_target_monitor.cpp
++++ b/systemd_target_monitor.cpp
+@@ -68,7 +68,8 @@ int main(int argc, char* argv[])
+ 
+     phosphor::state::manager::SystemdTargetLogging targetMon(
+         targetData, serviceResult.services,
+-        serviceResult.immediateQuiesceServices, bus);
++        serviceResult.immediateQuiesceServices, serviceResult.importantServices,
++        bus);
+ 
+     // Subscribe to systemd D-bus signals indicating target completions
+     targetMon.subscribeToSystemdSignals();
+diff --git a/systemd_target_signal.cpp b/systemd_target_signal.cpp
+index 52e48ff8..9b276d38 100644
+--- a/systemd_target_signal.cpp
++++ b/systemd_target_signal.cpp
+@@ -42,15 +42,22 @@ using LoggingEntry = sdbusplus::client::xyz::openbmc_project::logging::Entry<>;
+ 
+ constexpr auto CRITICAL_SERVICE_ERROR =
+     "xyz.openbmc_project.State.Error.CriticalServiceFailure";
++constexpr auto IMPORTANT_SERVICE_ERROR =
++    "xyz.openbmc_project.State.Error.ImportantServiceFailure";
+ 
+ void SystemdTargetLogging::startBmcQuiesceTarget()
++{
++    // TODO: Enhance when needed to support multiple-bmc instance systems
++    startUnit("obmc-bmc-service-quiesce@0.target");
++}
++
++void SystemdTargetLogging::startUnit(const std::string& unit)
+ {
+     auto method =
+         this->bus.new_method_call(SYSTEMD_SERVICE, SYSTEMD_OBJ_PATH,
+                                   SYSTEMD_MANAGER_INTERFACE, "StartUnit");
+ 
+-    // TODO: Enhance when needed to support multiple-bmc instance systems
+-    method.append("obmc-bmc-service-quiesce@0.target");
++    method.append(unit);
+     method.append("replace");
+     try
+     {
+@@ -58,13 +65,11 @@ void SystemdTargetLogging::startBmcQuiesceTarget()
+     }
+     catch (const sdbusplus::exception_t& e)
+     {
+-        error("Failed to start BMC quiesce target, exception:{ERROR}", "ERROR",
+-              e);
++        error("Failed to start unit:{UNIT}, exception:{ERROR}", "UNIT", unit,
++              "ERROR", e);
+         // just continue, this is error path anyway so we're just doing what
+         // we can
+     }
+-
+-    return;
+ }
+ 
+ sdbusplus::object_path SystemdTargetLogging::logError(
+@@ -74,9 +79,13 @@ sdbusplus::object_path SystemdTargetLogging::logError(
+     auto method = this->bus.new_method_call(
+         LoggingCreate::default_service, LoggingCreate::instance_path,
+         LoggingCreate::interface, "Create");
++    // Important services don't quiesce the BMC, so they aren't critical
++    const auto level = (errorLog == IMPORTANT_SERVICE_ERROR)
++                           ? LoggingEntry::Level::Error
++                           : LoggingEntry::Level::Critical;
+     // Signature is ssa{ss}
+     method.append(
+-        errorLog, LoggingEntry::Level::Critical,
++        errorLog, level,
+         std::array<std::pair<std::string, std::string>, 2>(
+             {std::pair<std::string, std::string>({"SYSTEMD_RESULT", result}),
+              std::pair<std::string, std::string>({"SYSTEMD_UNIT", unit})}));
+@@ -144,6 +153,29 @@ std::string SystemdTargetLogging::processError(const std::string& unit,
+         }
+     }
+ 
++    for (const auto& important : this->importantServiceData)
++    {
++        if (fnmatch(important.service.c_str(), unit.c_str(), 0) != 0)
++        {
++            continue;
++        }
++
++        if (result == "failed")
++        {
++            info(
++                "Monitored important systemd service has hit an error, unit:{UNIT}, result:{RESULT}",
++                "UNIT", unit, "RESULT", result);
++
++            // Same as a critical service failure, but start the configured
++            // units instead of entering BMC Quiesce
++            for (const auto& startUnitName : important.startUnits)
++            {
++                startUnit(startUnitName);
++            }
++            return std::string{IMPORTANT_SERVICE_ERROR};
++        }
++    }
++
+     return (std::string{});
+ }
+ 
+diff --git a/systemd_target_signal.hpp b/systemd_target_signal.hpp
+index 593fcd86..b93f53bb 100644
+--- a/systemd_target_signal.hpp
++++ b/systemd_target_signal.hpp
+@@ -33,9 +33,11 @@ class SystemdTargetLogging
+         const TargetErrorData& targetData,
+         const ServiceMonitorData& serviceData,
+         const ImmediateQuiesceData& immediateQuiesceServiceData,
++        const ImportantServiceData& importantServiceData,
+         sdbusplus::bus_t& bus) :
+         targetData(targetData), serviceData(serviceData),
+-        immediateQuiesceServiceData(immediateQuiesceServiceData), bus(bus),
++        immediateQuiesceServiceData(immediateQuiesceServiceData),
++        importantServiceData(importantServiceData), bus(bus),
+         systemdJobRemovedSignal(
+             bus,
+             sdbusplus::match_rules::type::signal() +
+@@ -73,6 +75,12 @@ class SystemdTargetLogging
+     /** @brief Start BMC Quiesce Target to indicate critical service failure */
+     void startBmcQuiesceTarget();
+ 
++    /** @brief Start a systemd unit
++     *
++     * @param[in]  unit       - The systemd unit to start
++     */
++    void startUnit(const std::string& unit);
++
+     /** @brief Call phosphor-logging to create error
+      *
+      * @param[in]  error      - The error to log
+@@ -141,6 +149,9 @@ class SystemdTargetLogging
+     /** @brief Systemd services to monitor via ActiveState changes */
+     const ImmediateQuiesceData& immediateQuiesceServiceData;
+ 
++    /** @brief Systemd services to monitor for failure without quiescing */
++    const ImportantServiceData& importantServiceData;
++
+     /** @brief Persistent sdbusplus DBus bus connection. */
+     sdbusplus::bus_t& bus;
+ 
+diff --git a/test/meson.build b/test/meson.build
+index d9806f0d..92fdc85f 100644
+--- a/test/meson.build
++++ b/test/meson.build
+@@ -4,6 +4,7 @@ test(
+     executable(
+         'test_systemd_parser',
+         'systemd_parser.cpp',
++        '../systemd_service_parser.cpp',
+         '../systemd_target_parser.cpp',
+         dependencies: [gtest, nlohmann_json_dep, phosphorlogging],
+         implicit_include_directories: true,
+diff --git a/test/systemd_parser.cpp b/test/systemd_parser.cpp
+index 65fbec43..13a272cf 100644
+--- a/test/systemd_parser.cpp
++++ b/test/systemd_parser.cpp
+@@ -1,3 +1,4 @@
++#include <systemd_service_parser.hpp>
+ #include <systemd_target_parser.hpp>
+ 
+ #include <cstdio>
+@@ -136,3 +137,41 @@ TEST(TargetJsonParser, NotJustDefault)
+                  std::invalid_argument);
+     std::remove("/tmp/not_just_default_file.json");
+ }
++
++TEST(ServiceJsonParser, ImportantServices)
++{
++    auto serviceData = R"(
++        {
++            "services" : ["bmcweb.service"],
++            "important_services" : [
++                "phosphor-ipmi-net@*.service",
++                {
++                    "service": "phosphor-ipmi-host.service",
++                    "start_units": ["ipmid-recover.service", "foo.target"]
++                },
++                {"service": "bar.service"}
++            ]
++        }
++    )"_json;
++
++    std::FILE* tmpf = fopen("/tmp/important_services.json", "w");
++    std::fputs(serviceData.dump().c_str(), tmpf);
++    std::fclose(tmpf);
++
++    auto result = parseServiceFiles({"/tmp/important_services.json"});
++
++    EXPECT_EQ(result.services.size(), 1);
++    ASSERT_EQ(result.importantServices.size(), 3);
++    EXPECT_EQ(result.importantServices[0].service,
++              "phosphor-ipmi-net@*.service");
++    EXPECT_TRUE(result.importantServices[0].startUnits.empty());
++    EXPECT_EQ(result.importantServices[1].service,
++              "phosphor-ipmi-host.service");
++    EXPECT_EQ(
++        result.importantServices[1].startUnits,
++        (std::vector<std::string>{"ipmid-recover.service", "foo.target"}));
++    EXPECT_EQ(result.importantServices[2].service, "bar.service");
++    EXPECT_TRUE(result.importantServices[2].startUnits.empty());
++
++    std::remove("/tmp/important_services.json");
++}
+diff --git a/test/systemd_signal.cpp b/test/systemd_signal.cpp
+index 65ec9c8f..3d50ec29 100644
+--- a/test/systemd_signal.cpp
++++ b/test/systemd_signal.cpp
+@@ -28,13 +28,15 @@ TEST(TargetSignalData, BasicPaths)
+         "xyz.openbmc_project.Dump.Manager.service"};
+ 
+     ImmediateQuiesceData immediateQuiesceServiceData;
++    ImportantServiceData importantServiceData;
+ 
+     auto bus = sdbusplus::bus::new_default();
+     auto event = sdeventplus::Event::get_default();
+     bus.attach_event(event.get(), SD_EVENT_PRIORITY_NORMAL);
+ 
+     phosphor::state::manager::SystemdTargetLogging targetMon(
+-        targetData, serviceData, immediateQuiesceServiceData, bus);
++        targetData, serviceData, immediateQuiesceServiceData,
++        importantServiceData, bus);
+ 
+     std::string invalidUnit = "invalid_unit";
+     std::string validError = "timeout";
+@@ -60,13 +62,15 @@ TEST(TargetSignalData, WildcardTargetMatchesInstance)
+           {"timeout", "failed"}}}};
+     ServiceMonitorData serviceData = {};
+     ImmediateQuiesceData immediateQuiesceServiceData;
++    ImportantServiceData importantServiceData;
+ 
+     auto bus = sdbusplus::bus::new_default();
+     auto event = sdeventplus::Event::get_default();
+     bus.attach_event(event.get(), SD_EVENT_PRIORITY_NORMAL);
+ 
+     phosphor::state::manager::SystemdTargetLogging targetMon(
+-        targetData, serviceData, immediateQuiesceServiceData, bus);
++        targetData, serviceData, immediateQuiesceServiceData,
++        importantServiceData, bus);
+ 
+     auto errorToLog =
+         targetMon.processError("obmc-chassis-poweron@3.target", "failed");
+@@ -81,13 +85,15 @@ TEST(TargetSignalData, ExactServiceMatchesInstance)
+     ServiceMonitorData serviceData = {
+         "xyz.openbmc_project.State.Chassis@0.service"};
+     ImmediateQuiesceData immediateQuiesceServiceData;
++    ImportantServiceData importantServiceData;
+ 
+     auto bus = sdbusplus::bus::new_default();
+     auto event = sdeventplus::Event::get_default();
+     bus.attach_event(event.get(), SD_EVENT_PRIORITY_NORMAL);
+ 
+     phosphor::state::manager::SystemdTargetLogging targetMon(
+-        targetData, serviceData, immediateQuiesceServiceData, bus);
++        targetData, serviceData, immediateQuiesceServiceData,
++        importantServiceData, bus);
+ 
+     auto errorToLog = targetMon.processError(
+         "xyz.openbmc_project.State.Chassis@0.service", "failed");
+@@ -104,13 +110,15 @@ TEST(TargetSignalData, ExactTargetMatchesInstance)
+           {"timeout", "failed"}}}};
+     ServiceMonitorData serviceData = {};
+     ImmediateQuiesceData immediateQuiesceServiceData;
++    ImportantServiceData importantServiceData;
+ 
+     auto bus = sdbusplus::bus::new_default();
+     auto event = sdeventplus::Event::get_default();
+     bus.attach_event(event.get(), SD_EVENT_PRIORITY_NORMAL);
+ 
+     phosphor::state::manager::SystemdTargetLogging targetMon(
+-        targetData, serviceData, immediateQuiesceServiceData, bus);
++        targetData, serviceData, immediateQuiesceServiceData,
++        importantServiceData, bus);
+ 
+     auto errorToLog =
+         targetMon.processError("obmc-chassis-poweron@0.target", "failed");
+@@ -125,13 +133,15 @@ TEST(TargetSignalData, WildcardServiceMatchesInstance)
+     ServiceMonitorData serviceData = {
+         "xyz.openbmc_project.State.Chassis@*.service"};
+     ImmediateQuiesceData immediateQuiesceServiceData;
++    ImportantServiceData importantServiceData;
+ 
+     auto bus = sdbusplus::bus::new_default();
+     auto event = sdeventplus::Event::get_default();
+     bus.attach_event(event.get(), SD_EVENT_PRIORITY_NORMAL);
+ 
+     phosphor::state::manager::SystemdTargetLogging targetMon(
+-        targetData, serviceData, immediateQuiesceServiceData, bus);
++        targetData, serviceData, immediateQuiesceServiceData,
++        importantServiceData, bus);
+ 
+     auto errorToLog = targetMon.processError(
+         "xyz.openbmc_project.State.Chassis@7.service", "failed");
+@@ -139,3 +149,58 @@ TEST(TargetSignalData, WildcardServiceMatchesInstance)
+     EXPECT_EQ(errorToLog,
+               "xyz.openbmc_project.State.Error.CriticalServiceFailure");
+ }
++
++TEST(TargetSignalData, ImportantServiceDoesNotUseCriticalError)
++{
++    TargetErrorData targetData = {};
++    ServiceMonitorData serviceData = {"bmcweb.service"};
++    ImmediateQuiesceData immediateQuiesceServiceData;
++    ImportantServiceData importantServiceData = {
++        {"phosphor-ipmi-host.service", {"ipmid-recover.service"}},
++        {"bmcweb.service", {}}};
++
++    auto bus = sdbusplus::bus::new_default();
++    auto event = sdeventplus::Event::get_default();
++    bus.attach_event(event.get(), SD_EVENT_PRIORITY_NORMAL);
++
++    phosphor::state::manager::SystemdTargetLogging targetMon(
++        targetData, serviceData, immediateQuiesceServiceData,
++        importantServiceData, bus);
++
++    auto errorToLog =
++        targetMon.processError("phosphor-ipmi-host.service", "failed");
++    EXPECT_EQ(errorToLog,
++              "xyz.openbmc_project.State.Error.ImportantServiceFailure");
++
++    // Only a final failure is logged
++    errorToLog =
++        targetMon.processError("phosphor-ipmi-host.service", "canceled");
++    EXPECT_TRUE(errorToLog.empty());
++
++    // A service in both lists is treated as critical
++    errorToLog = targetMon.processError("bmcweb.service", "failed");
++    EXPECT_EQ(errorToLog,
++              "xyz.openbmc_project.State.Error.CriticalServiceFailure");
++}
++
++TEST(TargetSignalData, WildcardImportantServiceMatchesInstance)
++{
++    TargetErrorData targetData = {};
++    ServiceMonitorData serviceData = {};
++    ImmediateQuiesceData immediateQuiesceServiceData;
++    ImportantServiceData importantServiceData = {
++        {"phosphor-ipmi-net@*.service", {}}};
++
++    auto bus = sdbusplus::bus::new_default();
++    auto event = sdeventplus::Event::get_default();
++    bus.attach_event(event.get(), SD_EVENT_PRIORITY_NORMAL);
++
++    phosphor::state::manager::SystemdTargetLogging targetMon(
++        targetData, serviceData, immediateQuiesceServiceData,
++        importantServiceData, bus);
++
++    auto errorToLog =
++        targetMon.processError("phosphor-ipmi-net@eth0.service", "failed");
++    EXPECT_EQ(errorToLog,
++              "xyz.openbmc_project.State.Error.ImportantServiceFailure");
++}
+-- 
+2.53.0-Meta
+

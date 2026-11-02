@@ -43,7 +43,8 @@ if [ "$mode" = "write" ]; then
         exit 1;
     fi
     ctrl_cmd=$(( 0x9000 | (0x1 << 10) | ( (0x10 + port) << 5) | reg_addr ))
-    data=$3
+    ctrl_cmd=$(printf "0x%08X" "$ctrl_cmd")
+    data=$4
     mdio-util -m "$OOB_MDIO_BUS" -p "$OOB_PHY_ADDR" -w 0x1 -d "$data"
     mdio-util -m "$OOB_MDIO_BUS" -p "$OOB_PHY_ADDR" -w 0x0 -d "$ctrl_cmd"
 elif [ "$mode" = "read" ]; then

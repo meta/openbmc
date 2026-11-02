@@ -18,7 +18,7 @@
 # Boston, MA 02110-1301 USA
 #
 
-# Collects the live log and any rotated copies.
+# Collects the live log and its rotated copy.
 echo -e "\n##### x86 mTerm Logs #####"
 # /var/log is a symlink to /var/volatile/log, so both names reach the same file.
 if [ ! -f /var/log/mTerm_wedge.log ]; then
@@ -28,13 +28,9 @@ else
 fi
 
 echo -e "\n##### x86 mTerm Rotated Logs #####"
-shopt -s nullglob
-found=0
-for log in /var/log/mTerm_wedge.log.*; do
-	found=1
-	echo -e "\n#### ${log} ####"
-	cat "$log"
-done
-if [ "$found" -eq 0 ]; then
+# mTerm rolls the live log over into a single backup file (see mTerm_helper.c).
+if [ ! -f /var/log/mTerm_wedge_backup.log ]; then
 	echo "No rotated mTerm logs found."
+else
+	cat /var/log/mTerm_wedge_backup.log
 fi

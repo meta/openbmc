@@ -12,9 +12,9 @@ mode used in the Zephyr driver.
 
 Signed-off-by: Peter Delevoryas <peter@pjd.dev>
 ---
- tests/qtest/aspeed_i2c-echo-test.c | 135 +++++++++++++++++++++++++++++
+ tests/qtest/aspeed_i2c-echo-test.c | 140 +++++++++++++++++++++++++++++
  tests/qtest/meson.build            |   1 +
- 2 files changed, 136 insertions(+)
+ 2 files changed, 141 insertions(+)
  create mode 100644 tests/qtest/aspeed_i2c-echo-test.c
 
 diff --git a/tests/qtest/aspeed_i2c-echo-test.c b/tests/qtest/aspeed_i2c-echo-test.c
@@ -22,7 +22,7 @@ new file mode 100644
 index 0000000000..1db23222f0
 --- /dev/null
 +++ b/tests/qtest/aspeed_i2c-echo-test.c
-@@ -0,0 +1,135 @@
+@@ -0,0 +1,140 @@
 +/*
 + * Aspeed I2C Controller Tests
 + *
@@ -111,7 +111,12 @@ index 0000000000..1db23222f0
 +    QTestState *s = ctx->qtest;
 +    uint32_t global = ctx->base_addr;
 +    uint32_t echo_bus = ctx->bus_addr[ECHO_BUS];
-+    uint8_t msg[] = {ECHO_ADDR << 1, SELF_ADDR << 1, 0xa, 0xb, 0xc, 0xd};
++    /*
++     * i2c-echo takes a 7-bit return address followed by at most two data
++     * bytes, and replays the data to that address once the transfer stops.
++     */
++    uint8_t msg[] = {ECHO_ADDR << 1, SELF_ADDR, 0xa, 0xb};
++    uint8_t echo[] = {SELF_ADDR << 1, 0xa, 0xb};
 +    uint8_t buf[64];
 +    int len;
 +
@@ -121,23 +126,23 @@ index 0000000000..1db23222f0
 +    QTEST_SHARED_FIELD_DP32(s, echo_bus, R_I2CD_FUN_CTRL, SLAVE_EN, 1);
 +    qtest_writel(s, echo_bus + A_I2CD_INTR_CTRL, 0xffffffff);
 +
-+    QTEST_SHARED_FIELD_DP32(s, echo_bus, R_I2CD_BYTE_BUF, TX_BUF, msg[0]);
-+    QTEST_SHARED_FIELD_DP32(s, echo_bus, R_I2CD_CMD, M_START_CMD, 1);
++    qtest_writel(s, echo_bus + A_I2CD_BYTE_BUF, SHARED_FIELD_DP32(0, TX_BUF, msg[0]));
++    qtest_writel(s, echo_bus + A_I2CD_CMD, SHARED_FIELD_DP32(0, M_START_CMD, 1));
 +    g_assert(QTEST_SHARED_FIELD_EX32(s, echo_bus, R_I2CD_INTR_STS, TX_ACK));
 +    qtest_writel(s, echo_bus + A_I2CD_INTR_STS, SHARED_FIELD_DP32(0, TX_ACK, 1));
 +    for (int i = 1; i < ARRAY_SIZE(msg); i++) {
-+        QTEST_SHARED_FIELD_DP32(s, echo_bus, R_I2CD_BYTE_BUF, TX_BUF, msg[i]);
-+        QTEST_SHARED_FIELD_DP32(s, echo_bus, R_I2CD_CMD, M_TX_CMD, 1);
++        qtest_writel(s, echo_bus + A_I2CD_BYTE_BUF, SHARED_FIELD_DP32(0, TX_BUF, msg[i]));
++        qtest_writel(s, echo_bus + A_I2CD_CMD, SHARED_FIELD_DP32(0, M_TX_CMD, 1));
 +        g_assert(QTEST_SHARED_FIELD_EX32(s, echo_bus, R_I2CD_INTR_STS, TX_ACK));
 +        qtest_writel(s, echo_bus + A_I2CD_INTR_STS, SHARED_FIELD_DP32(0, TX_ACK, 1));
 +    }
-+    QTEST_SHARED_FIELD_DP32(s, echo_bus, R_I2CD_CMD, M_STOP_CMD, 1);
++    qtest_writel(s, echo_bus + A_I2CD_CMD, SHARED_FIELD_DP32(0, M_STOP_CMD, 1));
 +    g_assert(QTEST_SHARED_FIELD_EX32(s, echo_bus, R_I2CD_INTR_STS, NORMAL_STOP));
 +    qtest_writel(s, echo_bus + A_I2CD_INTR_STS, SHARED_FIELD_DP32(0, NORMAL_STOP, 1));
 +
 +    len = old_reg_byte_mode_s_rx(s, echo_bus, false, buf, sizeof(buf));
-+    g_assert(len == sizeof(msg) - 1);
-+    g_assert(memcmp(&msg[1], buf, len) == 0);
++    g_assert(len == sizeof(echo));
++    g_assert(memcmp(echo, buf, len) == 0);
 +}
 +
 +int main(int argc, char **argv)

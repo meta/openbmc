@@ -1,0 +1,84 @@
+From 8bf869bcede2f9d43682677cb5e95ef84aa80ffe Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Tue, 13 Oct 2026 03:07:55 -0700
+Subject: [PATCH] tests/functional/arm: bletchley: expect the FRU MAC of the
+ configured NIC
+
+"hw/arm: bletchley: take the FRU MAC from the configured NIC" makes the
+chassis controller FRU carry the MAC of the NIC the board wires up rather
+than the address stored in the image. The test still expected the image's
+addresses (OUIs C01850 and 9082C3), so it failed against QEMU's default
+52:54:00:12:34:56.
+
+Configure the NIC with a distinct address per board revision and expect
+that address in the FRU.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/functional/arm/test_aspeed_bletchley.py | 22 +++++++++++++------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
+
+diff --git a/tests/functional/arm/test_aspeed_bletchley.py b/tests/functional/arm/test_aspeed_bletchley.py
+index 8d2c419e6e..8625304b7a 100755
+--- a/tests/functional/arm/test_aspeed_bletchley.py
++++ b/tests/functional/arm/test_aspeed_bletchley.py
+@@ -49,26 +49,33 @@ class BletchleyMachine(AspeedTest):
+     """Leading common-header bytes each revision presents: the format
+     version and the internal-use, chassis and board area offsets."""
+ 
++    NIC_MAC = {"1.0": "52:54:00:B1:E7:10", "1.5": "52:54:00:B1:E7:15"}
++    """Address given to the NIC; the chassis controller FRU carries it, not
++    the one in the image. Distinct per revision to show the FRU follows the
++    configuration."""
++
+     def test_arm_ast2600_bletchley_openbmc(self):
+         self.boot_openbmc()
+         self.check_sensors()
+         self.check_revision("1.0", "Bletchley Chassis Controller-Class 1",
+-                            "Bletchley MP", "C01850")
++                            "Bletchley MP")
+ 
+     def test_arm_ast2600_bletchley_v15_openbmc(self):
+         self.boot_openbmc("1.5")
+         self.check_revision("1.5",
+                             "Bletchley v1.5 Chassis Controller-Class 1",
+-                            "Bletchley v1.5 MP", "9082C3")
++                            "Bletchley v1.5 MP")
+ 
+     def boot_openbmc(self, revision=None):
+         image_path = self.uncompress(self.ASSET_BLETCHLEY_FLASH)
+ 
++        # set_machine() must run first: the VM is created on the first
++        # self.vm access.
++        self.set_machine('bletchley-bmc')
+         if revision:
+-            # set_machine() must run first: the VM is created on the
+-            # first self.vm access.
+-            self.set_machine('bletchley-bmc')
+             self.vm.add_args('-machine', f'board-revision={revision}')
++        self.require_netdev('user')
++        self.vm.add_args('-nic', f'user,mac={self.NIC_MAC[revision or "1.0"]}')
+ 
+         self.do_test_arm_aspeed_openbmc('bletchley-bmc', image=image_path,
+                                         uboot='2019.04', cpu_id='0xf00',
+@@ -77,14 +84,15 @@ def boot_openbmc(self, revision=None):
+         exec_command_and_wait_for_pattern(self, 'root', 'Password:')
+         exec_command_and_wait_for_pattern(self, '0penBmc', self.PROMPT)
+ 
+-    def check_revision(self, revision, cc_board, bsm_product, mac_oui):
++    def check_revision(self, revision, cc_board, bsm_product):
+         self.assertIn(self.HW_STRAP1[revision],
+                       self.vm.cmd('human-monitor-command',
+                                   command_line=f'xp/1xw {self.SCU500:#x}'))
+ 
+         chassis = self.read_eeprom_strings("7-0054")
+         self.assertIn(cc_board.encode(), chassis)
+-        self.assertIn(mac_oui.encode(), chassis)
++        self.assertIn(self.NIC_MAC[revision].replace(":", "").encode(),
++                      chassis)
+         self.assertIn(bsm_product.encode(),
+                       self.read_eeprom_strings("6-0056"))
+         if revision == "1.0":
+-- 
+2.53.0-Meta
+

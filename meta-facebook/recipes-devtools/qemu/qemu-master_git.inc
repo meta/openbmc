@@ -206,6 +206,7 @@ SRC_URI:append = " \
            file://0712-hw-arm-bletchley-take-the-FRU-MAC-from-the-configure.patch \
            file://0713-slirp-pin-the-guest-address-with-a-static-DHCP-lease.patch \
            file://0714-hw-i2c-aspeed_i2c-hold-the-target-RX-ACK-until-the-I.patch \
+           file://0715-tests-functional-arm-bletchley-expect-the-FRU-MAC-of-.patch \
            "
 
 # slirp is a subproject: its patches need a patchdir, or they hit QEMU's tree.

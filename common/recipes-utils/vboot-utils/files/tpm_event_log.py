@@ -16,24 +16,21 @@
 # Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
-import functools
 import json
 import mmap
 import os
 import struct
 
 from measure_func import (
-    Pcr,
-    measure_spl,
     measure_keystore,
-    measure_uboot,
-    measure_rcv_uboot,
-    measure_vbs,
     measure_os,
+    measure_rcv_uboot,
+    measure_spl,
+    measure_uboot,
+    measure_vbs,
+    Pcr,
 )
-from vboot_common import (
-    get_soc_model,
-)
+from vboot_common import get_soc_model
 
 
 class MalformedTPMEventLog(Exception):
@@ -180,6 +177,8 @@ class TPMEventLog(object):
         self.flash0_meta = flash0_meta
         self.flash1_meta = flash1_meta
         self.eventfile = eventfile
+        self._os_measure_cache = None
+        self._rec_os_measure_cache = None
         self.tpm_events = self._load_tpm_events()
 
     def _load_tpm_events(self) -> "list[TPMEventRecord]":
@@ -290,13 +289,23 @@ class TPMEventLog(object):
         print("=" * len(header_str))
         return
 
-    @functools.lru_cache(maxsize=1)
     def _measure_os_cached(self, algo, recal):
-        return measure_os(algo, self.flash1_meta, recal, True)
+        key = (algo, recal)
+        cached = self._os_measure_cache
+        if cached is None or cached[0] != key:
+            result = measure_os(algo, self.flash1_meta, recal, True)
+            cached = (key, result)
+            self._os_measure_cache = cached
+        return cached[1]
 
-    @functools.lru_cache(maxsize=1)
     def _measure_rec_os_cached(self, algo, recal):
-        return measure_os(algo, self.flash0_meta, recal, True)
+        key = (algo, recal)
+        cached = self._rec_os_measure_cache
+        if cached is None or cached[0] != key:
+            result = measure_os(algo, self.flash0_meta, recal, True)
+            cached = (key, result)
+            self._rec_os_measure_cache = cached
+        return cached[1]
 
     def _check_digest(self, measure, algo, digest, recal):
         expect_digest = None

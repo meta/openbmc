@@ -58,6 +58,8 @@ def get_soc_model(soc_family):
     ret = "SOC_MODEL_ASPEED_G5"
   elif soc_family == "aspeed-g6":
     ret = "SOC_MODEL_ASPEED_G6"
+  elif soc_family == "aspeed-g7":
+    ret = "SOC_MODEL_ASPEED_G7"
   else:
     ret = "SOC_MODEL_INVALID"
 
@@ -70,6 +72,8 @@ def get_cpu_model(soc_family):
     ret = "CPU_MODEL_ARM_V6"
   elif soc_family == "aspeed-g6":
     ret = "CPU_MODEL_ARM_V7"
+  elif soc_family == "aspeed-g7":
+    ret = "CPU_MODEL_ARM_V8"
   else:
     ret = "CPU_MODEL_INVALID"
 

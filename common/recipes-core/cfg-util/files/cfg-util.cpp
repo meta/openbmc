@@ -134,23 +134,26 @@ main(int argc, char **argv) {
 
       pal_restore_key_value();
 
-      // Set the flag to identify the reboot is caused by cfg-util
-      mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
-      if (mem_fd >= 0) {
-        if (get_soc_model() == SOC_MODEL_ASPEED_G6) {
-          sram_bmc_reboot_base = AST_G6_SRAM_BMC_REBOOT_BASE;
-          sram_offset = AST_G6_SRAM_BMC_REBOOT_OFFSET;
-        } else {
-          sram_bmc_reboot_base = AST_SRAM_BMC_REBOOT_BASE;
-          sram_offset = AST_SRAM_BMC_REBOOT_OFFSET;
-        }
+      // No AST2700 mapping for the SRAM reboot-cause handoff is
+      // established yet.
+      if (get_soc_model() != SOC_MODEL_ASPEED_G7) {
+        mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+        if (mem_fd >= 0) {
+          if (get_soc_model() == SOC_MODEL_ASPEED_G6) {
+            sram_bmc_reboot_base = AST_G6_SRAM_BMC_REBOOT_BASE;
+            sram_offset = AST_G6_SRAM_BMC_REBOOT_OFFSET;
+          } else {
+            sram_bmc_reboot_base = AST_SRAM_BMC_REBOOT_BASE;
+            sram_offset = AST_SRAM_BMC_REBOOT_OFFSET;
+          }
 
-        bmc_reboot_base = (uint8_t *)mmap(NULL, PAGE_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, mem_fd, sram_bmc_reboot_base);
-        if (bmc_reboot_base != 0) {
-          BMC_REBOOT_BY_CMD(bmc_reboot_base, sram_offset) |= BIT_RECORD_LOG | FLAG_CFG_UTIL;
-          munmap(bmc_reboot_base, PAGE_SIZE);
+          bmc_reboot_base = (uint8_t *)mmap(NULL, PAGE_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, mem_fd, sram_bmc_reboot_base);
+          if (bmc_reboot_base != 0) {
+            BMC_REBOOT_BY_CMD(bmc_reboot_base, sram_offset) |= BIT_RECORD_LOG | FLAG_CFG_UTIL;
+            munmap(bmc_reboot_base, PAGE_SIZE);
+          }
+          close(mem_fd);
         }
-        close(mem_fd);
       }
 
       sleep(3);

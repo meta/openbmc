@@ -34,7 +34,8 @@ class SocModelId(IntEnum):
     SOC_MODEL_ASPEED_G4 = 0
     SOC_MODEL_ASPEED_G5 = 1
     SOC_MODEL_ASPEED_G6 = 2
-    SOC_MODEL_MAX = 3
+    SOC_MODEL_ASPEED_G7 = 3
+    SOC_MODEL_MAX = 4
 
 
 class SocModelError(Exception):
@@ -58,6 +59,9 @@ register_map = {
         wdt_reg(0x1E785050, 1),
     ],
     SocModelId.SOC_MODEL_ASPEED_G6: [wdt_reg(0x1E620064, 4)],
+    # AST2700 WDTA boot-source status register.  Bit 1 is set when the BMC
+    # is booted from the slave flash, as used by boot_info.sh.
+    SocModelId.SOC_MODEL_ASPEED_G7: [wdt_reg(0x14C3744C, 1)],
 }  # type: Dict[int, List[wdt_reg]]
 
 

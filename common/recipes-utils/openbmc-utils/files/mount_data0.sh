@@ -115,6 +115,13 @@ get_reboot_cause_addr() {
 
 is_ubifs_error_set() {
     BOOT_MAGIC="0xFB420054"
+    soc_model=$(cat /etc/soc_model 2>/dev/null)
+    if [ "$soc_model" = "SOC_MODEL_ASPEED_G7" ]; then
+        # No AST2700 mapping for the SRAM reboot-cause handoff is
+        # established.
+        return 1
+    fi
+
     reboot_sig_addr=$(get_reboot_cause_addr sig)
     reboot_sig_val=$(devmem "$reboot_sig_addr" 2>/dev/null)
     if [ "$reboot_sig_val" != "$BOOT_MAGIC" ]; then
@@ -282,7 +289,7 @@ do_mount_jffs2() {
     # according "block" device (/dev/mtdblock#) due to mount.busybox
     # limitations.
     #
-    mtd_blkdev=$(echo "$mtd_chardev" | sed 's/mtd/mtdblock/')
+    mtd_blkdev="/dev/mtdblock${mtd_chardev#/dev/mtd}"
 
     if jffs2_mount "$mtd_blkdev" "$mnt_point"; then
         #
@@ -323,6 +330,7 @@ do_mount_jffs2() {
 }
 
 is_vboot_recovery_boot(){
+   [ -x /usr/local/bin/vboot-util ] || return 1
    recv_boot=$(/usr/local/bin/vboot-util | awk -F: -e '/recovery_boot/{ print $2 }')
    test $(( "$recv_boot" )) -ne 0
 }

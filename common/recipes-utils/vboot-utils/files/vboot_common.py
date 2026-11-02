@@ -74,12 +74,17 @@ def get_soc_model():
     return soc_model.strip()
 
 
+def get_vbs_location():
+    soc_model = get_soc_model()
+    if soc_model not in VBS_LOCATION:
+        raise RuntimeError("VBS is not supported on {}".format(soc_model))
+    return VBS_LOCATION[soc_model]
+
+
 def read_vbs() -> bytearray:
     memfn = None
     try:
-        SRAM_OFFSET, SRAM_SIZE, VBS_OFFSET, vbs_data_size = VBS_LOCATION[
-            get_soc_model()
-        ]
+        SRAM_OFFSET, SRAM_SIZE, VBS_OFFSET, vbs_data_size = get_vbs_location()
         memfn = os.open("/dev/mem", os.O_RDWR | os.O_SYNC)
         with mmap.mmap(
             memfn,
@@ -97,7 +102,7 @@ def read_vbs() -> bytearray:
 
 def write_vbs(vbs_data: bytearray):
     memfn = None
-    SRAM_OFFSET, SRAM_SIZE, VBS_OFFSET, vbs_data_size = VBS_LOCATION[get_soc_model()]
+    SRAM_OFFSET, SRAM_SIZE, VBS_OFFSET, vbs_data_size = get_vbs_location()
     assert (
         len(vbs_data) == vbs_data_size
     ), f"vbs_data length {len(vbs_data)} is not {vbs_data_size}"

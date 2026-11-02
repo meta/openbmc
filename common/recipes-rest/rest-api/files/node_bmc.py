@@ -38,7 +38,7 @@ import kv
 import psutil
 import rest_mmc
 import rest_pal_legacy
-from boot_source import is_boot_from_secondary
+from boot_source import SocModelId, get_soc_model, is_boot_from_secondary
 from node import node
 from vboot import get_vboot_status
 
@@ -99,7 +99,9 @@ def cache_uboot_version():
 
 
 def get_wdt_counter() -> int:
-    addr = 0x1E785010
+    addr = (
+        0x1E785010 if get_soc_model() != SocModelId.SOC_MODEL_ASPEED_G7 else 0x14C37410
+    )
     with open("/dev/mem", "rb") as f:
         with mmap.mmap(
             f.fileno(),
@@ -107,7 +109,10 @@ def get_wdt_counter() -> int:
             mmap.MAP_SHARED,
             mmap.PROT_READ,
         ) as reg_map:
-            return reg_map[addr]
+            # The mmap conversion broke the former `devmem(addr) & 0xFF00`
+            # behavior by reading bits 7:0. Read bits 15:8 at addr + 1 instead;
+            # this was easy to miss because callers only check zero vs nonzero.
+            return reg_map[addr + 1]
 
 
 def SPIVendorID2Name(manufacturer_id):

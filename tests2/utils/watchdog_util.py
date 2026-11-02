@@ -31,10 +31,17 @@ class WatchdogUtils:
     """Watchdog utility functions."""
 
     _DEVMEM_CMD = "/sbin/devmem"
-    _WDT1_CTRL_REG = "0x1E78500C"
-    _WDT1_STATUS_REG = "0x1E785000"
     _WDTCLI_CMD = "/usr/local/bin/wdtcli"
     _DT_COMPATIBLE_PATH = "/proc/device-tree/compatible"
+
+    # Registers for the watchdog exposed as /dev/watchdog.
+    _WATCHDOG_REGISTERS = {
+        "ast2400": ("0x1E78500C", "0x1E785000"),
+        "ast2500": ("0x1E78500C", "0x1E785000"),
+        "ast2600": ("0x1E78500C", "0x1E785000"),
+        "ast2700": ("0x14C3700C", "0x14C37000"),
+    }
+
     # Boot (second) watchdog enable register per SoC; keep in sync with
     # common/recipes-utils/openbmc-utils/files/aspeed-g*/disable_watchdog.sh
     _SECOND_WDT_ENABLE_REG = {
@@ -43,6 +50,13 @@ class WatchdogUtils:
         "ast2600": "0x1E620064",  # FMC_WDT2
         "ast2700": "0x14C3740C",  # WDTA control
     }
+
+    def _watchdog_registers(self):
+        return self._WATCHDOG_REGISTERS[self.get_soc()]
+
+    def _read_register(self, register):
+        cmd_out = run_shell_cmd(f"{self._DEVMEM_CMD} {register}")
+        return int(cmd_out, 16)
 
     def start_watchdog(self):
         """Start the watchdog."""
@@ -61,15 +75,13 @@ class WatchdogUtils:
 
     def _read_ctrl_register(self):
         """Read watchdog control register."""
-        cmd = self._DEVMEM_CMD + " " + self._WDT1_CTRL_REG
-        cmd_out = run_shell_cmd(cmd)
-        return int(cmd_out, 16)
+        ctrl_reg, _ = self._watchdog_registers()
+        return self._read_register(ctrl_reg)
 
     def _read_status_register(self):
         """Read watchdog status register."""
-        cmd = self._DEVMEM_CMD + " " + self._WDT1_STATUS_REG
-        cmd_out = run_shell_cmd(cmd)
-        return int(cmd_out, 16)
+        _, status_reg = self._watchdog_registers()
+        return self._read_register(status_reg)
 
     def get_soc(self):
         """Return the Aspeed SoC (e.g. "ast2500") from the device tree.
@@ -83,7 +95,7 @@ class WatchdogUtils:
             raise UnknownSocError(f"cannot read {self._DT_COMPATIBLE_PATH}: {e}") from e
         for entry in entries:
             vendor, _, model = entry.partition(",")
-            if vendor == "aspeed" and model in self._SECOND_WDT_ENABLE_REG:
+            if vendor == "aspeed" and model in self._WATCHDOG_REGISTERS:
                 return model
         raise UnknownSocError(f"no supported Aspeed SoC in compatible: {entries}")
 
@@ -101,10 +113,7 @@ class WatchdogUtils:
 
         count_2 = self._read_status_register()
 
-        if count_2 < count_1:
-            return True
-        else:
-            return False
+        return count_2 < count_1
 
     def watchdog_is_running(self, check_counter=False):
         """Check if watchdog is running."""
@@ -123,5 +132,4 @@ class WatchdogUtils:
     def second_watchdog_is_running(self):
         """Check if second watchdog is running."""
         reg = self._SECOND_WDT_ENABLE_REG[self.get_soc()]
-        cmd_out = run_shell_cmd(self._DEVMEM_CMD + " " + reg)
-        return (int(cmd_out, 16) & 1) == 1
+        return (self._read_register(reg) & 1) == 1

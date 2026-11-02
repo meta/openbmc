@@ -28,7 +28,12 @@ store_clear_por() {
 
   # default AST G4/G5
   system_reset_reg="0x1e6e203c"
-  if [ "$soc_model" = "SOC_MODEL_ASPEED_G6" ]; then
+  if [ "$soc_model" = "SOC_MODEL_ASPEED_G7" ]; then
+      # No G7 equivalent of the legacy SCU reset flag is established here.
+      # Do not classify an unknown reset as a power-on reset.
+      echo 0 > /tmp/ast_por
+      return 0
+  elif [ "$soc_model" = "SOC_MODEL_ASPEED_G6" ]; then
       system_reset_reg="0x1e6e2074"
   fi
 

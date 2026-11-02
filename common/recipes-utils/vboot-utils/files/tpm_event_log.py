@@ -97,8 +97,15 @@ digest_algo_info = {
 
 
 def get_location_size(soc_model):
-    SRAM_OFFSET, _, LOG_OFFSET, log_data_size = EVENT_LOG_LOCATION[soc_model]
+    SRAM_OFFSET, _, LOG_OFFSET, log_data_size = get_event_log_location(soc_model)
     return (SRAM_OFFSET + LOG_OFFSET, log_data_size)
+
+
+def get_event_log_location(soc_model=None):
+    soc_model = get_soc_model() if soc_model is None else soc_model
+    if soc_model not in EVENT_LOG_LOCATION:
+        raise RuntimeError("TPM event log is not supported on {}".format(soc_model))
+    return EVENT_LOG_LOCATION[soc_model]
 
 
 def read_log_data_from_sram():
@@ -109,7 +116,7 @@ def read_log_data_from_sram():
             SRAM_SIZE,
             LOG_OFFSET,
             log_data_size,
-        ) = EVENT_LOG_LOCATION[get_soc_model()]
+        ) = get_event_log_location()
         memfn = os.open("/dev/mem", os.O_RDONLY | os.O_SYNC)
         with mmap.mmap(
             memfn,

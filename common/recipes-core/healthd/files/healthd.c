@@ -1831,6 +1831,12 @@ log_reboot_cause(char *sled_off_time)
   uint32_t sram_bmc_reboot_base = 0x0;
   uint32_t sram_offset = 0x0;
 
+  if (get_soc_model() == SOC_MODEL_ASPEED_G7) {
+    /* No AST2700 mapping for the reboot-cause handoff is established. */
+    syslog(LOG_CRIT, "BMC Reboot detected (cause handoff not yet defined for AST2700)");
+    return;
+  }
+
   if (get_soc_model() == SOC_MODEL_ASPEED_G6) {
     sram_bmc_reboot_base = AST_G6_SRAM_BMC_REBOOT_BASE;
     sram_offset = AST_G6_SRAM_BMC_REBOOT_OFFSET;
@@ -2134,17 +2140,21 @@ ubifs_health_monitor(void *unused __attribute__((unused))) {
     } else if (val != 0) {
       syslog(LOG_CRIT, "%s: ubifs (/dev/ubi0_0) in read-only mode (ro_error=%d)", __func__, val);
 
-      mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
-      if (mem_fd < 0) {
-        syslog(LOG_ERR, "devmem open failed");
-      } else {
-        bmc_reboot_base = mmap(NULL, PAGE_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, mem_fd, sram_bmc_reboot_base);
-        if (bmc_reboot_base == NULL) {
-          syslog(LOG_ERR, "Mapping SRAM_BMC_REBOOT_BASE failed");
+      if (get_soc_model() != SOC_MODEL_ASPEED_G7) {
+        mem_fd = open("/dev/mem", O_RDWR | O_SYNC);
+        if (mem_fd < 0) {
+          syslog(LOG_ERR, "devmem open failed");
         } else {
-          BMC_REBOOT_BY_CMD(bmc_reboot_base, sram_offset) |= BIT_RECORD_LOG | FLAG_UBIFS_ERROR;
+          bmc_reboot_base = mmap(NULL, PAGE_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, mem_fd, sram_bmc_reboot_base);
+          if (bmc_reboot_base == NULL) {
+            syslog(LOG_ERR, "Mapping SRAM_BMC_REBOOT_BASE failed");
+          } else {
+            BMC_REBOOT_BY_CMD(bmc_reboot_base, sram_offset) |= BIT_RECORD_LOG | FLAG_UBIFS_ERROR;
+          }
+          close(mem_fd);
         }
-        close(mem_fd);
+      } else {
+        syslog(LOG_INFO, "%s: no AST2700 reboot-cause handoff is defined", __func__);
       }
       fclose(fp);
       break;

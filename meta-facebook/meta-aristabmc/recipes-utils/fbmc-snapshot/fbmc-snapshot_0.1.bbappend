@@ -24,19 +24,21 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 SHOWTECH_INSTALL_UTILS = "1"
 
 LOCAL_URI += " \
-    file://900_aristabmc_system_info.sh \
-    file://901_aristabmc_platform_debug.sh \
-    file://902_aristabmc_boot_info.sh \
-    file://903_aristabmc_network_detail.sh \
-    file://904_aristabmc_systemd.sh \
+    file://900_system_info.sh \
+    file://901_platform_debug.sh \
+    file://902_boot_info.sh \
+    file://903_network_detail.sh \
+    file://904_systemd.sh \
+    file://905_dump_cpld.sh \
     "
 
 SHOWTECH_RULES_FILES:append = " \
-    900_aristabmc_system_info.sh \
-    901_aristabmc_platform_debug.sh \
-    902_aristabmc_boot_info.sh \
-    903_aristabmc_network_detail.sh \
-    904_aristabmc_systemd.sh \
+    900_system_info.sh \
+    901_platform_debug.sh \
+    902_boot_info.sh \
+    903_network_detail.sh \
+    904_systemd.sh \
+    905_dump_cpld.sh \
     "
 
 # mtd_metadata.sh overrides the common utility: Aristabmc stores image metadata

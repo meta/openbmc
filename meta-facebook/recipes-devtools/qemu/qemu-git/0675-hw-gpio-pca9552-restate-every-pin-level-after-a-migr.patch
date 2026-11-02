@@ -1,0 +1,42 @@
+From 518542baa773904d590ddb281135efca34a22eca Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Mon, 7 Sep 2026 11:00:42 +0200
+Subject: [PATCH 675/682] hw/gpio: pca9552: restate every pin level after a
+ migration
+
+The registers and the external pin state survive a migration, but the
+outgoing GPIO lines do not: the destination drove them once from its
+own reset and is never told what the restored state implies. A
+consumer keeps the reset level until some later write happens to move
+the pin.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ hw/gpio/pca9552.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/hw/gpio/pca9552.c b/hw/gpio/pca9552.c
+index 067bbd0a4e..81f507c5f8 100644
+--- a/hw/gpio/pca9552.c
++++ b/hw/gpio/pca9552.c
+@@ -541,10 +541,17 @@ static const VMStateDescription vmstate_pca955x_reset_pin = {
+     }
+ };
+ 
++static int pca9552_post_load(void *opaque, int version_id)
++{
++    pca955x_update_pin_input(opaque, true);
++    return 0;
++}
++
+ static const VMStateDescription pca9552_vmstate = {
+     .name = "PCA9552",
+     .version_id = 0,
+     .minimum_version_id = 0,
++    .post_load = pca9552_post_load,
+     .fields = (const VMStateField[]) {
+         VMSTATE_UINT8(len, PCA955xState),
+         VMSTATE_UINT8(pointer, PCA955xState),
+-- 
+2.53.0-Meta
+

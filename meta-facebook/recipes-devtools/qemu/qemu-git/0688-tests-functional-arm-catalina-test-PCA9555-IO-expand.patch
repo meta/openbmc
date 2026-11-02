@@ -1,0 +1,125 @@
+From 198b29134259910921a2f6c0a71f010ae0ed6689 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot via qemu development <qemu-devel@nongnu.org>
+Date: Fri, 31 Jul 2026 12:45:22 +0200
+Subject: [PATCH] tests/functional/arm: catalina: test PCA9555 IO expander via
+ QOM
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Drive the io_expander0 (pca9555@20 on i2c2) input pins from the host
+through the pin%d QOM properties and read each one back both via qom-get
+and via the guest kernel gpiochip (libgpiod), spanning both 8-bit ports
+and both ends, then check two pins on different ports are reported
+independently.
+
+Introduce a check_ioexp() helper doing that round-trip so further
+expanders can reuse it. Address the expander through the device locator
+rather than a hardcoded QOM path.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Link: https://lore.kernel.org/qemu-devel/20260731-sanmiguel-bmc-locator-v2-23-1266926ba769@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ tests/functional/arm/test_aspeed_catalina.py | 64 +++++++++++++++++++-
+ 1 file changed, 63 insertions(+), 1 deletion(-)
+
+diff --git a/tests/functional/arm/test_aspeed_catalina.py b/tests/functional/arm/test_aspeed_catalina.py
+index b80b5fe92b..5624774891 100755
+--- a/tests/functional/arm/test_aspeed_catalina.py
++++ b/tests/functional/arm/test_aspeed_catalina.py
+@@ -2,6 +2,8 @@
+ #
+ # Functional test that boots the ASPEED machines
+ #
++# Copyright (c) 2026 Meta Platforms, Inc. and affiliates.
++#
+ # SPDX-License-Identifier: GPL-2.0-or-later
+ 
+ import sys
+@@ -28,6 +30,10 @@ class CatalinaMachine(AspeedTest):
+     TMP75_HWMON = "/sys/bus/i2c/devices/9-004b/hwmon/hwmon*"
+     PROMPT = "root@catalina:~#"
+ 
++    # io_expander0: pca9555@20 on i2c2, a 16-bit expander directly on the bus.
++    IOEXP0_LOCATOR = "/machine/soc::aspeed.i2c-ast2600[0]~i2c[2]~pca9555@0x20"
++    IOEXP0_GPIODETECT = r"\[2-0020\]"
++
+     def test_arm_ast2600_catalina_openbmc(self):
+         image_path = self.uncompress(self.ASSET_CATALINA_FLASH)
+ 
+@@ -45,7 +51,9 @@ def test_arm_ast2600_catalina_openbmc(self):
+         if sys.version_info < (3, 10):
+             return
+ 
+-        tmp75 = DeviceLocator(self.vm.cmd).resolve(self.TMP75_LOCATOR, "tmp75")
++        locator = DeviceLocator(self.vm.cmd)
++        tmp75 = locator.resolve(self.TMP75_LOCATOR, "tmp75")
++        ioexp0 = locator.resolve(self.IOEXP0_LOCATOR, "pca9555")
+ 
+         # temp1_input reports the temperature in millidegrees Celsius. Drive it
+         # through QOM (units of 0.001 C) and check the kernel hwmon interface
+@@ -55,6 +63,60 @@ def test_arm_ast2600_catalina_openbmc(self):
+                         property="temperature", value=milli_c)
+             self.wait_hwmon_value(self.TMP75_HWMON, "temp1_input", milli_c)
+ 
++        # pca9555@20 spans two 8-bit ports (pins 0-7 and 8-15).
++        self.check_ioexp(ioexp0, self.IOEXP0_GPIODETECT, (0, 7, 8, 15))
++
++    def check_ioexp(self, qom, gpiodetect, pins):
++        # The guest drives these lines as inputs: set_pin injects an external
++        # level, read back over QOM and gpioget. Outputs are covered by qtests.
++        chip = self.resolve_gpiochip(gpiodetect)
++        for pin in pins:
++            self.set_pin(qom, pin, "low")
++            self.assert_pin(qom, pin, "low")
++            self.assert_gpio_line(chip, pin, 0)
++            self.set_pin(qom, pin, "high")
++            self.assert_pin(qom, pin, "high")
++            self.assert_gpio_line(chip, pin, 1)
++
++        # Drive two pins to opposite levels at once to confirm they are
++        # reported back independently.
++        lo, hi = pins[0], pins[-1]
++        self.set_pin(qom, lo, "low")
++        self.set_pin(qom, hi, "high")
++        self.assert_pin(qom, lo, "low")
++        self.assert_pin(qom, hi, "high")
++        self.assert_gpio_line(chip, lo, 0)
++        self.assert_gpio_line(chip, hi, 1)
++
++    def read_catalina_console(self, command):
++        return exec_command_and_wait_for_pattern(self, command, self.PROMPT)
++
++    def resolve_gpiochip(self, gpiodetect):
++        # awk already prints the "gpiochipN" name; just pick it out of the
++        # console output (the command echo and prompt hold no such token).
++        out = self.read_catalina_console(
++            f"gpiodetect | awk '/{gpiodetect}/{{print $1}}'")
++        for token in out.split():
++            if token.startswith(b"gpiochip"):
++                return token.decode()
++        self.fail(f"could not resolve gpiochip {gpiodetect}")
++
++    def set_pin(self, qom, pin, level):
++        self.vm.cmd("qom-set", path=qom, property=f"pin{pin}", value=level)
++
++    def get_pin(self, qom, pin):
++        return self.vm.cmd("qom-get", path=qom, property=f"pin{pin}")
++
++    def assert_pin(self, qom, pin, expected):
++        level = self.get_pin(qom, pin)
++        self.assertEqual(level, expected,
++                         f"pin{pin} QOM read {level!r}, expected {expected!r}")
++
++    def assert_gpio_line(self, chip, pin, expected):
++        out = self.read_catalina_console(
++            f"echo LINE{pin}=$(gpioget {chip} {pin})")
++        self.assertIn(f"LINE{pin}={expected}".encode(), out)
++
+ 
+ if __name__ == '__main__':
+     AspeedTest.main()
+-- 
+2.54.0
+

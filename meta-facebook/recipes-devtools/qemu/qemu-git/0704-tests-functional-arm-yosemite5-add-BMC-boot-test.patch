@@ -1,0 +1,121 @@
+From 0de1dd0e658403e53edf4db41c195afbf666b6b1 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 6 Aug 2026 18:18:58 +0200
+Subject: [PATCH] tests/functional/arm: yosemite5: add BMC boot test
+
+Boot the OpenBMC flash image, then drive the OCP NIC TMP421 sensor and
+one of the ADC128D818 voltage monitors through QOM and confirm the
+readings propagate to the guest hwmon interface.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/functional/arm/meson.build              |  2 +
+ tests/functional/arm/test_aspeed_yosemite5.py | 76 +++++++++++++++++++
+ 2 files changed, 78 insertions(+)
+ create mode 100644 tests/functional/arm/test_aspeed_yosemite5.py
+
+diff --git a/tests/functional/arm/meson.build b/tests/functional/arm/meson.build
+index 8e015b2266..e3002adc81 100644
+--- a/tests/functional/arm/meson.build
++++ b/tests/functional/arm/meson.build
+@@ -21,6 +21,7 @@ test_arm_timeouts = {
+   'aspeed_rainier' : 480,
+   'aspeed_sanmiguel' : 480,
+   'aspeed_santabarbara' : 480,
++  'aspeed_yosemite5' : 480,
+   'bpim2u' : 500,
+   'collie' : 180,
+   'cubieboard' : 360,
+@@ -61,6 +62,7 @@ tests_arm_system_thorough = [
+   'aspeed_rainier',
+   'aspeed_sanmiguel',
+   'aspeed_santabarbara',
++  'aspeed_yosemite5',
+   'bpim2u',
+   'canona1100',
+   'collie',
+diff --git a/tests/functional/arm/test_aspeed_yosemite5.py b/tests/functional/arm/test_aspeed_yosemite5.py
+new file mode 100644
+index 0000000000..7e85f86a6a
+--- /dev/null
++++ b/tests/functional/arm/test_aspeed_yosemite5.py
+@@ -0,0 +1,76 @@
++#!/usr/bin/env python3
++#
++# Functional test that boots the ASPEED machines
++#
++# Copyright (c) 2026 Meta Platforms, Inc. and affiliates.
++#
++# SPDX-License-Identifier: GPL-2.0-or-later
++
++from qemu_test import Asset
++from qemu_test import exec_command_and_wait_for_pattern
++from aspeed import AspeedTest
++
++
++class Yosemite5Machine(AspeedTest):
++
++    # TODO: the boot image currently lives on a personal fork; move it under
++    # legoater/qemu-aspeed-boot before upstreaming.
++    ASSET_YOSEMITE5_FLASH = Asset(
++        'https://github.com/eblot/qemu-aspeed-boot/raw/refs/heads/yosemite5-bmc/images/yosemite5-bmc/'
++            'openbmc-20260806025056/obmc-phosphor-image-yosemite5-20260806025056.static.mtd.xz',
++        '3932f6bd5c17033704c4ed7f7ed5efc43fb7e28e0768035d75881c1a312d1c02')
++
++    # The OCP NIC TMP421 sits directly on i2c4 at address 0x1f, the first
++    # slave instantiated on the bus (child[1], after the controller's own
++    # child[0]); it enumerates in the guest as device 4-001f.
++    TMP421_QOM_PATH = "/machine/soc/i2c/bus[4]/aspeed.i2c.bus.4/child[1]"
++    TMP421_HWMON = "/sys/bus/i2c/devices/4-001f/hwmon/hwmon*"
++
++    # An ADC128D818 sits directly on i2c8 at address 0x1d, the first slave
++    # instantiated on the bus (child[1]); it enumerates as device 8-001d.
++    ADC_QOM_PATH = "/machine/soc/i2c/bus[8]/aspeed.i2c.bus.8/child[1]"
++    ADC_HWMON = "/sys/bus/i2c/devices/8-001d/hwmon/hwmon*"
++    PROMPT = "root@yosemite5:~#"
++
++    def test_arm_ast2600_yosemite5_openbmc(self):
++        image_path = self.uncompress(self.ASSET_YOSEMITE5_FLASH)
++
++        self.do_test_arm_aspeed_openbmc('yosemite5-bmc', image=image_path,
++                                        uboot='2019.04', cpu_id='0xf00',
++                                        soc='AST2600 rev A3')
++
++        exec_command_and_wait_for_pattern(self, 'root', 'Password:')
++        exec_command_and_wait_for_pattern(self, '0penBmc', self.PROMPT)
++
++        self.assertIn(b"tmp421", self.read_hwmon(self.TMP421_HWMON, "name"))
++
++        # temperature0 is the local channel (hwmon temp1_input), temperature1
++        # the first remote channel (temp2_input), both in millidegrees C. A
++        # set point on the TMP421's 1/16 C grid survives the round trip; one
++        # off the grid truncates down to it.
++        for (local_mc, local_rb), (remote_mc, remote_rb) in \
++                (((30000, 30000), (55000, 55000)),
++                 ((25020, 25000), (45020, 45000))):
++            self.vm.cmd("qom-set", path=self.TMP421_QOM_PATH,
++                        property="temperature0", value=local_mc)
++            self.vm.cmd("qom-set", path=self.TMP421_QOM_PATH,
++                        property="temperature1", value=remote_mc)
++            self.wait_hwmon_value(self.TMP421_HWMON, "temp1_input", local_rb)
++            self.wait_hwmon_value(self.TMP421_HWMON, "temp2_input", remote_rb)
++
++        self.assertIn(b"adc128d818", self.read_hwmon(self.ADC_HWMON, "name"))
++
++        # ainN sets analog input channel N in mV; the driver exposes it as the
++        # zero-based inN_input. With the internal 2560 mV reference and 12-bit
++        # resolution, values that are multiples of the LSB read back exactly.
++        for ain0_mv, ain1_mv in ((1000, 2000), (500, 1500)):
++            self.vm.cmd("qom-set", path=self.ADC_QOM_PATH,
++                        property="ain0", value=ain0_mv)
++            self.vm.cmd("qom-set", path=self.ADC_QOM_PATH,
++                        property="ain1", value=ain1_mv)
++            self.wait_hwmon_value(self.ADC_HWMON, "in0_input", ain0_mv)
++            self.wait_hwmon_value(self.ADC_HWMON, "in1_input", ain1_mv)
++
++
++if __name__ == '__main__':
++    AspeedTest.main()
+-- 
+2.54.0
+

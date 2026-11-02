@@ -1,0 +1,88 @@
+From 4d298207d0c45948ee2b68d5eb68b1d0c155b24e Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot via qemu development <qemu-devel@nongnu.org>
+Date: Fri, 31 Jul 2026 12:45:21 +0200
+Subject: [PATCH] tests/functional/arm: catalina: test TMP75
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Extend the Catalina boot test to exercise the TMP75 sensor on i2c9:
+confirm the guest exposes it through hwmon, then drive the temperature
+over QOM and check hwmon reports the injected value back.
+
+Address the sensor through the device locator rather than a hardcoded
+QOM path.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Link: https://lore.kernel.org/qemu-devel/20260731-sanmiguel-bmc-locator-v2-22-1266926ba769@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ tests/functional/arm/test_aspeed_catalina.py | 37 +++++++++++++++++++-
+ 1 file changed, 36 insertions(+), 1 deletion(-)
+
+diff --git a/tests/functional/arm/test_aspeed_catalina.py b/tests/functional/arm/test_aspeed_catalina.py
+index dc2f24e7b4..b80b5fe92b 100755
+--- a/tests/functional/arm/test_aspeed_catalina.py
++++ b/tests/functional/arm/test_aspeed_catalina.py
+@@ -4,16 +4,30 @@
+ #
+ # SPDX-License-Identifier: GPL-2.0-or-later
+ 
++import sys
++
+ from qemu_test import Asset
++from qemu_test import exec_command_and_wait_for_pattern
+ from aspeed import AspeedTest
+ 
++# DeviceLocator's type hints require Python 3.10+; import it only when
++# available. On the 3.9 baseline the module still loads and the boot
++# test still runs; only the locator-based device checks are skipped.
++if sys.version_info >= (3, 10):
++    from qemu_test.locator import DeviceLocator
++
+ 
+ class CatalinaMachine(AspeedTest):
+ 
+     ASSET_CATALINA_FLASH = Asset(
+-        'https://github.com/legoater/qemu-aspeed-boot/raw/a866feb5ef81245b4827a214584bf6bcc72939f6/images/catalina-bmc/obmc-phosphor-image-catalina-20250619123021.static.mtd.xz',
++        'https://github.com/legoater/qemu-aspeed-boot/raw/a866feb5ef81245b4827a214584bf6bcc72939f6/images/'
++            'catalina-bmc/obmc-phosphor-image-catalina-20250619123021.static.mtd.xz',
+         '287402e1ba021991e06be1d098f509444a02a3d81a73a932f66528b159e864f9')
+ 
++    TMP75_LOCATOR = "/machine/soc::aspeed.i2c-ast2600[0]~i2c[9]~tmp75@0x4b"
++    TMP75_HWMON = "/sys/bus/i2c/devices/9-004b/hwmon/hwmon*"
++    PROMPT = "root@catalina:~#"
++
+     def test_arm_ast2600_catalina_openbmc(self):
+         image_path = self.uncompress(self.ASSET_CATALINA_FLASH)
+ 
+@@ -21,5 +35,26 @@ def test_arm_ast2600_catalina_openbmc(self):
+                                         uboot='2019.04', cpu_id='0xf00',
+                                         soc='AST2600 rev A3')
+ 
++        exec_command_and_wait_for_pattern(self, 'root', 'Password:')
++        exec_command_and_wait_for_pattern(self, '0penBmc', self.PROMPT)
++
++        self.assertIn(b"tmp75", self.read_hwmon(self.TMP75_HWMON, "name"))
++
++        # The QOM round-trips below resolve devices with DeviceLocator, which
++        # require Python 3.10+; skip just those on older interpreters.
++        if sys.version_info < (3, 10):
++            return
++
++        tmp75 = DeviceLocator(self.vm.cmd).resolve(self.TMP75_LOCATOR, "tmp75")
++
++        # temp1_input reports the temperature in millidegrees Celsius. Drive it
++        # through QOM (units of 0.001 C) and check the kernel hwmon interface
++        # reports the injected value back.
++        for milli_c in (55000, 30000):
++            self.vm.cmd("qom-set", path=tmp75,
++                        property="temperature", value=milli_c)
++            self.wait_hwmon_value(self.TMP75_HWMON, "temp1_input", milli_c)
++
++
+ if __name__ == '__main__':
+     AspeedTest.main()
+-- 
+2.54.0
+

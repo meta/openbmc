@@ -1,0 +1,97 @@
+From 9cffca60d44a5bc9fd97d8c1420c224fab27bb37 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 3 Sep 2026 17:16:03 +0200
+Subject: [PATCH 630/682] tests/qtest: ds1339: cover persist-on-reset
+
+The property was untested on this variant.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/qtest/ds1339-test.c | 56 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+
+diff --git a/tests/qtest/ds1339-test.c b/tests/qtest/ds1339-test.c
+index 12562eff5f..a1b5afb331 100644
+--- a/tests/qtest/ds1339-test.c
++++ b/tests/qtest/ds1339-test.c
+@@ -8,7 +8,10 @@
+ 
+ #include "qemu/osdep.h"
+ #include "qemu/bcd.h"
++#include "libqtest.h"
++#include "libqtest-single.h"
+ #include "libqos/i2c.h"
++#include "qobject/qdict.h"
+ 
+ #define DS1339_ADDR 0x68
+ 
+@@ -426,6 +429,52 @@ static void test_alarm_registers(void *obj, void *data,
+     }
+ }
+ 
++/* A reset restores the power-on state, unless persist-on-reset is set. */
++static void check_reset(QI2CDevice *i2cdev, bool persists)
++{
++    uint8_t year = i2c_get8(i2cdev, DS1339_YEAR);
++    /* A year the clock is not already showing, so the check discriminates. */
++    uint8_t marker = year == 0x42 ? 0x77 : 0x42;
++    QDict *rsp;
++
++    i2c_set8(i2cdev, DS1339_ALARM1, 0xa5);
++    i2c_set8(i2cdev, DS1339_STATUS, 0x00);
++    i2c_set8(i2cdev, DS1339_YEAR, marker);
++    g_assert_cmphex(i2c_get8(i2cdev, DS1339_ALARM1), ==, 0xa5);
++    g_assert_cmphex(i2c_get8(i2cdev, DS1339_STATUS), ==, 0x00);
++    g_assert_cmphex(i2c_get8(i2cdev, DS1339_YEAR), ==, marker);
++
++    rsp = qmp("{ 'execute': 'system_reset' }");
++    g_assert(qdict_haskey(rsp, "return"));
++    qobject_unref(rsp);
++    qmp_eventwait("RESET");
++
++    if (persists) {
++        g_assert_cmphex(i2c_get8(i2cdev, DS1339_ALARM1), ==, 0xa5);
++        g_assert_cmphex(i2c_get8(i2cdev, DS1339_STATUS), ==, 0x00);
++        g_assert_cmphex(i2c_get8(i2cdev, DS1339_YEAR), ==, marker);
++    } else {
++        g_assert_cmphex(i2c_get8(i2cdev, DS1339_ALARM1), ==, 0x00);
++        g_assert_cmphex(i2c_get8(i2cdev, DS1339_CONTROL), ==, 0x18);
++        g_assert_cmphex(i2c_get8(i2cdev, DS1339_STATUS), ==,
++                        DS1339_STATUS_OSF);
++        /* Back on host time, which is where the year came from. */
++        g_assert_cmphex(i2c_get8(i2cdev, DS1339_YEAR), ==, year);
++    }
++}
++
++/* Without persist-on-reset, a reset takes the part back to power-on. */
++static void test_reset_clears(void *obj, void *data, QGuestAllocator *alloc)
++{
++    check_reset((QI2CDevice *)obj, false);
++}
++
++/* With persist-on-reset, the registers and the clock survive a reset. */
++static void test_reset_persists(void *obj, void *data, QGuestAllocator *alloc)
++{
++    check_reset((QI2CDevice *)obj, true);
++}
++
+ static void ds1339_register_nodes(void)
+ {
+     QOSGraphEdgeOptions opts = {
+@@ -459,6 +508,13 @@ static void ds1339_register_nodes(void)
+     qos_add_test("block-wrap", "ds1339", test_block_wrap, NULL);
+     qos_add_test("alarm-registers", "ds1339", test_alarm_registers,
+                  NULL);
++    qos_add_test("reset-clears", "ds1339", test_reset_clears, NULL);
++
++    opts.extra_device_opts = "address=0x68,persist-on-reset=on";
++    qos_node_create_driver_named("ds1339-persist", "ds1339", i2c_device_create);
++    qos_node_consumes("ds1339-persist", "i2c-bus", &opts);
++
++    qos_add_test("reset-persists", "ds1339-persist", test_reset_persists, NULL);
+ }
+ 
+ libqos_init(ds1339_register_nodes);
+-- 
+2.53.0-Meta
+

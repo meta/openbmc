@@ -1,0 +1,225 @@
+From 680971c972acb4e82e322e8e4d160341ef4eccc5 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Fri, 7 Aug 2026 17:43:53 +0200
+Subject: [PATCH] hw/arm: ventura: add Facebook Ventura BMC machine
+
+Ventura is an AST2600-based rack management controller for a
+liquid-cooled compute rack. Model the board from its device tree
+(aspeed-bmc-facebook-ventura.dts) so OpenBMC images built for it can be
+booted and exercised under QEMU.
+
+The board uses TMP75 temperature sensors, ADC128D818 ADCs, PCA9555 IO
+expanders, PCA9548 I2C muxes and AT24C EEPROMs.
+
+The mux channels fan out to the compute and NVS trays, the fan boards,
+the rear I/O and LED boards, and the FRU EEPROMs for the RMC, SCM and
+BSM.
+
+Every device the Ventura device tree describes and QEMU already models
+is instantiated. The remaining ones (MAX11617 ADCs, the NCT7363 fan
+controller, XDP710 and LTC4286 power monitors, MAX31790 fan
+controllers, the PCF8563 RTC and IPMB) have no QEMU model and are left
+documented as comments.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ docs/system/arm/aspeed.rst      |   1 +
+ hw/arm/aspeed_ast2600_ventura.c | 161 ++++++++++++++++++++++++++++++++
+ hw/arm/meson.build              |   1 +
+ 3 files changed, 163 insertions(+)
+ create mode 100644 hw/arm/aspeed_ast2600_ventura.c
+
+diff --git a/docs/system/arm/aspeed.rst b/docs/system/arm/aspeed.rst
+index b011ceca0d..c95a95b8b2 100644
+--- a/docs/system/arm/aspeed.rst
++++ b/docs/system/arm/aspeed.rst
+@@ -40,6 +40,7 @@ AST2600 SoC based machines :
+ - ``anacapa-bmc``          Facebook Anacapa BMC
+ - ``minerva-bmc``          Facebook Minerva BMC
+ - ``harma-bmc``            Facebook Harma BMC
++- ``ventura-bmc``          Facebook Ventura BMC
+ - ``yosemite5-bmc``        Facebook Yosemite 5 BMC
+ - ``gb200nvl-bmc``         Nvidia GB200nvl BMC
+ 
+diff --git a/hw/arm/aspeed_ast2600_ventura.c b/hw/arm/aspeed_ast2600_ventura.c
+new file mode 100644
+index 0000000000..8013a9f992
+--- /dev/null
++++ b/hw/arm/aspeed_ast2600_ventura.c
+@@ -0,0 +1,161 @@
++/*
++ * Facebook Ventura BMC
++ *
++ * Copyright (c) 2026 Meta Platforms, Inc. and affiliates.
++ *
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ *
++ * Current limitations: the following devices from the device tree have no
++ * QEMU model and are therefore not emulated:
++ *   - maxim,max11617 ADCs
++ *   - maxim,max31790 / nuvoton,nct7363 fan controllers
++ *   - infineon,xdp710 power monitors
++ *   - lltc,ltc4286 hot-swap controllers
++ *   - nxp,pcf8563 RTC
++ *   - infineon,slb9670 TPM (bit-banged SPI)
++ *   - ipmb-dev IPMB interface
++ */
++
++#include "qemu/osdep.h"
++#include "hw/arm/aspeed.h"
++#include "hw/arm/aspeed_soc.h"
++#include "hw/i2c/i2c_mux_pca954x.h"
++#include "hw/gpio/pca9552.h"
++#include "hw/nvram/eeprom_at24c.h"
++#include "hw/sensor/adc128d818.h"
++#include "hw/sensor/tmp105.h"
++
++/* Ventura hardware values. */
++#define VENTURA_BMC_HW_STRAP1 0x00002002
++#define VENTURA_BMC_HW_STRAP2 0x00000801
++#define VENTURA_BMC_RAM_SIZE (2 * GiB)
++
++/*
++ * Fan board: an ADC, an I/O expander driving the fan LEDs and reporting
++ * fan presence, a second ADC and the board FRU. Two are fitted, on
++ * adjacent channels of the i2c3 mux.
++ */
++static void ventura_fan_board_init(I2CBus *bus)
++{
++    /* adc@1f - ti,adc128d818 (mode 1) */
++    i2c_slave_create_simple(bus, TYPE_ADC128D818, 0x1f);
++    /* gpio@21 - nxp,pca9555 */
++    i2c_slave_create_simple(bus, TYPE_PCA9555, 0x21);
++    /* adc@35 - maxim,max11617 (no model) */
++    /* eeprom@56 - atmel,24c128 (fan board FRU) */
++    at24c_eeprom_init(bus, 0x56, 16 * KiB);
++}
++
++static void ventura_bmc_i2c_init(AspeedMachineState *bmc)
++{
++    /* Reference: aspeed-bmc-facebook-ventura.dts */
++
++    AspeedSoCState *soc = bmc->soc;
++    I2CBus *i2c[16] = {};
++    I2CSlave *mux;
++
++    for (unsigned idx = 0; idx < ARRAY_SIZE(i2c); idx++) {
++        i2c[idx] = aspeed_i2c_get_bus(&soc->i2c, idx);
++    }
++
++    /* &i2c0..&i2c2 - i2c-mux@77 PCA9548, channels reserved for trays */
++    i2c_slave_create_simple(i2c[0], TYPE_PCA9548, 0x77);
++    i2c_slave_create_simple(i2c[1], TYPE_PCA9548, 0x77);
++    i2c_slave_create_simple(i2c[2], TYPE_PCA9548, 0x77);
++
++    /* &i2c3 - i2c-mux@77 PCA9548 (fan and rear I/O boards) */
++    mux = i2c_slave_create_simple(i2c[3], TYPE_PCA9548, 0x77);
++    /* channels 0-2 - empty */
++    /* channels 3, 4 - fan boards 0 and 1 */
++    ventura_fan_board_init(pca954x_i2c_get_bus(mux, 3));
++    ventura_fan_board_init(pca954x_i2c_get_bus(mux, 4));
++    /* channel 5 */
++    /* pwm@20 - maxim,max31790 (no model) */
++    /* hwmon@23 - nuvoton,nct7363 (no model) */
++    /* channel 6 - eeprom@56 atmel,24c128 (rear I/O board FRU) */
++    at24c_eeprom_init(pca954x_i2c_get_bus(mux, 6), 0x56, 16 * KiB);
++    /* channel 7 - empty */
++
++    /* &i2c4 - empty */
++
++    /* &i2c5 */
++    /* temperature-sensor@4c..4f - ti,tmp75 (voltage regulators, brick) */
++    i2c_slave_create_simple(i2c[5], TYPE_TMP75, 0x4c);
++    i2c_slave_create_simple(i2c[5], TYPE_TMP75, 0x4d);
++    i2c_slave_create_simple(i2c[5], TYPE_TMP75, 0x4e);
++    i2c_slave_create_simple(i2c[5], TYPE_TMP75, 0x4f);
++    /* eeprom@54 - atmel,24c128 (RMC FRU) */
++    at24c_eeprom_init(i2c[5], 0x54, 16 * KiB);
++
++    /* &i2c6 */
++    /* gpio@20/21/22 - nxp,pca9555 */
++    i2c_slave_create_simple(i2c[6], TYPE_PCA9555, 0x20);
++    i2c_slave_create_simple(i2c[6], TYPE_PCA9555, 0x21);
++    i2c_slave_create_simple(i2c[6], TYPE_PCA9555, 0x22);
++    /* rtc@51 - nxp,pcf8563 (no model) */
++
++    /* &i2c7 - ipmb@10 ipmb-dev (no model) */
++    /* &i2c8 - disabled */
++
++    /* &i2c9 */
++    /* temperature-sensor@4b - ti,tmp75 (SCM) */
++    i2c_slave_create_simple(i2c[9], TYPE_TMP75, 0x4b);
++    /* eeprom@50 - atmel,24c128 (SCM FRU) */
++    at24c_eeprom_init(i2c[9], 0x50, 16 * KiB);
++    /* eeprom@56 - atmel,24c64 (BSM FRU) */
++    at24c_eeprom_init(i2c[9], 0x56, 8 * KiB);
++
++    /* &i2c10 */
++    /* gpio@10/11 - nxp,pca9555 (power good, pump control) */
++    i2c_slave_create_simple(i2c[10], TYPE_PCA9555, 0x10);
++    i2c_slave_create_simple(i2c[10], TYPE_PCA9555, 0x11);
++    /* power-monitor@14 - infineon,xdp710 (no model) */
++    /* gpio@19/1a/1b - nxp,pca9555 (RPU link, leak sensors) */
++    i2c_slave_create_simple(i2c[10], TYPE_PCA9555, 0x19);
++    i2c_slave_create_simple(i2c[10], TYPE_PCA9555, 0x1a);
++    i2c_slave_create_simple(i2c[10], TYPE_PCA9555, 0x1b);
++    /* power-monitor@44 - lltc,ltc4286 (no model) */
++
++    /* &i2c11..&i2c13 - disabled */
++    /* &i2c14 - empty */
++
++    /* &i2c15 */
++    /* gpio@20/21/22/24/25/26 - nxp,pca9555 (tray LEDs) */
++    i2c_slave_create_simple(i2c[15], TYPE_PCA9555, 0x20);
++    i2c_slave_create_simple(i2c[15], TYPE_PCA9555, 0x21);
++    i2c_slave_create_simple(i2c[15], TYPE_PCA9555, 0x22);
++    i2c_slave_create_simple(i2c[15], TYPE_PCA9555, 0x24);
++    i2c_slave_create_simple(i2c[15], TYPE_PCA9555, 0x25);
++    i2c_slave_create_simple(i2c[15], TYPE_PCA9555, 0x26);
++    /* eeprom@56 - atmel,24c128 (LED board FRU) */
++    at24c_eeprom_init(i2c[15], 0x56, 16 * KiB);
++}
++
++static void aspeed_machine_ventura_class_init(ObjectClass *oc,
++                                              const void *data)
++{
++    MachineClass *mc = MACHINE_CLASS(oc);
++    AspeedMachineClass *amc = ASPEED_MACHINE_CLASS(oc);
++
++    mc->desc       = "Facebook Ventura BMC (Cortex-A7)";
++    amc->soc_name  = "ast2600-a3";
++    amc->hw_strap1 = VENTURA_BMC_HW_STRAP1;
++    amc->hw_strap2 = VENTURA_BMC_HW_STRAP2;
++    amc->fmc_model = "mx66l1g45g";
++    amc->spi_model = NULL;
++    amc->num_cs    = 2;
++    amc->macs_mask = ASPEED_MAC3_ON;
++    amc->i2c_init  = ventura_bmc_i2c_init;
++    mc->default_ram_size = VENTURA_BMC_RAM_SIZE;
++    aspeed_machine_class_init_cpus_defaults(mc);
++}
++
++static const TypeInfo aspeed_ast2600_ventura_types[] = {
++    {
++        .name          = MACHINE_TYPE_NAME("ventura-bmc"),
++        .parent        = TYPE_ASPEED_MACHINE,
++        .class_init    = aspeed_machine_ventura_class_init,
++    }
++};
++
++DEFINE_TYPES(aspeed_ast2600_ventura_types)
+diff --git a/hw/arm/meson.build b/hw/arm/meson.build
+index 79f366127a..388538566e 100644
+--- a/hw/arm/meson.build
++++ b/hw/arm/meson.build
+@@ -69,6 +69,7 @@ arm_common_ss.add(when: 'CONFIG_ASPEED_SOC', if_true: files(
+   'aspeed_ast2600_rainier.c',
+   'aspeed_ast2600_santabarbara.c',
+   'aspeed_ast2600_sanmiguel.c',
++  'aspeed_ast2600_ventura.c',
+   'aspeed_ast2600_yosemite5.c',
+   'aspeed_ast10x0.c',
+   'aspeed_ast10x0_evb.c',
+-- 
+2.53.0-Meta
+

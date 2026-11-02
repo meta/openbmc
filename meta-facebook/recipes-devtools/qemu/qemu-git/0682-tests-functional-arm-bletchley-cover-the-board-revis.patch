@@ -1,0 +1,122 @@
+From 232397185e1d23a1c749a31f9016e1b009c1b411 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Mon, 7 Sep 2026 09:54:59 +0200
+Subject: [PATCH 682/682] tests/functional/arm: bletchley: cover the board
+ revision
+
+Boot the machine a second time with the other revision selected and
+check both revision-specific pieces: the hardware strap the board
+presents, and the FRU images the guest reads back, whose revision
+shows in the board and product names, in the MAC address, and in the
+common header area pointers. The default-revision test gains the
+mirror assertions so the two sets cannot silently converge.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/functional/arm/meson.build              |  2 +-
+ tests/functional/arm/test_aspeed_bletchley.py | 63 +++++++++++++++++++
+ 2 files changed, 64 insertions(+), 1 deletion(-)
+
+diff --git a/tests/functional/arm/meson.build b/tests/functional/arm/meson.build
+index dd1ddf7f6f..a78d498d44 100644
+--- a/tests/functional/arm/meson.build
++++ b/tests/functional/arm/meson.build
+@@ -13,7 +13,7 @@ test_arm_timeouts = {
+   'aspeed_ast2600_sdk_515' : 720,
+   'aspeed_ast2600_sdk_otp' : 720,
+   'aspeed_anacapa' : 480,
+-  'aspeed_bletchley' : 480,
++  'aspeed_bletchley' : 720,
+   'aspeed_catalina' : 480,
+   'aspeed_gb200nvl_bmc' : 480,
+   'aspeed_minerva' : 480,
+diff --git a/tests/functional/arm/test_aspeed_bletchley.py b/tests/functional/arm/test_aspeed_bletchley.py
+index 5a60b24b3d..7a351e5582 100755
+--- a/tests/functional/arm/test_aspeed_bletchley.py
++++ b/tests/functional/arm/test_aspeed_bletchley.py
+@@ -5,6 +5,7 @@
+ # SPDX-License-Identifier: GPL-2.0-or-later
+ 
+ from qemu_test import Asset
++from qemu_test import exec_command_and_wait_for_pattern
+ from aspeed import AspeedTest
+ 
+ 
+@@ -14,12 +15,74 @@ class BletchleyMachine(AspeedTest):
+         'https://github.com/legoater/qemu-aspeed-boot/raw/master/images/bletchley-bmc/openbmc-20250128071329/obmc-phosphor-image-bletchley-20250128071329.static.mtd.xz',
+         'db21d04d47d7bb2a276f59d308614b4dfb70b9c7c81facbbca40a3977a2d8844')
+ 
++    PROMPT = "root@bletchley:~#"
++
++    SCU500 = 0x1e6e2500
++    """Hardware strap register 1."""
++
++    HW_STRAP1 = {"1.0": "0x00002000", "1.5": "0x00002002"}
++    """Strap value each revision presents."""
++
++    FRU_HEADERS = {
++        "1.0": {"7-0054": "01 00 01 07", "6-0056": "01 00 00 01"},
++        "1.5": {"7-0054": "01 00 01 08", "6-0056": "01 00 01 02"},
++    }
++    """Leading common-header bytes each revision presents: the format
++    version and the internal-use, chassis and board area offsets."""
++
+     def test_arm_ast2600_bletchley_openbmc(self):
++        self.boot_openbmc()
++        self.check_revision("1.0", "Bletchley Chassis Controller-Class 1",
++                            "Bletchley MP", "C01850")
++
++    def test_arm_ast2600_bletchley_v15_openbmc(self):
++        self.boot_openbmc("1.5")
++        self.check_revision("1.5",
++                            "Bletchley v1.5 Chassis Controller-Class 1",
++                            "Bletchley v1.5 MP", "9082C3")
++
++    def boot_openbmc(self, revision=None):
+         image_path = self.uncompress(self.ASSET_BLETCHLEY_FLASH)
+ 
++        if revision:
++            # set_machine() must run first: the VM is created on the
++            # first self.vm access.
++            self.set_machine('bletchley-bmc')
++            self.vm.add_args('-machine', f'board-revision={revision}')
++
+         self.do_test_arm_aspeed_openbmc('bletchley-bmc', image=image_path,
+                                         uboot='2019.04', cpu_id='0xf00',
+                                         soc='AST2600 rev A3')
+ 
++        exec_command_and_wait_for_pattern(self, 'root', 'Password:')
++        exec_command_and_wait_for_pattern(self, '0penBmc', self.PROMPT)
++
++    def check_revision(self, revision, cc_board, bsm_product, mac_oui):
++        self.assertIn(self.HW_STRAP1[revision],
++                      self.vm.cmd('human-monitor-command',
++                                  command_line=f'xp/1xw {self.SCU500:#x}'))
++
++        chassis = self.read_eeprom_strings("7-0054")
++        self.assertIn(cc_board.encode(), chassis)
++        self.assertIn(mac_oui.encode(), chassis)
++        self.assertIn(bsm_product.encode(),
++                      self.read_eeprom_strings("6-0056"))
++        if revision == "1.0":
++            self.assertNotIn(b"v1.5", chassis)
++
++        for dev, header in self.FRU_HEADERS[revision].items():
++            self.assertIn(header.encode(), self.read_eeprom_header(dev))
++
++    def read_eeprom_strings(self, dev):
++        return exec_command_and_wait_for_pattern(
++            self, f"strings -n 4 /sys/bus/i2c/devices/{dev}/eeprom",
++            self.PROMPT)
++
++    def read_eeprom_header(self, dev):
++        return exec_command_and_wait_for_pattern(
++            self, f"hexdump -C -n 4 /sys/bus/i2c/devices/{dev}/eeprom",
++            self.PROMPT)
++
++
+ if __name__ == '__main__':
+     AspeedTest.main()
+-- 
+2.53.0-Meta
+

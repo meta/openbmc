@@ -1,0 +1,153 @@
+From 1f9c2df20b00297731ba810d15adf1dd992bd4f3 Mon Sep 17 00:00:00 2001
+From: Zinc Lim <zinclim@meta.com>
+Date: Thu, 20 Aug 2026 19:02:02 -0700
+Subject: [PATCH] hw/i2c/aspeed_i2c: only clear target status the ISR has seen
+
+A packet mode PKT_CMD_DONE acknowledge clears the whole low word of
+I2CS_INTR_STS, not the bits the guest wrote. Target status is latched
+from the main loop, so it can appear after the ISR sampled the register
+and be acknowledged away before the ISR ever decodes it.
+
+The target ISR arms the RX pool before it acknowledges:
+
+  writel(TRIGGER | RX_BUFF_EN, I2CS_CMD_STS);   /* releases the ACK */
+  writel(PKT_DONE, I2CS_ISR);                   /* clears the low word */
+
+Arming releases the withheld bus ACK, so the initiator runs again while
+the vCPU is still between those two writes. During an MCTP firmware
+update that gap is typically 25us but occasionally exceeds 400us, long
+enough for the remaining bytes and the STOP to arrive. I2C_FINISH sets
+PKT_CMD_DONE | RX_DONE | NORMAL_STOP and the acknowledge wipes all
+three. Having sampled a status without STOP, the driver still believes
+the transfer is running, never clears target_operate, and rejects every
+later transfer before it reaches the controller:
+
+  i2c i2c-4: __i2c_transfer failed -16
+
+Nothing recovers from that state.
+
+Record what the ISR read out of I2CS_INTR_STS and skip the acknowledge
+when status has been latched since. The interrupt stays asserted and
+the ISR takes another round to decode it. The master side handles the
+same hazard with pending_intr_sts. Acknowledging without reading first
+keeps the old clear-everything behaviour.
+
+Keeping WAIT_RX_DMA is not enough on its own: PKT_CMD_DONE is what
+makes the target interrupt deliverable, so the ack re-asserts it while
+WAIT_RX_DMA is pending. Otherwise the re-arm request is stranded with
+no interrupt to report it, deadlocking against the withheld bus ACK.
+
+Signed-off-by: Zinc Lim <zinclim@meta.com>
+---
+ hw/i2c/aspeed_i2c.c         | 38 +++++++++++++++++++++++++++++++------
+ include/hw/i2c/aspeed_i2c.h |  9 +++++++++
+ 2 files changed, 41 insertions(+), 6 deletions(-)
+
+diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
+index ec91d51ea3..cb1e15bebc 100644
+--- a/hw/i2c/aspeed_i2c.c
++++ b/hw/i2c/aspeed_i2c.c
+@@ -164,11 +164,15 @@ static uint64_t aspeed_i2c_bus_new_read(AspeedI2CBus *bus, hwaddr offset,
+     case A_I2CS_CMD:
+     case A_I2CS_INTR_CTRL:
+     case A_I2CS_DMA_LEN_STS:
+-    case A_I2CS_INTR_STS:
+     case A_I2CC_BYTE_DATA_LOG:
+     case A_I2CC_VERSION_CTRL:
+         value = bus->regs[offset / sizeof(*bus->regs)];
+         break;
++    case A_I2CS_INTR_STS:
++        value = bus->regs[R_I2CS_INTR_STS];
++        /* Remember what the target ISR sampled; see the write handler. */
++        bus->slave_intr_sts_seen = value;
++        break;
+     case A_I2CC_DMA_ADDR:
+         value = extract64(bus->dma_dram_offset, 0, 32);
+         break;
+@@ -758,6 +762,8 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+     bool w1t;
+     uint32_t old_intr;
+     uint32_t cmd_intr;
++    uint32_t seen;
++    uint32_t late;
+ 
+     trace_aspeed_i2c_bus_write(bus->id, offset, size, value);
+ 
+@@ -939,15 +945,34 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+         break;
+ 
+     case A_I2CS_INTR_STS:
++        seen = bus->slave_intr_sts_seen;
++        bus->slave_intr_sts_seen = UINT32_MAX;
+         if (ARRAY_FIELD_EX32(bus->regs, I2CS_INTR_CTRL, PKT_CMD_DONE)) {
++            /*
++             * This ack clears the whole low word, not the bits written, so
++             * status latched after the ISR sampled the register would be lost
++             * undecoded. Keep it and let the ISR take another round.
++             */
++            late = bus->regs[R_I2CS_INTR_STS] & ~ASPEED_I2CS_PKT_ACK_KEEP &
++                   ~seen;
++
+             if (ARRAY_FIELD_EX32(bus->regs, I2CS_INTR_STS, PKT_CMD_DONE) &&
+-                FIELD_EX32(value, I2CS_INTR_STS, PKT_CMD_DONE)) {
++                FIELD_EX32(value, I2CS_INTR_STS, PKT_CMD_DONE) && !late) {
++                /*
++                 * Keeps WAIT_RX_DMA: it gates the bus ACK withheld in
++                 * A_I2CS_CMD, so only arming RX_BUFF_EN or ending the transfer
++                 * may clear it. WAIT_TX_DMA has no such role and is cleared.
++                 */
++                bus->regs[R_I2CS_INTR_STS] &= ASPEED_I2CS_PKT_ACK_KEEP;
+                 /*
+-                 * Also clears WAIT_TX_DMA, but not WAIT_RX_DMA: it gates the
+-                 * bus ACK withheld in A_I2CS_CMD, so only arming RX_BUFF_EN
+-                 * or ending the transfer may clear it.
++                 * WAIT_RX_DMA survives the ack, but PKT_CMD_DONE is what makes
++                 * the target interrupt deliverable. Dropping it here strands a
++                 * pending re-arm request the driver can never be told about,
++                 * deadlocking against the withheld bus ACK.
+                  */
+-                bus->regs[R_I2CS_INTR_STS] &= 0xfdfc0000;
++                if (ARRAY_FIELD_EX32(bus->regs, I2CS_INTR_STS, WAIT_RX_DMA)) {
++                    ARRAY_FIELD_DP32(bus->regs, I2CS_INTR_STS, PKT_CMD_DONE, 1);
++                }
+             }
+         } else {
+             /* Same invariant on the explicit write-to-clear path. */
+@@ -1740,6 +1765,7 @@ static void aspeed_i2c_bus_reset_hold(Object *obj, ResetType type)
+ 
+     memset(s->regs, 0, sizeof(s->regs));
+     s->pending_intr_sts = 0;
++    s->slave_intr_sts_seen = UINT32_MAX;
+     i2c_end_transfer(s->bus);
+     /*
+      * I2CC_VERSION_CTRL resets to all-ones. FUNC_CFG_DMA_EN is therefore set,
+diff --git a/include/hw/i2c/aspeed_i2c.h b/include/hw/i2c/aspeed_i2c.h
+index 3d5bf4aeb3..ece92897e0 100644
+--- a/include/hw/i2c/aspeed_i2c.h
++++ b/include/hw/i2c/aspeed_i2c.h
+@@ -201,6 +201,8 @@ REG32(I2CS_INTR_STS, 0x24)
+     FIELD(I2CS_INTR_STS, PKT_CMD_DONE, 16, 1)
+     /* 14:0 shared with I2CD_INTR_STS[14:0] */
+     FIELD(I2CS_INTR_STS, SLAVE_ADDR_RX_MATCH, 7, 1)
++/* Bits a packet-mode PKT_CMD_DONE ack preserves; it clears the rest. */
++#define ASPEED_I2CS_PKT_ACK_KEEP 0xfdfc0000
+ REG32(I2CS_CMD, 0x28)
+     FIELD(I2CS_CMD, W1_CTRL, 31, 1)
+     FIELD(I2CS_CMD, PKT_MODE_ACTIVE_ADDR, 17, 2)
+@@ -265,6 +267,13 @@ struct AspeedI2CBus {
+     uint32_t pending_intr_sts;
+     uint8_t pool[ASPEED_I2C_BUS_POOL_SIZE];
+     uint64_t dma_dram_offset;
++
++    /*
++     * I2CS_INTR_STS as the target ISR last sampled it, all-ones if unread
++     * since the previous ack. Not in vmstate: all-ones is the old
++     * ack-everything behaviour.
++     */
++    uint32_t slave_intr_sts_seen;
+ };
+ 
+ struct AspeedI2CState {
+-- 
+2.52.0
+

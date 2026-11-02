@@ -1,0 +1,174 @@
+From 4994520ad0d64c974e97a1dada04b80b465606a1 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Tue, 1 Sep 2026 12:00:00 +0200
+Subject: [PATCH] slirp: pin the guest address with a static DHCP lease
+
+QEMU gives the emulated BMC its network through slirp, a user-mode networking
+library. Here it is set up to put the guest on a private network and forward a
+couple of host ports into it, and those forwarded ports are the only way in:
+anything on the host that wants to reach the BMC -- a browser, curl, ssh, the
+robot rig -- goes through them. None of it corresponds to anything on the
+board. Among the services slirp offers on that private network is a DHCP
+server, and it hands out addresses in the order clients ask for them: first
+come, first served, starting at 10.0.2.15.
+
+That ordering is the problem, and it has no counterpart in real hardware. On a
+machine with an NC-SI NIC the BMC does not keep one identity for the whole boot.
+It comes up with the MAC the controller powers on with and asks for an address.
+The NIC then hands it a different MAC over NC-SI, so it asks again -- as far as
+the DHCP server is concerned, a second, unrelated client -- and is given
+whichever address happens to be free. Which of the two MACs gets there first is
+a matter of timing; on catalina the window is about thirty milliseconds. The
+address the BMC ends up holding is therefore not predictable from one run to the
+next.
+
+The host side, by contrast, is fixed. The forwarded ports carrying Redfish and
+SSH are bound to one guest address when QEMU starts and never move. When the BMC
+lands on the other address, nothing on the host can reach it. The machine is up
+and bmcweb is answering, but the test rig sees silence and reports a broken BMC.
+Catalina failed three of twenty-four robot runs this way.
+
+Real hardware does not have this failure mode. There is no first-come pool: the
+BMC is given its address by a DHCP server that knows it by MAC, or configured
+statically, and whoever wants to reach it uses that address regardless of what
+order anything happened in.
+
+So give slirp what an ordinary DHCP server has -- a static lease. Bind a MAC to
+an address: that MAC always gets it, and no other client ever does. The start
+script binds the address the ports are forwarded to, to the MAC the BMC ends up
+with. Whichever request arrives first, the BMC is reachable. The transient MAC
+still gets a lease of its own, just not that one, so nothing the guest does is
+hidden from the test.
+
+Two notes on the shape of it. The lease is a generic MAC-to-address binding that
+knows nothing about NC-SI; the start script holds the platform knowledge. And
+the start script now names the guest address once and passes it to all three
+places that need it -- where the pool begins, the lease, and the forwarding
+rules -- rather than leaving any of them to a default, so they cannot disagree.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ net/slirp.c   | 48 +++++++++++++++++++++++++++++++++++++++++++++++-
+ qapi/net.json |  5 ++++-
+ 2 files changed, 51 insertions(+), 2 deletions(-)
+
+diff --git a/net/slirp.c b/net/slirp.c
+index 75bc2d25e7..422487c898 100644
+--- a/net/slirp.c
++++ b/net/slirp.c
+@@ -107,6 +107,7 @@ static QTAILQ_HEAD(, SlirpState) slirp_stacks =
+ 
+ static int slirp_hostfwd(SlirpState *s, const char *redir_str, Error **errp);
+ static int slirp_guestfwd(SlirpState *s, const char *config_str, Error **errp);
++static int slirp_dhcp_lease(SlirpState *s, const char *lease_str, Error **errp);
+ 
+ #if defined(CONFIG_SMBD_COMMAND)
+ static int slirp_smb(SlirpState *s, const char *exported_dir,
+@@ -443,6 +444,7 @@ static int net_slirp_init(NetClientState *peer, const char *model,
+                           const char **dnssearch, const char *vdomainname,
+                           const char *tftp_server_name, uint32_t mfr_id,
+                           const char *oob_eth_addr_str,
++                          const strList *dhcp_lease,
+                           Error **errp)
+ {
+     /* default settings according to historic slirp */
+@@ -465,6 +467,7 @@ static int net_slirp_init(NetClientState *peer, const char *model,
+     int shift;
+     char *end;
+     struct slirp_config_str *config;
++    const strList *lease_str;
+     MACAddr oob_eth_addr = {};
+ 
+     if (!ipv4 && (vnetwork || vhost || vnameserver)) {
+@@ -693,6 +696,12 @@ static int net_slirp_init(NetClientState *peer, const char *model,
+     s->poll_notifier.notify = net_slirp_poll_notify;
+     main_loop_poll_add_notifier(&s->poll_notifier);
+ 
++    for (lease_str = dhcp_lease; lease_str; lease_str = lease_str->next) {
++        if (slirp_dhcp_lease(s, lease_str->value, errp) < 0) {
++            goto error;
++        }
++    }
++
+     for (config = slirp_configs; config; config = config->next) {
+         if (config->flags & SLIRP_CFG_HOSTFWD) {
+             if (slirp_hostfwd(s, config->str, errp) < 0) {
+@@ -814,6 +823,43 @@ void hmp_hostfwd_remove(MonitorHMP *hmp, const QDict *qdict)
+ }
+ #endif
+ 
++/* Bind one MAC to one DHCP address, given as MAC=IPv4. */
++static int slirp_dhcp_lease(SlirpState *s, const char *lease_str, Error **errp)
++{
++#ifndef SLIRP_HAVE_STATIC_LEASE
++    error_setg(errp, "dhcp-lease is not supported by this libslirp");
++    return -1;
++#else
++    const char *sep = strchr(lease_str, '=');
++    g_autofree char *macaddr_str = NULL;
++    struct in_addr addr;
++    MACAddr macaddr;
++
++    if (!sep) {
++        error_setg(errp, "Invalid dhcp-lease '%s', expected MAC=IPv4",
++                   lease_str);
++        return -1;
++    }
++
++    macaddr_str = g_strndup(lease_str, sep - lease_str);
++    if (net_parse_macaddr(macaddr.a, macaddr_str) < 0) {
++        error_setg(errp, "Invalid MAC address '%s' in dhcp-lease",
++                   macaddr_str);
++        return -1;
++    }
++    if (!inet_aton(sep + 1, &addr)) {
++        error_setg(errp, "Invalid IPv4 address '%s' in dhcp-lease", sep + 1);
++        return -1;
++    }
++    if (slirp_add_static_lease(s->slirp, macaddr.a, addr) < 0) {
++        error_setg_errno(errp, errno, "Cannot reserve %s for %s",
++                         sep + 1, macaddr_str);
++        return -1;
++    }
++    return 0;
++#endif
++}
++
+ static int slirp_hostfwd(SlirpState *s, const char *redir_str, Error **errp)
+ {
+     union {
+@@ -1350,7 +1396,7 @@ int net_init_slirp(const Netdev *netdev, const char *name,
+                          user->dns, user->ipv6_dns, user->smb,
+                          user->smbserver, dnssearch, user->domainname,
+                          user->tftp_server_name, user->mfr_id,
+-                         user->oob_eth_addr, errp);
++                         user->oob_eth_addr, user->dhcp_lease, errp);
+ 
+     while (slirp_configs) {
+         config = slirp_configs;
+diff --git a/qapi/net.json b/qapi/net.json
+index 4277a98af6..e27bef3633 100644
+--- a/qapi/net.json
++++ b/qapi/net.json
+@@ -359,6 +359,8 @@
+ # @oob-eth-addr: MAC Address allocated for an out-of-band management
+ #                controller, to be retrieved through NC-SI.
+ #
++# @dhcp-lease: Static DHCP lease, as MAC=IPv4, within the DHCP range.
++#
+ # Since: 1.2
+ ##
+ { 'struct': 'NetdevUserOptions',
+@@ -386,7 +388,8 @@
+     '*guestfwd':  ['NetdevUserGuestForward'],
+     '*tftp-server-name': 'str',
+     '*mfr-id':    'uint32',
+-    '*oob-eth-addr': 'str' } }
++    '*oob-eth-addr': 'str',
++    '*dhcp-lease': ['str'] } }
+ 
+ ##
+ # @NetdevTapOptions:
+-- 
+2.53.0-Meta
+

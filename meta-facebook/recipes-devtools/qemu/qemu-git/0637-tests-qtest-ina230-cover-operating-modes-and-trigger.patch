@@ -1,0 +1,132 @@
+From c10a870119c5281b7d10de6f401628159185e0d8 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Wed, 22 Jul 2026 17:27:57 +0200
+Subject: [PATCH 637/682] tests/qtest: ina230: cover operating modes and
+ triggered conversions
+
+Add coverage for the MODE field: power-down retains the last results,
+the shunt/bus channel-enable bits gate which registers track new inputs,
+triggered modes convert once per Config write, and bus-only mode still
+derives power from the retained current.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/qtest/ina230-test.c | 95 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 94 insertions(+), 1 deletion(-)
+
+diff --git a/tests/qtest/ina230-test.c b/tests/qtest/ina230-test.c
+index 36c899efee..f8b982686a 100644
+--- a/tests/qtest/ina230-test.c
++++ b/tests/qtest/ina230-test.c
+@@ -142,7 +142,97 @@ static void test_config_wmask(void *obj, void *data, QGuestAllocator *alloc)
+     g_assert_cmphex(i2c_get16(dev, REG_CONFIG), ==, 0x7FFF);
+ }
+ 
+-/* Shunt voltage register, including two's-complement negatives */
++/* Operating modes */
++static void test_modes(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++    static const struct {
++        uint8_t mode;
++        uint16_t shunt, bus, current, power;
++    } cases[] = {
++        /* Power-down: no conversion, every register retains the baseline */
++        { 0x0, 0x1F40, 0x2570, 0x2710, 0x12B8 },
++        { 0x4, 0x1F40, 0x2570, 0x2710, 0x12B8 },
++        /* Shunt only (continuous): shunt and current track the probe */
++        { 0x5, 0x0FA0, 0x2570, 0x1388, 0x12B8 },
++        /* Shunt and bus (continuous): every register tracks the probe */
++        { 0x7, 0x0FA0, 0x12C0, 0x1388, 0x04B0 },
++    };
++    size_t idx;
++
++    for (idx = 0; idx < ARRAY_SIZE(cases); idx++) {
++        i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++        i2c_set16(dev, REG_CALIBRATION, 0x0A00);
++        qmp_ina230_set("shunt-voltage", 20000000);
++        qmp_ina230_set("bus-voltage", 11980000);
++
++        i2c_set16(dev, REG_CONFIG, cases[idx].mode);
++        qmp_ina230_set("shunt-voltage", 10000000);
++        qmp_ina230_set("bus-voltage", 6000000);
++
++        g_assert_cmphex(i2c_get16(dev, REG_SHUNT), ==, cases[idx].shunt);
++        g_assert_cmphex(i2c_get16(dev, REG_BUS), ==, cases[idx].bus);
++        g_assert_cmphex(i2c_get16(dev, REG_CURRENT), ==, cases[idx].current);
++        g_assert_cmphex(i2c_get16(dev, REG_POWER), ==, cases[idx].power);
++    }
++}
++
++/*
++ * Triggered modes perform exactly one conversion per trigger, where the
++ * trigger is a Configuration-register write. Injected input changes
++ * between triggers are ignored until the next write.
++ */
++static void test_triggered(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++    i2c_set16(dev, REG_CALIBRATION, 0x0A00);
++
++    qmp_ina230_set("shunt-voltage", 20000000);
++    qmp_ina230_set("bus-voltage", 11980000);
++
++    i2c_set16(dev, REG_CONFIG, 0x03);
++    g_assert_cmphex(i2c_get16(dev, REG_SHUNT), ==, 0x1F40);
++    g_assert_cmphex(i2c_get16(dev, REG_BUS), ==, 0x2570);
++
++    qmp_ina230_set("shunt-voltage", 10000000);
++    qmp_ina230_set("bus-voltage", 6000000);
++    g_assert_cmphex(i2c_get16(dev, REG_SHUNT), ==, 0x1F40);
++    g_assert_cmphex(i2c_get16(dev, REG_BUS), ==, 0x2570);
++
++    i2c_set16(dev, REG_CONFIG, 0x03);
++    g_assert_cmphex(i2c_get16(dev, REG_SHUNT), ==, 0x0FA0);
++    g_assert_cmphex(i2c_get16(dev, REG_BUS), ==, 0x12C0);
++
++    i2c_set16(dev, REG_CONFIG, 0x07);
++    qmp_ina230_set("shunt-voltage", 20000000); /* A */
++    g_assert_cmphex(i2c_get16(dev, REG_SHUNT), ==, 0x1F40);
++}
++
++/*
++ * In a bus-only mode the current register is retained, but the power register
++ * is still refreshed on each bus conversion from that retained current.
++ */
++static void test_bus_only_power(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++    i2c_set16(dev, REG_CALIBRATION, 0x0A00);
++    qmp_ina230_set("shunt-voltage", 20000000);
++    qmp_ina230_set("bus-voltage", 11980000);
++    g_assert_cmphex(i2c_get16(dev, REG_CURRENT), ==, 0x2710);
++
++    i2c_set16(dev, REG_CONFIG, 0x06);
++    qmp_ina230_set("bus-voltage", 6000000);
++
++    g_assert_cmphex(i2c_get16(dev, REG_CURRENT), ==, 0x2710);
++    g_assert_cmphex(i2c_get16(dev, REG_BUS), ==, 0x12C0);
++    g_assert_cmphex(i2c_get16(dev, REG_POWER), ==, 0x0960);
++}
++
++/* Shunt voltage register */
+ static void test_shunt_injection(void *obj, void *data, QGuestAllocator *alloc)
+ {
+     QI2CDevice *dev = (QI2CDevice *)obj;
+@@ -377,6 +467,9 @@ static void ina230_register_nodes(void)
+     qos_add_test("defaults", "ina230", test_defaults, NULL);
+     qos_add_test("soft-reset", "ina230", test_soft_reset, NULL);
+     qos_add_test("config-wmask", "ina230", test_config_wmask, NULL);
++    qos_add_test("modes", "ina230", test_modes, NULL);
++    qos_add_test("triggered", "ina230", test_triggered, NULL);
++    qos_add_test("bus-only-power", "ina230", test_bus_only_power, NULL);
+     qos_add_test("shunt-injection", "ina230", test_shunt_injection, NULL);
+     qos_add_test("bus-injection", "ina230", test_bus_injection, NULL);
+     qos_add_test("shunt-limits", "ina230", test_shunt_limits, NULL);
+-- 
+2.53.0-Meta
+

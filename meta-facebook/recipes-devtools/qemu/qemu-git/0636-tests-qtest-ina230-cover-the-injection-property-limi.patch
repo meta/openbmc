@@ -1,0 +1,109 @@
+From 9f22c4a31aae3af80e2f37b8faf4fbe7616b837e Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Tue, 21 Jul 2026 15:29:01 +0200
+Subject: [PATCH 636/682] tests/qtest: ina230: cover the injection-property
+ limits
+
+Verify that the extremes of the shunt- and bus-voltage injection ranges
+round-trip through the QOM property without truncation or wraparound,
+and that values just outside are rejected rather than silently wrapped.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/qtest/ina230-test.c | 59 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
+
+diff --git a/tests/qtest/ina230-test.c b/tests/qtest/ina230-test.c
+index 1c55028fcb..36c899efee 100644
+--- a/tests/qtest/ina230-test.c
++++ b/tests/qtest/ina230-test.c
+@@ -47,6 +47,11 @@
+ #define SHUNT_LSB_NV        2500
+ #define BUS_LSB_UV          1250
+ 
++/* Injection-property limits (see ina230.c) */
++#define SHUNT_MIN_NV        (-81920000)
++#define SHUNT_MAX_NV        81917500
++#define BUS_MAX_UV          36000000
++
+ #define DIE_ID_VAL          0x2310
+ 
+ /* QMP helpers for injecting the physical inputs */
+@@ -76,6 +81,18 @@ static int qmp_ina230_get(const char *property)
+     return ret;
+ }
+ 
++/* A qom-set expected to be rejected (value outside the supported range) */
++static void qmp_ina230_set_fail(const char *property, int64_t value)
++{
++    QDict *resp;
++
++    resp = qmp("{ 'execute': 'qom-set', 'arguments':"
++               " { 'path': %s, 'property': %s, 'value': %lld } }",
++               INA230_TEST_ID, property, (long long)value);
++    g_assert(qdict_haskey(resp, "error"));
++    qobject_unref(resp);
++}
++
+ /* Power-on-reset default values and the Die ID */
+ static void test_defaults(void *obj, void *data, QGuestAllocator *alloc)
+ {
+@@ -307,6 +324,46 @@ static void test_cvrf(void *obj, void *data, QGuestAllocator *alloc)
+     g_assert_cmphex(i2c_get16(dev, REG_MASK_ENABLE) & ME_CVRF, ==, 0);
+ }
+ 
++/* Shunt-voltage injection limits */
++static void test_shunt_limits(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++
++    qmp_ina230_set("shunt-voltage", SHUNT_MAX_NV);
++    g_assert_cmphex(i2c_get16(dev, REG_SHUNT), ==, 0x7FFF);
++    g_assert_cmpint(qmp_ina230_get("shunt-voltage"), ==, SHUNT_MAX_NV);
++
++    qmp_ina230_set("shunt-voltage", SHUNT_MIN_NV);
++    g_assert_cmphex(i2c_get16(dev, REG_SHUNT), ==, 0x8000);
++    g_assert_cmpint(qmp_ina230_get("shunt-voltage"), ==, SHUNT_MIN_NV);
++
++    qmp_ina230_set_fail("shunt-voltage", (int64_t)SHUNT_MAX_NV + 1);
++    qmp_ina230_set_fail("shunt-voltage", (int64_t)SHUNT_MIN_NV - 1);
++    g_assert_cmpint(qmp_ina230_get("shunt-voltage"), ==, SHUNT_MIN_NV);
++    g_assert_cmphex(i2c_get16(dev, REG_SHUNT), ==, 0x8000);
++}
++
++/* Bus-voltage injection limits. */
++static void test_bus_limits(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++
++    qmp_ina230_set("bus-voltage", 0);
++    g_assert_cmphex(i2c_get16(dev, REG_BUS), ==, 0x0000);
++
++    qmp_ina230_set("bus-voltage", BUS_MAX_UV);
++    g_assert_cmphex(i2c_get16(dev, REG_BUS), ==, 0x7080);
++    g_assert_cmpint(qmp_ina230_get("bus-voltage"), ==, BUS_MAX_UV);
++
++    qmp_ina230_set_fail("bus-voltage", (int64_t)BUS_MAX_UV + 1);
++    qmp_ina230_set_fail("bus-voltage", -1);
++    g_assert_cmpint(qmp_ina230_get("bus-voltage"), ==, BUS_MAX_UV);
++}
++
+ static void ina230_register_nodes(void)
+ {
+     QOSGraphEdgeOptions opts = {
+@@ -322,6 +379,8 @@ static void ina230_register_nodes(void)
+     qos_add_test("config-wmask", "ina230", test_config_wmask, NULL);
+     qos_add_test("shunt-injection", "ina230", test_shunt_injection, NULL);
+     qos_add_test("bus-injection", "ina230", test_bus_injection, NULL);
++    qos_add_test("shunt-limits", "ina230", test_shunt_limits, NULL);
++    qos_add_test("bus-limits", "ina230", test_bus_limits, NULL);
+     qos_add_test("calibration-current", "ina230", test_calibration_current,
+                  NULL);
+     qos_add_test("power", "ina230", test_power, NULL);
+-- 
+2.53.0-Meta
+

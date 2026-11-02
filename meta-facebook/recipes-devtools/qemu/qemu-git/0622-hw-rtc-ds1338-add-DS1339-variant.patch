@@ -1,0 +1,362 @@
+From 50e9900ca5f86d5151a42bf8bb536bb91960d6a0 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 3 Sep 2026 16:04:18 +0200
+Subject: [PATCH 622/682] hw/rtc: ds1338: add DS1339 variant
+
+The Dallas/Maxim DS1339 register map is only partially compatible with
+the DS1338: it shares the clock/calendar time registers but differs
+elsewhere. It has no general-purpose NVRAM, moves the control register,
+and relocates the oscillator-stop flag.
+
+Add a 'ds1339' variant, modelling the EOSC oscillator stop, the
+OSF/A2F/A1F status register and the century bit. The alarm,
+square-wave and trickle-charger functions are not modelled.
+
+A migrated register pointer is now range-checked; it used to index the
+register array unvalidated.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ hw/rtc/ds1338.c         | 180 ++++++++++++++++++++++++++++++++++++----
+ include/hw/rtc/ds1338.h |   3 +-
+ 2 files changed, 168 insertions(+), 15 deletions(-)
+
+diff --git a/hw/rtc/ds1338.c b/hw/rtc/ds1338.c
+index 21deb94689..63a049292e 100644
+--- a/hw/rtc/ds1338.c
++++ b/hw/rtc/ds1338.c
+@@ -1,5 +1,5 @@
+ /*
+- * MAXIM DS1338 I2C RTC+NVRAM
++ * MAXIM DS1338/DS1339 I2C RTC+NVRAM
+  *
+  * Copyright (c) 2009 CodeSourcery.
+  * Written by Paul Brook
+@@ -10,6 +10,13 @@
+  * GNU GPL, version 2 or (at your option) any later version.
+  *
+  * Limitations:
++ * - The DS1339 alarm registers, the alarm-enable control bits, the A1F/A2F
++ *   status flags and the trickle charger are stored but never evaluated: no
++ *   alarm matching is performed, no flag is ever set by hardware and no
++ *   charging happens.
++ * - The INT#/SQW output pin is not exposed: neither alarm interrupts nor
++ *   square-wave generation are produced. No board wires this pin and the guest
++ *   does not use the RTC wakealarm here.
+  * - Writing the seconds register does not reset the internal countdown chain,
+  *   so the sub-second phase of the clock is not modelled.
+  * - The user registers are refreshed on a START and on a read that wraps the
+@@ -47,6 +54,23 @@
+ /* POR: OUT, OSF, SQWE and both rate-select bits come up set. */
+ #define DS1338_CTRL_RESET  0xb3
+ 
++/* Sentinel register address meaning "this variant has no such register". */
++#define DS1338_NO_REG      0xff
++
++/* DS1339 register map: 0x00..0x10 only, no general-purpose NVRAM */
++#define DS1339_NUM_REGS    0x11         /* 0x00..0x10, then wraps */
++#define DS1339_CONTROL     0x0e
++#define DS1339_CTRL_MASK   0xbf         /* bit 6 is reserved, reads back zero */
++#define DS1339_CTRL_EOSC   0x80         /* EOSC: 1 stops the oscillator */
++#define DS1339_CTRL_RESET  0x18         /* POR: RS2=RS1=1 (32 kHz), rest zero */
++#define DS1339_MONTH_CENTURY 0x80       /* Century is bit 7 of the month reg */
++#define DS1339_STATUS      0x0f
++#define DS1339_STATUS_OSF  0x80         /* OSF is bit 7 of the status reg */
++/* Status bits that exist (OSF | A2F | A1F); bits 6..2 are reserved, read 0. */
++#define DS1339_STATUS_MASK 0x83
++/* All three status flags are hardware-set and clear-only (write 0). */
++#define DS1339_STATUS_W0   0x83
++
+ OBJECT_DECLARE_TYPE(DS1338State, DS1338Class, DS1338)
+ 
+ struct DS1338State {
+@@ -58,6 +82,7 @@ struct DS1338State {
+     int32_t ptr;
+     bool addr_byte;
+     bool osc_stopped;      /* oscillator halted: time is frozen */
++    uint8_t prev_century;  /* century index (tm_year/100) at last capture */
+     bool persist_on_reset; /* keep the registers across a reset */
+ };
+ 
+@@ -69,24 +94,70 @@ struct DS1338Class {
+     uint8_t ctrl_mask;      /* writable/read-back bits of the control reg */
+     uint8_t osf_addr;       /* register holding the OSF flag */
+     uint8_t osf_mask;       /* OSF bit within osf_addr */
++    uint8_t status_addr;    /* status register address */
++    uint8_t status_mask;    /* bits that exist; reserved bits read 0 */
++    uint8_t status_w0_mask; /* flags that can only be cleared */
+     uint8_t ctrl_reset;     /* control-register power-on value */
++    uint8_t status_reset;   /* status-register power-on value */
++    uint8_t eosc_mask;      /* oscillator-disable bit in the control reg */
++    uint8_t century_mask;   /* Century bit in the month register */
+     uint8_t ch_mask;        /* Clock-halt bit in the seconds reg */
+ };
+ 
++static int ds1338_post_load(void *opaque, int version_id)
++{
++    DS1338State *s = opaque;
++    DS1338Class *k = DS1338_GET_CLASS(s);
++
++    /* Both accessors index nvram[] with ptr before incrementing it. */
++    if (s->ptr < 0 || s->ptr >= k->num_regs) {
++        return -EINVAL;
++    }
++
++    /*
++     * prev_century did not exist before version 3, so an older incoming stream
++     * leaves it zero.
++     */
++    if (version_id < 3) {
++        struct tm now;
++
++        qemu_get_timedate(&now, s->offset);
++        s->prev_century = now.tm_year / 100;
++    }
++    return 0;
++}
++
++static const VMStateField vmstate_ds1338_fields[] = {
++    VMSTATE_I2C_SLAVE(parent_obj, DS1338State),
++    VMSTATE_INT64(offset, DS1338State),
++    VMSTATE_UINT8_V(wday_offset, DS1338State, 2),
++    VMSTATE_UINT8_ARRAY(nvram, DS1338State, NVRAM_SIZE),
++    VMSTATE_INT32(ptr, DS1338State),
++    VMSTATE_BOOL(addr_byte, DS1338State),
++    VMSTATE_BOOL_V(osc_stopped, DS1338State, 3),
++    VMSTATE_UINT8_V(prev_century, DS1338State, 3),
++    VMSTATE_END_OF_LIST()
++};
++
+ static const VMStateDescription vmstate_ds1338 = {
+     .name = "ds1338",
+     .version_id = 3,
+     .minimum_version_id = 1,
+-    .fields = (const VMStateField[]) {
+-        VMSTATE_I2C_SLAVE(parent_obj, DS1338State),
+-        VMSTATE_INT64(offset, DS1338State),
+-        VMSTATE_UINT8_V(wday_offset, DS1338State, 2),
+-        VMSTATE_UINT8_ARRAY(nvram, DS1338State, NVRAM_SIZE),
+-        VMSTATE_INT32(ptr, DS1338State),
+-        VMSTATE_BOOL(addr_byte, DS1338State),
+-        VMSTATE_BOOL_V(osc_stopped, DS1338State, 3),
+-        VMSTATE_END_OF_LIST()
+-    }
++    .post_load = ds1338_post_load,
++    .fields = vmstate_ds1338_fields,
++};
++
++/*
++ * The DS1339 reuses the DS1338 migration field list, so it migrates the full
++ * NVRAM_SIZE-byte nvram[] array even though it only implements registers
++ * 0x00..0x10.
++ */
++static const VMStateDescription vmstate_ds1339 = {
++    .name = "ds1339",
++    .version_id = 3,
++    .minimum_version_id = 3,
++    .post_load = ds1338_post_load,
++    .fields = vmstate_ds1338_fields,
+ };
+ 
+ /* Reconstruct a struct tm from the BCD time registers in nvram. */
+@@ -109,7 +180,7 @@ static void ds1338_time_from_regs(DS1338State *s, struct tm *now)
+     }
+     now->tm_mday = from_bcd(s->nvram[4] & 0x3f);
+     now->tm_mon = from_bcd(s->nvram[5] & 0x1f) - 1;
+-    now->tm_year = from_bcd(s->nvram[6]) + 100;
++    now->tm_year = s->prev_century * 100 + from_bcd(s->nvram[6]);
+ }
+ 
+ static void ds1338_resync_from_regs(DS1338State *s)
+@@ -129,13 +200,22 @@ static void ds1338_capture_current_time(DS1338State *s)
+     /* Capture the current time into the secondary registers
+      * which will be actually read by the data transfer operation.
+      */
++    DS1338Class *k = DS1338_GET_CLASS(s);
+     struct tm now;
++    uint8_t century;
+ 
+     if (s->osc_stopped) {
+         return;
+     }
+ 
+     qemu_get_timedate(&now, s->offset);
++
++    century = now.tm_year / 100;
++    if (k->century_mask && ((century ^ s->prev_century) & 1)) {
++        s->nvram[5] ^= k->century_mask;
++    }
++    s->prev_century = century;
++
+     s->nvram[0] = to_bcd(now.tm_sec);
+     s->nvram[1] = to_bcd(now.tm_min);
+     if (s->nvram[2] & HOURS_12) {
+@@ -153,7 +233,7 @@ static void ds1338_capture_current_time(DS1338State *s)
+     }
+     s->nvram[3] = (now.tm_wday + s->wday_offset) % 7 + 1;
+     s->nvram[4] = to_bcd(now.tm_mday);
+-    s->nvram[5] = to_bcd(now.tm_mon + 1);
++    s->nvram[5] = to_bcd(now.tm_mon + 1) | (s->nvram[5] & k->century_mask);
+     s->nvram[6] = to_bcd(now.tm_year % 100);
+ }
+ 
+@@ -204,6 +284,16 @@ static uint8_t ds1338_recv(I2CSlave *i2c)
+     return res;
+ }
+ 
++/* OSF is raised by hardware whenever the oscillator stops. */
++static void ds1338_raise_osf(DS1338State *s)
++{
++    DS1338Class *k = DS1338_GET_CLASS(s);
++
++    if (k->osf_addr != DS1338_NO_REG) {
++        s->nvram[k->osf_addr] |= k->osf_mask;
++    }
++}
++
+ static int ds1338_send(I2CSlave *i2c, uint8_t data)
+ {
+     DS1338State *s = DS1338(i2c);
+@@ -234,12 +324,14 @@ static int ds1338_send(I2CSlave *i2c, uint8_t data)
+             if (k->ch_mask) {
+                 halt = data & k->ch_mask;
+             }
++        } else if (s->ptr == 5) {
++            mask |= k->century_mask;
+         }
+ 
+         if (halt && !s->osc_stopped) {
+             /* CH set: freeze the counters before the register is stored. */
+             ds1338_capture_current_time(s);
+-            s->nvram[k->osf_addr] |= k->osf_mask;
++            ds1338_raise_osf(s);
+         }
+         s->nvram[s->ptr] = data & mask;
+         s->osc_stopped = halt;
+@@ -250,6 +342,19 @@ static int ds1338_send(I2CSlave *i2c, uint8_t data)
+         if (s->ptr == k->ctrl_addr) {
+             /* Control register: reserved bits read back as zero. */
+             data &= k->ctrl_mask;
++            if (k->eosc_mask) {
++                bool now_stop = data & k->eosc_mask;
++                bool was_stop = s->nvram[k->ctrl_addr] & k->eosc_mask;
++                if (now_stop && !was_stop) {
++                    ds1338_capture_current_time(s);
++                    s->osc_stopped = true;
++                    ds1338_raise_osf(s);
++                } else if (!now_stop && was_stop) {
++                    /* EOSC cleared: resume counting from the frozen time. */
++                    ds1338_resync_from_regs(s);
++                    s->osc_stopped = false;
++                }
++            }
+         }
+         if (s->ptr == k->osf_addr) {
+             /*
+@@ -259,6 +364,13 @@ static int ds1338_send(I2CSlave *i2c, uint8_t data)
+             data = (data & ~k->osf_mask) |
+                    (data & s->nvram[s->ptr] & k->osf_mask);
+         }
++        if (s->ptr == k->status_addr) {
++            /* Reserved bits read zero; flags are clear-only, OSF included. */
++            uint8_t cur = s->nvram[s->ptr];
++            data &= k->status_mask;
++            data = (data & ~k->status_w0_mask) |
++                   (data & cur & k->status_w0_mask);
++        }
+         s->nvram[s->ptr] = data;
+     }
+     ds1338_inc_regptr(s);
+@@ -268,13 +380,19 @@ static int ds1338_send(I2CSlave *i2c, uint8_t data)
+ static void ds1338_power_on(DS1338State *s)
+ {
+     DS1338Class *k = DS1338_GET_CLASS(s);
++    struct tm now;
+ 
+     /* The clock is running and synchronized with the host */
+     s->offset = 0;
+     s->wday_offset = 0;
+     memset(s->nvram, 0, NVRAM_SIZE);
+     s->nvram[k->ctrl_addr] = k->ctrl_reset;
++    if (k->status_addr != DS1338_NO_REG) {
++        s->nvram[k->status_addr] = k->status_reset;
++    }
+     s->osc_stopped = false;
++    qemu_get_timedate(&now, 0);
++    s->prev_century = now.tm_year / 100;
+ }
+ 
+ static void ds1338_realize(DeviceState *dev, Error **errp)
+@@ -318,10 +436,39 @@ static void ds1338_class_init(ObjectClass *klass, const void *data)
+     dsc->ctrl_mask  = DS1338_CTRL_MASK;
+     dsc->osf_addr   = DS1338_CONTROL;
+     dsc->osf_mask   = CTRL_OSF;
++    dsc->status_addr = DS1338_NO_REG;   /* the DS1338 has no status register */
++    dsc->status_mask = 0;
++    dsc->status_w0_mask = 0;
+     dsc->ctrl_reset = DS1338_CTRL_RESET;
++    dsc->status_reset = 0;
++    dsc->eosc_mask = 0;
++    dsc->century_mask = 0;
+     dsc->ch_mask = SECONDS_CH;
+ }
+ 
++static void ds1339_class_init(ObjectClass *klass, const void *data)
++{
++    DeviceClass *dc = DEVICE_CLASS(klass);
++    DS1338Class *dsc = DS1338_CLASS(klass);
++
++    dc->desc = "DS1339 I2C serial real-time clock";
++    dc->vmsd = &vmstate_ds1339;
++
++    dsc->num_regs   = DS1339_NUM_REGS;
++    dsc->ctrl_addr  = DS1339_CONTROL;
++    dsc->ctrl_mask  = DS1339_CTRL_MASK;
++    dsc->osf_addr   = DS1339_STATUS;   /* OSF lives in the status register */
++    dsc->osf_mask   = DS1339_STATUS_OSF;
++    dsc->status_addr = DS1339_STATUS;
++    dsc->status_mask = DS1339_STATUS_MASK;
++    dsc->status_w0_mask = DS1339_STATUS_W0;
++    dsc->ctrl_reset = DS1339_CTRL_RESET;
++    dsc->status_reset = DS1339_STATUS_OSF;   /* OSF set at power-on */
++    dsc->eosc_mask = DS1339_CTRL_EOSC;
++    dsc->century_mask = DS1339_MONTH_CENTURY;
++    dsc->ch_mask = 0;   /* bit 7 of the seconds register reads back zero */
++}
++
+ static const TypeInfo ds1338_types[] = {
+     {
+         .name          = TYPE_DS1338,
+@@ -330,6 +477,11 @@ static const TypeInfo ds1338_types[] = {
+         .class_size    = sizeof(DS1338Class),
+         .class_init    = ds1338_class_init,
+     },
++    {
++        .name          = TYPE_DS1339,
++        .parent        = TYPE_DS1338,
++        .class_init    = ds1339_class_init,
++    },
+ };
+ 
+ DEFINE_TYPES(ds1338_types)
+diff --git a/include/hw/rtc/ds1338.h b/include/hw/rtc/ds1338.h
+index f4cfe6a8e7..fff04c225d 100644
+--- a/include/hw/rtc/ds1338.h
++++ b/include/hw/rtc/ds1338.h
+@@ -1,5 +1,5 @@
+ /*
+- * MAXIM DS1338 I2C RTC+NVRAM
++ * MAXIM DS1338/DS1339 I2C RTC+NVRAM
+  *
+  * Copyright (c) 2009 CodeSourcery.
+  * Written by Paul Brook
+@@ -16,5 +16,6 @@
+ #define HW_RTC_DS1338_H
+ 
+ #define TYPE_DS1338 "ds1338"
++#define TYPE_DS1339 "ds1339"
+ 
+ #endif
+-- 
+2.53.0-Meta
+

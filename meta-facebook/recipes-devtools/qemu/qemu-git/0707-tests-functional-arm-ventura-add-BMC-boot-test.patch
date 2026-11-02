@@ -1,0 +1,92 @@
+From 5021597ef4eff134ddfeb7405a208a3f8b72863a Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Fri, 7 Aug 2026 18:18:01 +0200
+Subject: [PATCH] tests/functional/arm: ventura: add BMC boot test
+
+Boot an OpenBMC image to a login shell to keep the board wired up as
+the tree changes around it.
+
+The only device tree in the image's FIT is the AST2600 EVB one, so the
+guest never probes the board I2C topology and no FRU EEPROM, sensor or
+I/O expander appears in sysfs. The test therefore covers the boot path
+alone; a note in the file records what to add once an image carrying
+the board device tree is published.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/functional/arm/meson.build            |  2 +
+ tests/functional/arm/test_aspeed_ventura.py | 42 +++++++++++++++++++++
+ 2 files changed, 44 insertions(+)
+ create mode 100644 tests/functional/arm/test_aspeed_ventura.py
+
+diff --git a/tests/functional/arm/meson.build b/tests/functional/arm/meson.build
+index 91b2410013..5992812953 100644
+--- a/tests/functional/arm/meson.build
++++ b/tests/functional/arm/meson.build
+@@ -22,6 +22,7 @@ test_arm_timeouts = {
+   'aspeed_rainier' : 480,
+   'aspeed_sanmiguel' : 480,
+   'aspeed_santabarbara' : 480,
++  'aspeed_ventura' : 480,
+   'aspeed_yosemite5' : 480,
+   'bpim2u' : 500,
+   'collie' : 180,
+@@ -64,6 +65,7 @@ tests_arm_system_thorough = [
+   'aspeed_rainier',
+   'aspeed_sanmiguel',
+   'aspeed_santabarbara',
++  'aspeed_ventura',
+   'aspeed_yosemite5',
+   'bpim2u',
+   'canona1100',
+diff --git a/tests/functional/arm/test_aspeed_ventura.py b/tests/functional/arm/test_aspeed_ventura.py
+new file mode 100644
+index 0000000000..01b800f200
+--- /dev/null
++++ b/tests/functional/arm/test_aspeed_ventura.py
+@@ -0,0 +1,42 @@
++#!/usr/bin/env python3
++#
++# Functional test that boots the ASPEED machines
++#
++# Copyright (c) 2026 Meta Platforms, Inc. and affiliates.
++#
++# SPDX-License-Identifier: GPL-2.0-or-later
++
++from qemu_test import Asset
++from qemu_test import exec_command_and_wait_for_pattern
++from aspeed import AspeedTest
++
++
++class VenturaMachine(AspeedTest):
++
++    # TODO: the boot image currently lives on a personal fork; move it under
++    # legoater/qemu-aspeed-boot before upstreaming.
++    ASSET_VENTURA_FLASH = Asset(
++        'https://github.com/eblot/qemu-aspeed-boot/raw/refs/heads/ventura-bmc/images/ventura-bmc/openbmc-20260807025044/'
++            'obmc-phosphor-image-ventura-20260807025044.static.mtd.xz',
++        'b9c097d2f09d5e074bf41d57f2bcf03adb010cbb9556e48d431fbb19791fafc3')
++
++    PROMPT = "root@ventura:~#"
++
++    # The only device tree in this image's FIT is the AST2600 EVB one, so
++    # the guest never probes the board I2C topology: no FRU EEPROM, sensor
++    # or I/O expander shows up under /sys/bus/i2c. Until an image carrying
++    # the board device tree is published this covers the boot path only —
++    # flash, RAM, SoC and console. Add the device assertions then.
++    def test_arm_ast2600_ventura_openbmc(self):
++        image_path = self.uncompress(self.ASSET_VENTURA_FLASH)
++
++        self.do_test_arm_aspeed_openbmc('ventura-bmc', image=image_path,
++                                        uboot='2019.04', cpu_id='0xf00',
++                                        soc='AST2600 rev A3')
++
++        exec_command_and_wait_for_pattern(self, 'root', 'Password:')
++        exec_command_and_wait_for_pattern(self, '0penBmc', self.PROMPT)
++
++
++if __name__ == '__main__':
++    AspeedTest.main()
+-- 
+2.54.0
+

@@ -1,0 +1,50 @@
+From f4d7c6badd567c8e783a5fef6560c5f9180ebcbf Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot via <qemu-arm@nongnu.org>
+Date: Fri, 31 Jul 2026 12:45:23 +0200
+Subject: [PATCH] hw/arm: catalina: drive pca9554 io expander input pins
+ externally
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Create io_expander5 (pca9554@27) with hw-dir=true so its pin%d QOM
+properties drive the external input level of each pin, matching the
+pca9555 expanders, instead of the legacy behaviour that forces the pin
+to an output. This lets external agents, including tests, stimulate the
+input pins and have the guest read them back.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Reviewed-by: Cédric Le Goater <clg@redhat.com>
+Link: https://lore.kernel.org/qemu-devel/20260731-sanmiguel-bmc-locator-v2-24-1266926ba769@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ hw/arm/aspeed_ast2600_catalina.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/hw/arm/aspeed_ast2600_catalina.c b/hw/arm/aspeed_ast2600_catalina.c
+index ad2953dfea..ec25ae7968 100644
+--- a/hw/arm/aspeed_ast2600_catalina.c
++++ b/hw/arm/aspeed_ast2600_catalina.c
+@@ -544,9 +544,16 @@ static void catalina_bmc_i2c_init(AspeedMachineState *bmc)
+     i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 5), TYPE_TMP75, 0x4f);
+ 
+     /* i2c1mux0ch6 */
+-    /* io_expander5 - pca9554@27 */
+-    i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 6),
+-                            TYPE_PCA9554, 0x27);
++    /* io_expander5 - pca9554@27 (external agents drive its input pins) */
++    {
++        I2CBus *bus = pca954x_i2c_get_bus(i2c_mux, 6);
++        I2CSlave *ioexp = i2c_slave_new(TYPE_PCA9554, 0x27);
++
++        object_property_add_child(OBJECT(bus), "0x27", OBJECT(ioexp));
++        object_property_set_bool(OBJECT(ioexp), "hw-dir", true,
++                                 &error_abort);
++        i2c_slave_realize_and_unref(ioexp, bus, &error_abort);
++    }
+     /* io_expander6 - pca9555@25 */
+     i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 6),
+                             TYPE_PCA9555, 0x25);
+-- 
+2.54.0
+

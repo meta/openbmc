@@ -1,0 +1,91 @@
+From 9d6acdd6daea39cc255b191c41a275c01617ed68 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Fri, 4 Sep 2026 14:21:18 +0200
+Subject: [PATCH 670/682] tests/qtest: tmp105: cover the Config low byte across
+ a migration
+
+The byte rides in an optional subsection, so a dropped field or a wrong
+needed() gate would have gone unnoticed.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/qtest/tmp105-test.c | 50 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+
+diff --git a/tests/qtest/tmp105-test.c b/tests/qtest/tmp105-test.c
+index b21deb1128..1bb7dcc265 100644
+--- a/tests/qtest/tmp105-test.c
++++ b/tests/qtest/tmp105-test.c
+@@ -9,6 +9,9 @@
+ 
+ #include "qemu/osdep.h"
+ 
++#include <glib/gstdio.h>
++
++#include "libqtest.h"
+ #include "libqtest-single.h"
+ #include "libqos/qgraph.h"
+ #include "libqos/i2c.h"
+@@ -468,6 +471,52 @@ static void test_tmp1075_config_width(void *obj, void *data,
+     g_assert_cmphex(i2c_get8(i2cdev, TMP105_REG_CONFIG), ==, 0x00);
+ }
+ 
++/* The low byte of the Config register rides in an optional subsection. */
++static void test_tmp1075_migration(void *obj, void *data,
++                                   QGuestAllocator *alloc)
++{
++    QI2CDevice *i2cdev = (QI2CDevice *)obj;
++    g_autofree char *tmpfs = NULL;
++    g_autofree char *mig_path = NULL;
++    g_autofree char *uri = NULL;
++    GString *dest_cmdline;
++    GError *err = NULL;
++    QTestState *from, *to;
++    QDict *rsp;
++
++    tmpfs = g_dir_make_tmp("tmp1075-test-XXXXXX", &err);
++    g_assert_no_error(err);
++    g_assert(tmpfs);
++
++    mig_path = g_strdup_printf("%s/socket.mig", tmpfs);
++    uri = g_strdup_printf("unix:%s", mig_path);
++
++    /* A low byte away from its reset value, so the subsection is emitted. */
++    i2c_set16(i2cdev, TMP105_REG_CONFIG, 0x605a);
++    g_assert_cmphex(i2c_get16(i2cdev, TMP105_REG_CONFIG), ==, 0x605a);
++
++    dest_cmdline = g_string_new(qos_get_current_command_line());
++    g_string_append_printf(dest_cmdline, " -incoming %s", uri);
++    to = qtest_init(dest_cmdline->str);
++
++    rsp = qmp("{ 'execute': 'migrate', 'arguments': { 'uri': %s } }", uri);
++    g_assert(qdict_haskey(rsp, "return"));
++    qobject_unref(rsp);
++
++    qmp_eventwait("STOP");
++    qtest_qmp_eventwait(to, "RESUME");
++
++    from = i2cdev->bus->qts;
++    i2cdev->bus->qts = to;
++    g_assert_cmphex(i2c_get16(i2cdev, TMP105_REG_CONFIG), ==, 0x605a);
++    i2cdev->bus->qts = from;
++
++    qtest_quit(to);
++    g_unlink(mig_path);
++    g_rmdir(tmpfs);
++    g_string_free(dest_cmdline, true);
++}
++
+ static void tmp105_register_nodes(void)
+ {
+     QOSGraphEdgeOptions opts = {
+@@ -536,5 +585,6 @@ static void tmp105_register_nodes(void)
+ 
+     qos_add_test("device-id", "tmp1075", test_tmp1075_device_id, NULL);
+     qos_add_test("config-width", "tmp1075", test_tmp1075_config_width, NULL);
++    qos_add_test("migration", "tmp1075", test_tmp1075_migration, NULL);
+ }
+ libqos_init(tmp105_register_nodes);
+-- 
+2.53.0-Meta
+

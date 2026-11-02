@@ -1,0 +1,143 @@
+From 2c1dc51cbb969ee01d381dbaf45d76376ce6d1d9 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Fri, 7 Aug 2026 17:23:08 +0200
+Subject: [PATCH 679/682] hw/arm: bletchley: select the board revision with a
+ machine property
+
+Two Bletchley revisions are in the field, differing in FRU layout and
+in one hardware strap bit: the BMC MAC address moved from a custom
+field of the chassis controller board area on v1.0 to that board's
+chassis area on v1.5.
+
+Add a "board-revision" property to pick one, defaulting to v1.0. It
+sits on a board-local machine subclass rather than the shared Aspeed
+machine state, as no other board needs it. The FRU content only
+diverges once the images land.
+
+The FMC flash is dual-sourced, so the two sampled chassis carry
+different vendors; not a revision property, so both keep the default.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ docs/system/arm/aspeed.rst        | 14 +++++++++
+ hw/arm/aspeed_ast2600_bletchley.c | 50 ++++++++++++++++++++++++++++++-
+ 2 files changed, 63 insertions(+), 1 deletion(-)
+
+diff --git a/docs/system/arm/aspeed.rst b/docs/system/arm/aspeed.rst
+index db0035189b..bf3a09aae8 100644
+--- a/docs/system/arm/aspeed.rst
++++ b/docs/system/arm/aspeed.rst
+@@ -244,6 +244,20 @@ under Linux), use :
+ 
+   -M ast2500-evb,bmc-console=uart3
+ 
++Board revision option
++^^^^^^^^^^^^^^^^^^^^^
++
++The ``bletchley-bmc`` machine models two board revisions. They carry
++the same devices and differ in their FRU content and in one hardware
++strap bit: on v1.0 the BMC MAC address is held in a custom field of
++the chassis controller board area, while on v1.5 it moved to that
++board's chassis area. The ``board-revision`` option selects the
++revision and defaults to ``1.0`` :
++
++.. code-block:: bash
++
++  -M bletchley-bmc,board-revision=1.5
++
+ OTP Option
+ ^^^^^^^^^^
+ 
+diff --git a/hw/arm/aspeed_ast2600_bletchley.c b/hw/arm/aspeed_ast2600_bletchley.c
+index d0a4f53dfe..7ef87d7da1 100644
+--- a/hw/arm/aspeed_ast2600_bletchley.c
++++ b/hw/arm/aspeed_ast2600_bletchley.c
+@@ -4,6 +4,10 @@
+  * Copyright 2016 IBM Corp.
+  *
+  * SPDX-License-Identifier: GPL-2.0-or-later
++ *
++ * Two board revisions are modelled, selected with the "board-revision"
++ * machine property. They carry the same devices and differ in their FRU
++ * content and in one hardware strap bit.
+  */
+ 
+ #include "qemu/osdep.h"
+@@ -18,9 +22,20 @@
+ #include "hw/sensor/tmp421.h"
+ /* Bletchley hardware value */
+ #define BLETCHLEY_BMC_HW_STRAP1 0x00002000
++/* v1.5 also straps bit 1, reserved on this silicon revision. */
++#define BLETCHLEY_V1_5_HW_STRAP1 0x00002002
+ #define BLETCHLEY_BMC_HW_STRAP2 0x00000801
+ #define BLETCHLEY_BMC_RAM_SIZE (2 * GiB)
+ 
++#define TYPE_BLETCHLEY_MACHINE MACHINE_TYPE_NAME("bletchley-bmc")
++OBJECT_DECLARE_SIMPLE_TYPE(BletchleyMachineState, BLETCHLEY_MACHINE)
++
++struct BletchleyMachineState {
++    AspeedMachineState parent_obj;
++
++    bool v1_5;
++};
++
+ static void bletchley_bmc_i2c_init(AspeedMachineState *bmc)
+ {
+     AspeedSoCState *soc = bmc->soc;
+@@ -69,6 +84,32 @@ static void bletchley_bmc_i2c_init(AspeedMachineState *bmc)
+     /* Missing model: ipmb-dev @ 0x10 */
+ }
+ 
++static char *bletchley_get_board_revision(Object *obj, Error **errp)
++{
++    BletchleyMachineState *bmc = BLETCHLEY_MACHINE(obj);
++
++    return g_strdup(bmc->v1_5 ? "1.5" : "1.0");
++}
++
++static void bletchley_set_board_revision(Object *obj, const char *value,
++                                         Error **errp)
++{
++    BletchleyMachineState *bmc = BLETCHLEY_MACHINE(obj);
++
++    if (!strcmp(value, "1.0")) {
++        bmc->v1_5 = false;
++    } else if (!strcmp(value, "1.5")) {
++        bmc->v1_5 = true;
++    } else {
++        error_setg(errp, "Bad value for \"board-revision\" property, "
++                   "expected \"1.0\" or \"1.5\"");
++        return;
++    }
++
++    ASPEED_MACHINE(obj)->hw_strap1 = bmc->v1_5 ? BLETCHLEY_V1_5_HW_STRAP1
++                                               : BLETCHLEY_BMC_HW_STRAP1;
++}
++
+ static void aspeed_machine_bletchley_class_init(ObjectClass *oc,
+                                                 const void *data)
+ {
+@@ -86,12 +127,19 @@ static void aspeed_machine_bletchley_class_init(ObjectClass *oc,
+     amc->i2c_init  = bletchley_bmc_i2c_init;
+     mc->default_ram_size = BLETCHLEY_BMC_RAM_SIZE;
+     aspeed_machine_class_init_cpus_defaults(mc);
++
++    object_class_property_add_str(oc, "board-revision",
++                                  bletchley_get_board_revision,
++                                  bletchley_set_board_revision);
++    object_class_property_set_description(oc, "board-revision",
++                           "Board revision, \"1.0\" (default) or \"1.5\"");
+ }
+ 
+ static const TypeInfo aspeed_ast2600_bletchley_types[] = {
+     {
+-        .name          = MACHINE_TYPE_NAME("bletchley-bmc"),
++        .name          = TYPE_BLETCHLEY_MACHINE,
+         .parent        = TYPE_ASPEED_MACHINE,
++        .instance_size = sizeof(BletchleyMachineState),
+         .class_init    = aspeed_machine_bletchley_class_init,
+     }
+ };
+-- 
+2.53.0-Meta
+

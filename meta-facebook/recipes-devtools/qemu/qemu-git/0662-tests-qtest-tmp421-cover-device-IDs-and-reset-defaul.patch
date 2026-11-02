@@ -1,0 +1,122 @@
+From 87110e2096449074d2454091e191c675b5f8aad1 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Wed, 5 Aug 2026 18:06:08 +0200
+Subject: [PATCH 662/682] tests/qtest: tmp421: cover device IDs and reset
+ defaults
+
+Add a qgraph test that instantiates each variant and checks the
+manufacturer and device identification bytes and the reset values of
+the configuration and conversion-rate registers.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/qtest/meson.build   |  1 +
+ tests/qtest/tmp421-test.c | 84 +++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 85 insertions(+)
+ create mode 100644 tests/qtest/tmp421-test.c
+
+diff --git a/tests/qtest/meson.build b/tests/qtest/meson.build
+index 7005509d4d..5042ae52b2 100644
+--- a/tests/qtest/meson.build
++++ b/tests/qtest/meson.build
+@@ -349,6 +349,7 @@ qos_test_ss.add(
+   'sdhci-test.c',
+   'spapr-phb-test.c',
+   'tmp105-test.c',
++  'tmp421-test.c',
+   'emc141x-test.c',
+   'usb-hcd-ohci-test.c',
+   'virtio-test.c',
+diff --git a/tests/qtest/tmp421-test.c b/tests/qtest/tmp421-test.c
+new file mode 100644
+index 0000000000..2307e5f603
+--- /dev/null
++++ b/tests/qtest/tmp421-test.c
+@@ -0,0 +1,84 @@
++/*
++ * QTest testcase for the TMP421/TMP422/TMP423 temperature sensor
++ *
++ * Copyright (c) 2026 Meta Platforms, Inc. and affiliates.
++ *
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ */
++
++#include "qemu/osdep.h"
++
++#include "libqtest-single.h"
++#include "libqos/qgraph.h"
++#include "libqos/i2c.h"
++#include "qobject/qdict.h"
++
++/*
++ * TMP421 register map, per the datasheet. Kept here rather than
++ * shared with the model, so the test states the values it expects
++ * independently of the implementation it is checking.
++ */
++#define TMP421_CONFIG_REG_1             0x09
++#define TMP421_CONFIG_REG_2             0x0A
++#define TMP421_CONVERSION_RATE_REG      0x0B
++#define TMP421_MANUFACTURER_ID_REG      0xFE
++#define TMP421_DEVICE_ID_REG            0xFF
++#define TMP421_MANUFACTURER_ID          0x55
++
++#define TMP421_TEST_ID   "tmp421-test"
++#define TMP422_TEST_ID   "tmp422-test"
++#define TMP423_TEST_ID   "tmp423-test"
++
++/*
++ * Per-variant expectations, passed as the qos test payload so a single test
++ * body can cover all three parts.
++ */
++typedef struct TMP421Variant {
++    const char *id;
++    uint8_t device_id;
++    uint8_t config2_reset;
++    unsigned nchannels;
++} TMP421Variant;
++
++static const TMP421Variant tmp421_variant = { TMP421_TEST_ID, 0x21, 0x1c, 2 };
++static const TMP421Variant tmp422_variant = { TMP422_TEST_ID, 0x22, 0x3c, 3 };
++static const TMP421Variant tmp423_variant = { TMP423_TEST_ID, 0x23, 0x7c, 4 };
++
++static void test_ids(void *obj, void *data, QGuestAllocator *alloc)
++{
++    const TMP421Variant *var = data;
++    QI2CDevice *i2cdev = obj;
++
++    g_assert_cmphex(i2c_get8(i2cdev, TMP421_MANUFACTURER_ID_REG), ==,
++                    TMP421_MANUFACTURER_ID);
++    g_assert_cmphex(i2c_get8(i2cdev, TMP421_DEVICE_ID_REG), ==, var->device_id);
++    g_assert_cmphex(i2c_get8(i2cdev, TMP421_CONFIG_REG_1), ==, 0);
++    g_assert_cmphex(i2c_get8(i2cdev, TMP421_CONFIG_REG_2), ==,
++                    var->config2_reset);
++    g_assert_cmphex(i2c_get8(i2cdev, TMP421_CONVERSION_RATE_REG), ==, 0x07);
++}
++
++static void tmp421_register_node(const TMP421Variant *var, const char *type,
++                                 uint8_t addr)
++{
++    QOSGraphEdgeOptions opts = {
++        .extra_device_opts = g_strdup_printf("id=%s,address=0x%02x",
++                                             var->id, addr),
++    };
++
++    add_qi2c_address(&opts, &(QI2CAddress) { addr });
++    qos_node_create_driver(type, i2c_device_create);
++    qos_node_consumes(type, "i2c-bus", &opts);
++
++    qos_add_test("ids", type, test_ids,
++                 &(QOSGraphTestOptions) { .arg = (void *)var });
++}
++
++static void tmp421_register_nodes(void)
++{
++    tmp421_register_node(&tmp421_variant, "tmp421", 0x4c);
++    tmp421_register_node(&tmp422_variant, "tmp422", 0x4d);
++    tmp421_register_node(&tmp423_variant, "tmp423", 0x4e);
++}
++
++libqos_init(tmp421_register_nodes);
+-- 
+2.53.0-Meta
+

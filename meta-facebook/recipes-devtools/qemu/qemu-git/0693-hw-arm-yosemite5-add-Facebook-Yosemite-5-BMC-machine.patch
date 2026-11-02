@@ -1,0 +1,279 @@
+From 3a1f6bdf177a597ef25c4978c08b76e1cadd7108 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 6 Aug 2026 18:18:58 +0200
+Subject: [PATCH] hw/arm: yosemite5: add Facebook Yosemite 5 BMC machine
+
+Add an AST2600-based machine for the Facebook Yosemite 5 platform,
+modelled from its device tree (aspeed-bmc-facebook-yosemite5.dts).
+
+The board uses TMP75, LM75B and TMP421 temperature sensors, INA230 and
+INA238 power monitors, ADC128D818 ADCs, PCA9535 and PCA9536 IO
+expanders, PCA9546 I2C muxes, AT24C EEPROMs and a DS1339 RTC, including
+the CXL board reachable through a nested mux pair.
+
+Every device the Yosemite 5 device tree describes and QEMU already
+models is instantiated. The remaining ones (XDP710, LTC4287, MP5998,
+TPS25990, ISL28022 and INA233 power monitors, the RAA228006 PSU
+controller, ADS7830 ADCs, MAX31790 fan controllers, the TMP432
+temperature sensor, the SBRMI and SBTSI side-band interfaces and MCTP)
+have no QEMU model and are left documented as comments.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ docs/system/arm/aspeed.rst        |   1 +
+ hw/arm/aspeed_ast2600_yosemite5.c | 218 ++++++++++++++++++++++++++++++
+ hw/arm/meson.build                |   1 +
+ 3 files changed, 220 insertions(+)
+ create mode 100644 hw/arm/aspeed_ast2600_yosemite5.c
+
+diff --git a/docs/system/arm/aspeed.rst b/docs/system/arm/aspeed.rst
+index aa43e0d47b..e50422ac92 100644
+--- a/docs/system/arm/aspeed.rst
++++ b/docs/system/arm/aspeed.rst
+@@ -39,6 +39,7 @@ AST2600 SoC based machines :
+ - ``sanmiguel-bmc``        Facebook SanMiguel BMC
+ - ``anacapa-bmc``          Facebook Anacapa BMC
+ - ``minerva-bmc``          Facebook Minerva BMC
++- ``yosemite5-bmc``        Facebook Yosemite 5 BMC
+ - ``gb200nvl-bmc``         Nvidia GB200nvl BMC
+ 
+ Supported devices
+diff --git a/hw/arm/aspeed_ast2600_yosemite5.c b/hw/arm/aspeed_ast2600_yosemite5.c
+new file mode 100644
+index 0000000000..8bfb443550
+--- /dev/null
++++ b/hw/arm/aspeed_ast2600_yosemite5.c
+@@ -0,0 +1,218 @@
++/*
++ * Facebook Yosemite 5 BMC
++ *
++ * Copyright (c) 2026 Meta Platforms, Inc. and affiliates.
++ *
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ *
++ * Current limitations: the following devices from the device tree have no
++ * QEMU model and are therefore not emulated:
++ *   - amd,sbrmi / amd,sbtsi CPU side-band interfaces
++ *   - infineon,xdp710 / mps,mp5998 / ti,tps25990 power monitors
++ *   - lltc,ltc4287 hot-swap controllers
++ *   - renesas,isl28022 power monitors
++ *   - renesas,raa228006 voltage regulators
++ *   - maxim,max31790 fan controllers
++ *   - ti,ina233 power sensors
++ *   - ti,ads7830 ADCs
++ *   - ti,tmp432 temperature sensors
++ *   - infineon,slb9670 TPM (SPI)
++ *   - mctp-i2c-controller MCTP endpoints
++ */
++
++#include "qemu/osdep.h"
++#include "hw/arm/aspeed.h"
++#include "hw/arm/aspeed_soc.h"
++#include "hw/i2c/i2c_mux_pca954x.h"
++#include "hw/gpio/pca9552.h"
++#include "hw/gpio/pca9554.h"
++#include "hw/nvram/eeprom_at24c.h"
++#include "hw/rtc/ds1338.h"
++#include "hw/sensor/adc128d818.h"
++#include "hw/sensor/tmp105.h"
++#include "hw/sensor/tmp421.h"
++#include "hw/sensor/ina230.h"
++#include "hw/sensor/ina238.h"
++
++/* Yosemite 5 hardware values. */
++#define YOSEMITE5_BMC_HW_STRAP1 0x00002002
++#define YOSEMITE5_BMC_HW_STRAP2 0x00000800
++#define YOSEMITE5_BMC_RAM_SIZE (2 * GiB)
++
++/*
++ * CXL board behind a nested PCA9546 on i2c8: two ADCs, an I/O expander,
++ * temperature and power sensors and a FRU EEPROM.
++ */
++static void yosemite5_cxl_bd_init(I2CBus *bus)
++{
++    /* adc@1e/1f - ti,adc128d818 (mode 1) */
++    i2c_slave_create_simple(bus, TYPE_ADC128D818, 0x1e);
++    i2c_slave_create_simple(bus, TYPE_ADC128D818, 0x1f);
++    /* gpio-expander@27 - nxp,pca9535 */
++    i2c_slave_create_simple(bus, TYPE_PCA9535, 0x27);
++    /* temperature-sensor@4a - ti,tmp75 */
++    i2c_slave_create_simple(bus, TYPE_TMP75, 0x4a);
++    /* temperature-sensor@4c - ti,tmp432 (no model) */
++    /* power-sensor@4d - ti,ina230 */
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x4d);
++    /* temperature-sensor@4e - ti,tmp75 */
++    i2c_slave_create_simple(bus, TYPE_TMP75, 0x4e);
++    /* eeprom@50 - atmel,24c64 (CXL FRU) */
++    at24c_eeprom_init(bus, 0x50, 8 * KiB);
++}
++
++static void yosemite5_bmc_i2c_init(AspeedMachineState *bmc)
++{
++    /* Reference: aspeed-bmc-facebook-yosemite5.dts */
++
++    AspeedSoCState *soc = bmc->soc;
++    I2CBus *i2c[16] = {};
++    I2CSlave *mux, *mux2;
++
++    for (unsigned idx = 0; idx < ARRAY_SIZE(i2c); idx++) {
++        i2c[idx] = aspeed_i2c_get_bus(&soc->i2c, idx);
++    }
++
++    /* &i2c0 - MB CPLD (no model) */
++    /* &i2c1 - CPU (no model) */
++    /* &i2c2 - MCIO 2A (no model) */
++
++    /* &i2c3 */
++    /* sbrmi@3c - amd,sbrmi (no model) */
++    /* sbtsi@4c - amd,sbtsi (no model) */
++
++    /* &i2c4 */
++    /* mctp@10 - mctp-i2c-controller (no model) */
++    /* temperature-sensor@1f - ti,tmp421 (OCP NIC) */
++    i2c_slave_create_simple(i2c[4], TYPE_TMP421, 0x1f);
++    /* eeprom@50 - atmel,24c64 (OCP NIC FRU) */
++    at24c_eeprom_init(i2c[4], 0x50, 8 * KiB);
++
++    /* &i2c5 */
++    /* i2c-mux@70/77 - PCA9546 (MCIO, channels empty) */
++    i2c_slave_create_simple(i2c[5], TYPE_PCA9546, 0x70);
++    i2c_slave_create_simple(i2c[5], TYPE_PCA9546, 0x77);
++
++    /* &i2c6 */
++    /* i2c-mux@77 - PCA9546 (PWRPIC, channels empty) */
++    i2c_slave_create_simple(i2c[6], TYPE_PCA9546, 0x77);
++
++    /* &i2c7 - SCM CPLD (no model) */
++
++    /* &i2c8 */
++    /* power-monitor@14 - infineon,xdp710 (no model) */
++    /* adc@1d - ti,adc128d818 (mode 1) */
++    i2c_slave_create_simple(i2c[8], TYPE_ADC128D818, 0x1d);
++    /* power-sensor@40 - ti,ina238 */
++    i2c_slave_create_simple(i2c[8], TYPE_INA238, 0x40);
++    /* gpio-expander@41 - nxp,pca9536 */
++    i2c_slave_create_simple(i2c[8], TYPE_PCA9536, 0x41);
++    /* power-sensor@42 - ti,ina238 */
++    i2c_slave_create_simple(i2c[8], TYPE_INA238, 0x42);
++    /* power-monitor@43 - lltc,ltc4287 (no model) */
++    /* power-sensor@44/45 - ti,ina238 */
++    i2c_slave_create_simple(i2c[8], TYPE_INA238, 0x44);
++    i2c_slave_create_simple(i2c[8], TYPE_INA238, 0x45);
++    /* power-monitor@46 - mps,mp5998 (no model) */
++    /* power-monitor@47 - ti,tps25990 (no model) */
++    /* temperature-sensor@48/49 - ti,tmp75 */
++    i2c_slave_create_simple(i2c[8], TYPE_TMP75, 0x48);
++    i2c_slave_create_simple(i2c[8], TYPE_TMP75, 0x49);
++    /* eeprom@56 - atmel,24c128 (PDB FRU) */
++    at24c_eeprom_init(i2c[8], 0x56, 16 * KiB);
++    /* eeprom@57 - atmel,24c128 (Paddle BD FRU) */
++    at24c_eeprom_init(i2c[8], 0x57, 16 * KiB);
++    /* power-monitor@58/59/5a/5b - renesas,isl28022 (no model) */
++    /* psu@5c - renesas,raa228006 (no model) */
++    /* fan-controller@5e - maxim,max31790 (no model) */
++    /* i2c-mux@77 - PCA9546 (PWRPIC #1/#2/#12/#11) */
++    mux = i2c_slave_create_simple(i2c[8], TYPE_PCA9546, 0x77);
++    /* channel 2 - CXL board via a nested PCA9546 */
++    mux2 = i2c_slave_create_simple(pca954x_i2c_get_bus(mux, 2),
++                                   TYPE_PCA9546, 0x70);
++    yosemite5_cxl_bd_init(pca954x_i2c_get_bus(mux2, 2));
++
++    /* &i2c9 */
++    /* temperature-sensor@4b - ti,tmp75 */
++    i2c_slave_create_simple(i2c[9], TYPE_TMP75, 0x4b);
++    /* eeprom@50 - atmel,24c128 (SCM FRU) */
++    at24c_eeprom_init(i2c[9], 0x50, 16 * KiB);
++    /* eeprom@56 - atmel,24c64 (BSM FRU) */
++    at24c_eeprom_init(i2c[9], 0x56, 8 * KiB);
++
++    /* &i2c10 - MCIO 0A */
++    /* gpio-expander@21/22 - nxp,pca9535 (E1.S backplane) */
++    i2c_slave_create_simple(i2c[10], TYPE_PCA9535, 0x21);
++    i2c_slave_create_simple(i2c[10], TYPE_PCA9535, 0x22);
++    /* power-sensor@40/45 - ti,ina233 (no model) */
++    /* adc@48 - ti,ads7830 (no model) */
++    /* temperature-sensor@49 - ti,tmp75 */
++    i2c_slave_create_simple(i2c[10], TYPE_TMP75, 0x49);
++    /* eeprom@54 - atmel,24c128 (E1.S backplane FRU) */
++    at24c_eeprom_init(i2c[10], 0x54, 16 * KiB);
++
++    /* &i2c11 */
++    /* gpio-expander@21 - nxp,pca9535 (MB) */
++    i2c_slave_create_simple(i2c[11], TYPE_PCA9535, 0x21);
++    /* power-sensor@40..45 - ti,ina230 */
++    i2c_slave_create_simple(i2c[11], TYPE_INA230, 0x40);
++    i2c_slave_create_simple(i2c[11], TYPE_INA230, 0x41);
++    i2c_slave_create_simple(i2c[11], TYPE_INA230, 0x42);
++    i2c_slave_create_simple(i2c[11], TYPE_INA230, 0x43);
++    i2c_slave_create_simple(i2c[11], TYPE_INA230, 0x44);
++    i2c_slave_create_simple(i2c[11], TYPE_INA230, 0x45);
++    /* adc@48/49/4b - ti,ads7830 (no model) */
++
++    /* &i2c12 - MCIO 4A */
++    /* mctp@10 - mctp-i2c-controller (no model) */
++
++    /* &i2c13 */
++    /* power-sensor@40/41/44/45 - ti,ina230 */
++    i2c_slave_create_simple(i2c[13], TYPE_INA230, 0x40);
++    i2c_slave_create_simple(i2c[13], TYPE_INA230, 0x41);
++    i2c_slave_create_simple(i2c[13], TYPE_INA230, 0x44);
++    i2c_slave_create_simple(i2c[13], TYPE_INA230, 0x45);
++    /* temperature-sensor@48/49 - national,lm75b */
++    i2c_slave_create_simple(i2c[13], TYPE_LM75B, 0x48);
++    i2c_slave_create_simple(i2c[13], TYPE_LM75B, 0x49);
++    /* eeprom@50 - atmel,24c16 (CLKGEN FRU) */
++    at24c_eeprom_init(i2c[13], 0x50, 2 * KiB);
++    /* eeprom@51 - atmel,24c128 (MB FRU) */
++    at24c_eeprom_init(i2c[13], 0x51, 16 * KiB);
++    /* eeprom@53 - atmel,24c128 (CPU FRU) */
++    at24c_eeprom_init(i2c[13], 0x53, 16 * KiB);
++    /* rtc@68 - dallas,ds1339 */
++    i2c_slave_create_simple(i2c[13], TYPE_DS1339, 0x68);
++
++    /* &i2c14 - PROT reserve (no model) */
++    /* &i2c15 - MCIO 3A (no model) */
++}
++
++static void aspeed_machine_yosemite5_class_init(ObjectClass *oc,
++                                                const void *data)
++{
++    MachineClass *mc = MACHINE_CLASS(oc);
++    AspeedMachineClass *amc = ASPEED_MACHINE_CLASS(oc);
++
++    mc->desc       = "Facebook Yosemite 5 BMC (Cortex-A7)";
++    amc->soc_name  = "ast2600-a3";
++    amc->hw_strap1 = YOSEMITE5_BMC_HW_STRAP1;
++    amc->hw_strap2 = YOSEMITE5_BMC_HW_STRAP2;
++    amc->fmc_model = "mx66l1g45g";
++    amc->spi_model = NULL;
++    amc->num_cs    = 2;
++    amc->macs_mask = ASPEED_MAC2_ON;
++    amc->i2c_init  = yosemite5_bmc_i2c_init;
++    mc->default_ram_size = YOSEMITE5_BMC_RAM_SIZE;
++    aspeed_machine_class_init_cpus_defaults(mc);
++}
++
++static const TypeInfo aspeed_ast2600_yosemite5_types[] = {
++    {
++        .name          = MACHINE_TYPE_NAME("yosemite5-bmc"),
++        .parent        = TYPE_ASPEED_MACHINE,
++        .class_init    = aspeed_machine_yosemite5_class_init,
++    }
++};
++
++DEFINE_TYPES(aspeed_ast2600_yosemite5_types)
+diff --git a/hw/arm/meson.build b/hw/arm/meson.build
+index 6055c93128..69b98348c5 100644
+--- a/hw/arm/meson.build
++++ b/hw/arm/meson.build
+@@ -68,6 +68,7 @@ arm_common_ss.add(when: 'CONFIG_ASPEED_SOC', if_true: files(
+   'aspeed_ast2600_rainier.c',
+   'aspeed_ast2600_santabarbara.c',
+   'aspeed_ast2600_sanmiguel.c',
++  'aspeed_ast2600_yosemite5.c',
+   'aspeed_ast10x0.c',
+   'aspeed_ast10x0_evb.c',
+   'aspeed_ast1040.c',
+-- 
+2.53.0-Meta
+

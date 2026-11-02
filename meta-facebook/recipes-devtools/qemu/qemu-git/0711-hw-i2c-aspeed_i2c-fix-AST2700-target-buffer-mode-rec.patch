@@ -1,0 +1,219 @@
+From b5383770d6c59f1d84cdf2694d22df7adfe9a085 Mon Sep 17 00:00:00 2001
+From: Zinc Lim <zinclim@meta.com>
+Date: Fri, 28 Aug 2026 11:59:33 -0700
+Subject: [PATCH] hw/i2c/aspeed_i2c: fix AST2700 target buffer-mode receive
+
+AST2700 gives the target its own pool region and drives it through the
+DMA register set, where AST2600 shares the controller pool and uses the
+buffer registers. The target path assumed AST2600 throughout, so inbound
+packets were ACKed on the wire then lost: the driver read an empty
+buffer and MCTP timed out with nothing logged.
+
+Gated on target_pool_via_dma_regs:
+
+- RX_DMA_EN no longer implies DRAM. The driver also sets it to arm the
+  pool in buffer mode, so FUNC_CFG_DMA_EN picks the destination;
+  aspeed_i2c_bus_dma_to_pool() already modelled that for the master
+  path. The arm/disarm bit now follows the SoC.
+- The pool offset comes from I2CS_DMA_RX_ADDR, which the guest programs
+  to 0x30, as the master path uses I2CM_DMA_RX_ADDR. Clamped, being
+  guest-supplied.
+- The length comes from I2CS_DMA_LEN.RX_BUF_LEN. POOL_CTRL.RX_SIZE is
+  never written on AST2700, read back 0 and stalled after one byte.
+- The byte count is reported through I2CS_DMA_LEN_STS.RX_LEN. It is
+  cleared with the pool it describes, so a stale count cannot make a
+  later RX_DONE replay bytes the driver already consumed.
+
+AST2400/2500 use the old register path; AST2600/1030/1040 keep
+RX_BUFF_EN, offset 0x10 and POOL_CTRL. AST1700 reuses
+"aspeed.i2c-ast2700" and picks this up.
+---
+ hw/i2c/aspeed_i2c.c | 103 +++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 87 insertions(+), 16 deletions(-)
+
+diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
+index 41035cfbc0..7ecbc215fd 100644
+--- a/hw/i2c/aspeed_i2c.c
++++ b/hw/i2c/aspeed_i2c.c
+@@ -330,6 +330,54 @@ static bool aspeed_i2c_bus_dma_to_pool(AspeedI2CBus *bus)
+            !ARRAY_FIELD_EX32(bus->regs, I2CC_VERSION_CTRL, FUNC_CFG_DMA_EN);
+ }
+ 
++/* AST2700 lets the guest place the pool window, as the master path does. */
++static uint32_t aspeed_i2c_bus_target_rx_offset(AspeedI2CBus *bus)
++{
++    AspeedI2CClass *aic = ASPEED_I2C_GET_CLASS(bus->controller);
++
++    if (aic->target_pool_via_dma_regs) {
++        return bus->regs[R_I2CS_DMA_RX_ADDR];
++    }
++    return ASPEED_I2C_BUS_POOL_RX_OFFSET;
++}
++
++/*
++ * AST2700 arms the target pool with RX_DMA_EN; earlier SoCs use RX_BUFF_EN.
++ * This follows the SoC, not FUNC_CFG_DMA_EN, which only selects pool vs DRAM.
++ */
++static bool aspeed_i2c_bus_slave_rx_armed(AspeedI2CBus *bus)
++{
++    AspeedI2CClass *aic = ASPEED_I2C_GET_CLASS(bus->controller);
++
++    if (aic->target_pool_via_dma_regs) {
++        return SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CS_CMD, RX_DMA_EN);
++    }
++    return SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CS_CMD, RX_BUFF_EN);
++}
++
++static void aspeed_i2c_bus_slave_rx_disarm(AspeedI2CBus *bus)
++{
++    AspeedI2CClass *aic = ASPEED_I2C_GET_CLASS(bus->controller);
++
++    if (aic->target_pool_via_dma_regs) {
++        SHARED_ARRAY_FIELD_DP32(bus->regs, R_I2CS_CMD, RX_DMA_EN, 0);
++    } else {
++        SHARED_ARRAY_FIELD_DP32(bus->regs, R_I2CS_CMD, RX_BUFF_EN, 0);
++    }
++}
++
++/* Only AST2700 overloads RX_DMA_EN, so only there can it mean the pool. */
++static bool aspeed_i2c_bus_slave_rx_to_dram(AspeedI2CBus *bus)
++{
++    AspeedI2CClass *aic = ASPEED_I2C_GET_CLASS(bus->controller);
++
++    if (!SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CS_CMD, RX_DMA_EN)) {
++        return false;
++    }
++    return !aic->target_pool_via_dma_regs ||
++           !aspeed_i2c_bus_dma_to_pool(bus);
++}
++
+ static int aspeed_i2c_bus_send_dma_pool(AspeedI2CBus *bus)
+ {
+     AspeedI2CClass *aic = ASPEED_I2C_GET_CLASS(bus->controller);
+@@ -940,9 +988,18 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+         i2c_slave_set_address(bus->slave,
+             SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CS_DEV_ADDR,
+                                     SLAVE_DEV_ADDR1));
+-        /* Arming the RX buffer releases a transfer held off waiting for it. */
+-        if (SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CS_CMD, RX_BUFF_EN)) {
++        /* Pool-only: the DRAM path never withholds the ACK. */
++        if (aspeed_i2c_bus_slave_rx_armed(bus) &&
++            !aspeed_i2c_bus_slave_rx_to_dram(bus)) {
+             SHARED_ARRAY_FIELD_DP32(bus->regs, R_I2CC_POOL_CTRL, RX_COUNT, 0);
++            /*
++             * The byte count reported to the driver must be cleared with the
++             * pool it describes. A stale count makes a later RX_DONE decode
++             * replay pool bytes the driver already consumed.
++             */
++            if (aic->target_pool_via_dma_regs) {
++                ARRAY_FIELD_DP32(bus->regs, I2CS_DMA_LEN_STS, RX_LEN, 0);
++            }
+             if (ARRAY_FIELD_EX32(bus->regs, I2CS_INTR_STS, WAIT_RX_DMA)) {
+                 ARRAY_FIELD_DP32(bus->regs, I2CS_INTR_STS, WAIT_RX_DMA, 0);
+                 i2c_ack(bus->bus);
+@@ -970,8 +1027,9 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+                 FIELD_EX32(value, I2CS_INTR_STS, PKT_CMD_DONE) && !late) {
+                 /*
+                  * Keeps WAIT_RX_DMA: it gates the bus ACK withheld in
+-                 * A_I2CS_CMD, so only arming RX_BUFF_EN or ending the transfer
+-                 * may clear it. WAIT_TX_DMA has no such role and is cleared.
++                 * A_I2CS_CMD, so only re-arming the target RX or ending the
++                 * transfer may clear it. WAIT_TX_DMA has no such role and is
++                 * cleared.
+                  */
+                 bus->regs[R_I2CS_INTR_STS] &= ASPEED_I2CS_PKT_ACK_KEEP;
+                 /*
+@@ -1591,11 +1649,11 @@ static void aspeed_i2c_bus_slave_dma_rx_store(AspeedI2CBus *bus, uint8_t data)
+ 
+ /*
+  * The buffer mode target pool is armed one chunk at a time, so withhold the
+- * ACK until the driver arms RX_BUFF_EN again (see A_I2CS_CMD).
++ * ACK until the driver arms the pool again (see A_I2CS_CMD).
+  */
+ static void aspeed_i2c_bus_slave_buff_rx_wait(AspeedI2CBus *bus)
+ {
+-    SHARED_ARRAY_FIELD_DP32(bus->regs, R_I2CS_CMD, RX_BUFF_EN, 0);
++    aspeed_i2c_bus_slave_rx_disarm(bus);
+     ARRAY_FIELD_DP32(bus->regs, I2CS_INTR_STS, WAIT_RX_DMA, 1);
+     ARRAY_FIELD_DP32(bus->regs, I2CS_INTR_STS, PKT_CMD_DONE, 1);
+     aspeed_i2c_bus_raise_slave_interrupt(bus);
+@@ -1603,7 +1661,12 @@ static void aspeed_i2c_bus_slave_buff_rx_wait(AspeedI2CBus *bus)
+ 
+ static void aspeed_i2c_bus_slave_buff_rx_start(AspeedI2CBus *bus)
+ {
++    AspeedI2CClass *aic = ASPEED_I2C_GET_CLASS(bus->controller);
++
+     SHARED_ARRAY_FIELD_DP32(bus->regs, R_I2CC_POOL_CTRL, RX_COUNT, 0);
++    if (aic->target_pool_via_dma_regs) {
++        ARRAY_FIELD_DP32(bus->regs, I2CS_DMA_LEN_STS, RX_LEN, 0);
++    }
+     ARRAY_FIELD_DP32(bus->regs, I2CS_INTR_STS, SLAVE_ADDR_RX_MATCH, 1);
+     aspeed_i2c_bus_slave_buff_rx_wait(bus);
+ }
+@@ -1611,21 +1674,29 @@ static void aspeed_i2c_bus_slave_buff_rx_start(AspeedI2CBus *bus)
+ static void aspeed_i2c_bus_slave_buff_rx_store(AspeedI2CBus *bus, uint8_t data)
+ {
+     AspeedI2CClass *aic = ASPEED_I2C_GET_CLASS(bus->controller);
++    uint32_t rx_offset = aspeed_i2c_bus_target_rx_offset(bus);
+     uint32_t count = SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CC_POOL_CTRL,
+                                              RX_COUNT);
+-    uint32_t size = MIN(SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CC_POOL_CTRL,
+-                                                RX_SIZE) + 1,
+-                        aic->pool_size - ASPEED_I2C_BUS_POOL_RX_OFFSET);
+-
+-    if (!SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CS_CMD, RX_BUFF_EN) ||
+-        count >= size) {
++    /* AST2700 carries the target pool length in the DMA length register. */
++    uint32_t armed = aic->target_pool_via_dma_regs ?
++        ARRAY_FIELD_EX32(bus->regs, I2CS_DMA_LEN, RX_BUF_LEN) :
++        SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CC_POOL_CTRL, RX_SIZE);
++    /* rx_offset is guest-supplied on AST2700. */
++    uint32_t room = rx_offset < aic->pool_size ? aic->pool_size - rx_offset : 0;
++    uint32_t size = MIN(armed + 1, room);
++
++    if (!aspeed_i2c_bus_slave_rx_armed(bus) || count >= size) {
+         qemu_log_mask(LOG_GUEST_ERROR,
+                       "%s: Slave mode RX buffer is not armed\n", __func__);
+         return;
+     }
+ 
+-    aic->bus_pool_base(bus)[ASPEED_I2C_BUS_POOL_RX_OFFSET + count++] = data;
++    aic->bus_pool_base(bus)[rx_offset + count++] = data;
+     SHARED_ARRAY_FIELD_DP32(bus->regs, R_I2CC_POOL_CTRL, RX_COUNT, count);
++    if (aic->target_pool_via_dma_regs) {
++        /* AST2700 reports the target byte count through the DMA status. */
++        ARRAY_FIELD_DP32(bus->regs, I2CS_DMA_LEN_STS, RX_LEN, count);
++    }
+     trace_aspeed_i2c_bus_recv(bus->id, "SBUF", count, size, data);
+ 
+     if (count == size) {
+@@ -1663,7 +1734,7 @@ static void aspeed_i2c_bus_slave_log_addr_hit(AspeedI2CBus *bus)
+ static int aspeed_i2c_bus_new_slave_event(AspeedI2CBus *bus,
+                                           enum i2c_event event)
+ {
+-    bool rx_dma = SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CS_CMD, RX_DMA_EN);
++    bool rx_dma = aspeed_i2c_bus_slave_rx_to_dram(bus);
+ 
+     trace_aspeed_i2c_bus_new_slave_event(bus->id, I2C_EVENT[event]);
+ 
+@@ -1691,7 +1762,7 @@ static int aspeed_i2c_bus_new_slave_event(AspeedI2CBus *bus,
+              * No SLAVE_ADDR_RX_MATCH: buffer mode reported the match with
+              * the arming interrupt and only decodes a STOP without one.
+              */
+-            SHARED_ARRAY_FIELD_DP32(bus->regs, R_I2CS_CMD, RX_BUFF_EN, 0);
++            aspeed_i2c_bus_slave_rx_disarm(bus);
+             ARRAY_FIELD_DP32(bus->regs, I2CS_INTR_STS, WAIT_RX_DMA, 0);
+             if (SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CC_POOL_CTRL,
+                                         RX_COUNT)) {
+@@ -1757,7 +1828,7 @@ static int aspeed_i2c_bus_slave_event(I2CSlave *slave, enum i2c_event event)
+ 
+ static void aspeed_i2c_bus_new_slave_send_async(AspeedI2CBus *bus, uint8_t data)
+ {
+-    if (SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CS_CMD, RX_DMA_EN)) {
++    if (aspeed_i2c_bus_slave_rx_to_dram(bus)) {
+         aspeed_i2c_bus_slave_dma_rx_store(bus, data);
+     } else {
+         aspeed_i2c_bus_slave_buff_rx_store(bus, data);
+-- 
+2.52.0
+

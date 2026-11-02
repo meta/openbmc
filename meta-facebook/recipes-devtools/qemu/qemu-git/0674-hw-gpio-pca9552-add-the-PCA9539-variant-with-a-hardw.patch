@@ -1,0 +1,225 @@
+From 5d319b62036ff2ac90504f1c2f309b5c96f87e7a Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 6 Aug 2026 17:24:49 +0200
+Subject: [PATCH 674/682] hw/gpio: pca9552: add the PCA9539 variant with a
+ hardware reset pin
+
+The PCA9539 is register-compatible with the PCA9535 and PCA9555 I/O
+expanders already handled here, differing only by an active-low
+hardware /RESET pin. Model that pin as a named GPIO input: asserting it
+restores the registers to their power-on defaults and holds the device
+off the bus until it is released.
+
+Only the expander is reset, so the levels driven onto its pins outlive
+the reset for as long as the pin is held low: whatever drives them
+emits no fresh edge afterwards, and a reset reaching the device from
+elsewhere meanwhile must not forget them either. The input registers
+are left for the reset's pin update to derive rather than preset first,
+since it recomputes every one of them anyway.
+
+The extra pin state is migrated in an optional subsection so existing
+snapshots of the other variants stay compatible.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ hw/gpio/pca9552.c         | 89 +++++++++++++++++++++++++++++++++++++--
+ include/hw/gpio/pca9552.h |  1 +
+ 2 files changed, 87 insertions(+), 3 deletions(-)
+
+diff --git a/hw/gpio/pca9552.c b/hw/gpio/pca9552.c
+index 67274ad815..067bbd0a4e 100644
+--- a/hw/gpio/pca9552.c
++++ b/hw/gpio/pca9552.c
+@@ -5,12 +5,19 @@
+  *     https://www.nxp.com/docs/en/data-sheet/PCA9552.pdf
+  *     https://www.nxp.com/docs/en/data-sheet/PCA9555.pdf
+  *     https://www.nxp.com/docs/en/data-sheet/PCA9535_PCA9535C.pdf
++ *     https://www.nxp.com/docs/en/data-sheet/PCA9539_PCA9539R.pdf
+  *
+  * Copyright (c) 2017-2018, IBM Corporation.
+  * Copyright (c) 2020 Philippe Mathieu-Daudé
+  *
+  * This work is licensed under the terms of the GNU GPL, version 2 or
+  * later. See the COPYING file in the top-level directory.
++ *
++ * Limitations:
++ * - The INT output is not exposed, so a change on the input pins is never
++ *   signalled. No board wires it.
++ * - The blink rate and duty cycle registers are stored but never acted on: a
++ *   pin driven from a PWM source holds a steady level.
+  */
+ 
+ #include "qemu/osdep.h"
+@@ -44,6 +51,9 @@ struct PCA955xState {
+     qemu_irq gpio_out[PCA955X_PIN_COUNT_MAX];
+     uint8_t ext_state[PCA955X_PIN_COUNT_MAX];
+     char *description; /* For debugging purpose only */
++
++    /* Active-low hardware /RESET pin; always released on parts without one */
++    uint8_t reset_pin_level;
+ };
+ 
+ struct PCA955xClass {
+@@ -54,6 +64,7 @@ struct PCA955xClass {
+     uint8_t pin_count;
+     uint8_t max_reg;
+     bool has_led_support;
++    bool has_reset_pin;
+ };
+ 
+ /*
+@@ -353,6 +364,12 @@ static int pca955x_send(I2CSlave *i2c, uint8_t data)
+ static int pca955x_event(I2CSlave *i2c, enum i2c_event event)
+ {
+     PCA955xState *s = PCA955X(i2c);
++    PCA955xClass *k = PCA955X_GET_CLASS(s);
++
++    /* While /RESET is held low the device is off the bus and NACKs. */
++    if (k->has_reset_pin && !s->reset_pin_level) {
++        return -1;
++    }
+ 
+     s->len = 0;
+     return 0;
+@@ -506,6 +523,24 @@ static void pca955x_set_pin(Object *obj, Visitor *v, const char *name,
+     pca955x_set_ext_state(s, pin, state != PCA9552_PIN_LOW);
+ }
+ 
++static bool pca955x_reset_pin_needed(void *opaque)
++{
++    PCA955xClass *k = PCA955X_GET_CLASS(opaque);
++
++    return k->has_reset_pin;
++}
++
++static const VMStateDescription vmstate_pca955x_reset_pin = {
++    .name = "PCA9552/reset_pin",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .needed = pca955x_reset_pin_needed,
++    .fields = (const VMStateField[]) {
++        VMSTATE_UINT8(reset_pin_level, PCA955xState),
++        VMSTATE_END_OF_LIST()
++    }
++};
++
+ static const VMStateDescription pca9552_vmstate = {
+     .name = "PCA9552",
+     .version_id = 0,
+@@ -517,6 +552,10 @@ static const VMStateDescription pca9552_vmstate = {
+         VMSTATE_UINT8_ARRAY(ext_state, PCA955xState, PCA955X_PIN_COUNT_MAX),
+         VMSTATE_I2C_SLAVE(parent_obj, PCA955xState),
+         VMSTATE_END_OF_LIST()
++    },
++    .subsections = (const VMStateDescription * const []) {
++        &vmstate_pca955x_reset_pin,
++        NULL
+     }
+ };
+ 
+@@ -544,8 +583,6 @@ static void pca9535_reset_hold(Object *obj, ResetType type)
+ {
+     PCA955xState *s = PCA955X(obj);
+ 
+-    s->regs[PCA9535_INPUT0] = 0xFF;   /* All inputs high (pull-ups) */
+-    s->regs[PCA9535_INPUT1] = 0xFF;   /* All inputs high (pull-ups) */
+     s->regs[PCA9535_OUTPUT0] = 0xFF;  /* All outputs high */
+     s->regs[PCA9535_OUTPUT1] = 0xFF;  /* All outputs high */
+     s->regs[PCA9535_POLARITY0] = 0x00; /* No polarity inversion */
+@@ -553,7 +590,15 @@ static void pca9535_reset_hold(Object *obj, ResetType type)
+     s->regs[PCA9535_CONFIG0] = 0xFF;  /* All pins as inputs */
+     s->regs[PCA9535_CONFIG1] = 0xFF;  /* All pins as inputs */
+ 
+-    memset(s->ext_state, PCA9552_PIN_HIZ, PCA955X_PIN_COUNT_MAX);
++    /*
++     * While /RESET is held low only the expander is reset, so whatever drives
++     * its pins keeps driving them: their levels are left alone for as long as
++     * the pin stays low, whatever else resets meanwhile.
++     */
++    if (s->reset_pin_level) {
++        memset(s->ext_state, PCA9552_PIN_HIZ, PCA955X_PIN_COUNT_MAX);
++    }
++    /* The input registers are derived, and every level restated. */
+     pca955x_update_pin_input(s, true);
+ 
+     s->pointer = 0xFF;
+@@ -604,6 +649,26 @@ static void pca955x_gpio_in_handler(void *opaque, int pin, int level)
+     pca955x_set_ext_state(s, pin, level);
+ }
+ 
++static void pca955x_reset_pin(void *opaque, int n, int level)
++{
++    PCA955xState *s = PCA955X(opaque);
++
++    if (level == s->reset_pin_level) {
++        return; /* no edge */
++    }
++    s->reset_pin_level = level;
++
++    /*
++     * On the falling edge the PCA9539 restores its registers to the power-on
++     * defaults; the register reset runs through the Resettable hold phase.
++     * While the pin stays low the device is held off the bus (see the event
++     * handler).
++     */
++    if (!level) {
++        device_cold_reset(DEVICE(s));
++    }
++}
++
+ static void pca955x_realize(DeviceState *dev, Error **errp)
+ {
+     PCA955xClass *k = PCA955X_GET_CLASS(dev);
+@@ -615,6 +680,11 @@ static void pca955x_realize(DeviceState *dev, Error **errp)
+ 
+     qdev_init_gpio_out(dev, s->gpio_out, k->pin_count);
+     qdev_init_gpio_in(dev, pca955x_gpio_in_handler, k->pin_count);
++
++    s->reset_pin_level = 1; /* pulled high: deasserted */
++    if (k->has_reset_pin) {
++        qdev_init_gpio_in_named(dev, pca955x_reset_pin, "reset", 1);
++    }
+ }
+ 
+ static const Property pca955x_properties[] = {
+@@ -659,6 +729,14 @@ static void pca95x5_class_init(ObjectClass *oc, const void *data)
+     pc->has_led_support = false;
+ }
+ 
++static void pca9539_class_init(ObjectClass *oc, const void *data)
++{
++    PCA955xClass *pc = PCA955X_CLASS(oc);
++
++    pca95x5_class_init(oc, data);
++    pc->has_reset_pin = true;
++}
++
+ static const TypeInfo pca955x_types[] = {
+     {
+         .name          = TYPE_PCA955X,
+@@ -683,6 +761,11 @@ static const TypeInfo pca955x_types[] = {
+         .name          = TYPE_PCA9555,
+         .parent        = TYPE_PCA955X,
+         .class_init    = pca95x5_class_init,
++    },
++    {
++        .name          = TYPE_PCA9539,
++        .parent        = TYPE_PCA955X,
++        .class_init    = pca9539_class_init,
+     }
+ };
+ 
+diff --git a/include/hw/gpio/pca9552.h b/include/hw/gpio/pca9552.h
+index 5299c13829..a7954aecb3 100644
+--- a/include/hw/gpio/pca9552.h
++++ b/include/hw/gpio/pca9552.h
+@@ -14,5 +14,6 @@
+ #define TYPE_PCA9552 "pca9552"
+ #define TYPE_PCA9535 "pca9535"
+ #define TYPE_PCA9555 "pca9555"
++#define TYPE_PCA9539 "pca9539"
+ 
+ #endif
+-- 
+2.53.0-Meta
+

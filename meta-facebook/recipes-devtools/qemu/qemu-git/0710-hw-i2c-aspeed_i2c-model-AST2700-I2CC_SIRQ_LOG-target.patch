@@ -1,0 +1,121 @@
+From 806cd3c90ea6a9640a94967361c3396cb8f3523a Mon Sep 17 00:00:00 2001
+From: Zinc Lim <zinclim@meta.com>
+Date: Fri, 28 Aug 2026 11:58:40 -0700
+Subject: [PATCH] hw/i2c/aspeed_i2c: model AST2700 I2CC_SIRQ_LOG target address
+
+The AST2700 target ISR reads I2CC_SIRQ_LOG (0x8c) to learn which
+registered target a transfer was addressed to.
+
+Populate it on an address match and clear it on read: the driver drains
+it with "while ((sirq_log = readl(...)))" in interrupt context, so a
+sticky value hangs the guest.
+
+Gate on a new target_pool_via_dma_regs flag, as 0x8c only exists on the
+AST2700 generation. AST1040 shares the register window but stays off,
+its target mode being untested here.
+
+0x8c already falls inside ASPEED_I2C_NEW_NUM_REG, so regs[] and its
+vmstate are unchanged. Simplified: a single latch rather than a queue,
+addr1 only, and no hit on target reads (I2C_START_RECV unimplemented).
+---
+ hw/i2c/aspeed_i2c.c         | 34 ++++++++++++++++++++++++++++++++++
+ include/hw/i2c/aspeed_i2c.h | 10 ++++++++++
+ 2 files changed, 44 insertions(+)
+
+diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
+index cb1e15bebc..41035cfbc0 100644
+--- a/hw/i2c/aspeed_i2c.c
++++ b/hw/i2c/aspeed_i2c.c
+@@ -173,6 +173,16 @@ static uint64_t aspeed_i2c_bus_new_read(AspeedI2CBus *bus, hwaddr offset,
+         /* Remember what the target ISR sampled; see the write handler. */
+         bus->slave_intr_sts_seen = value;
+         break;
++    case A_I2CC_SIRQ_LOG:
++        if (!aic->target_pool_via_dma_regs) {
++            qemu_log_mask(LOG_GUEST_ERROR, "%s: Bad offset 0x%" HWADDR_PRIx
++                          "\n", __func__, offset);
++            break;
++        }
++        /* Read-to-clear: the driver drains this in a while() loop. */
++        value = bus->regs[R_I2CC_SIRQ_LOG];
++        bus->regs[R_I2CC_SIRQ_LOG] = 0;
++        break;
+     case A_I2CC_DMA_ADDR:
+         value = extract64(bus->dma_dram_offset, 0, 32);
+         break;
+@@ -1628,6 +1638,28 @@ static void aspeed_i2c_bus_slave_buff_rx_store(AspeedI2CBus *bus, uint8_t data)
+     i2c_ack(bus->bus);
+ }
+ 
++/*
++ * Reports the matched target address to the driver. Simplified: a single latch
++ * where hardware queues entries, addr1 only, and no hit on target reads since
++ * I2C_START_RECV is unimplemented.
++ */
++static void aspeed_i2c_bus_slave_log_addr_hit(AspeedI2CBus *bus)
++{
++    AspeedI2CClass *aic = ASPEED_I2C_GET_CLASS(bus->controller);
++    uint32_t addr = SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CS_DEV_ADDR,
++                                            SLAVE_DEV_ADDR1);
++    uint32_t log = 0;
++
++    if (!aic->target_pool_via_dma_regs) {
++        /* 0x8c is outside the register window on earlier SoCs. */
++        return;
++    }
++
++    log = FIELD_DP32(log, I2CC_SIRQ_LOG, SADDR_HIT, 1);
++    log = FIELD_DP32(log, I2CC_SIRQ_LOG, SLAVE_ADDR, addr);
++    bus->regs[R_I2CC_SIRQ_LOG] = log;
++}
++
+ static int aspeed_i2c_bus_new_slave_event(AspeedI2CBus *bus,
+                                           enum i2c_event event)
+ {
+@@ -1637,6 +1669,7 @@ static int aspeed_i2c_bus_new_slave_event(AspeedI2CBus *bus,
+ 
+     switch (event) {
+     case I2C_START_SEND_ASYNC:
++        aspeed_i2c_bus_slave_log_addr_hit(bus);
+         if (rx_dma) {
+             aspeed_i2c_bus_slave_dma_rx_start(bus);
+         } else if (ARRAY_FIELD_EX32(bus->regs, I2CS_CMD, PKT_MODE_EN)) {
+@@ -2008,6 +2041,7 @@ static void aspeed_2700_i2c_class_init(ObjectClass *klass, const void *data)
+     aic->bus_pool_base = aspeed_2500_i2c_bus_pool_base;
+     aic->has_dma = true;
+     aic->mem_size = 0x2000;
++    aic->target_pool_via_dma_regs = true;
+     aic->has_dma64 = true;
+     aic->has_byte_data_log = true;
+     aic->dma_addr_lo_mask = 0xffffffff;
+diff --git a/include/hw/i2c/aspeed_i2c.h b/include/hw/i2c/aspeed_i2c.h
+index ece92897e0..1a35579423 100644
+--- a/include/hw/i2c/aspeed_i2c.h
++++ b/include/hw/i2c/aspeed_i2c.h
+@@ -239,6 +239,9 @@ REG32(I2CS_DMA_RX_ADDR_HI, 0x6c)
+     FIELD(I2CS_DMA_RX_ADDR_HI, ADDR_HI, 0, 7)
+ REG32(I2CC_BYTE_DATA_LOG, 0x84)
+     FIELD(I2CC_BYTE_DATA_LOG, RX_BUF, 0, 8)
++REG32(I2CC_SIRQ_LOG, 0x8c)
++    FIELD(I2CC_SIRQ_LOG, SADDR_HIT, 3, 1)
++    FIELD(I2CC_SIRQ_LOG, SLAVE_ADDR, 8, 8)
+ REG32(I2CC_VERSION_CTRL, 0x94)
+     FIELD(I2CC_VERSION_CTRL, FUNC_CFG_DMA_EN, 2, 1)
+ 
+@@ -313,6 +316,13 @@ struct AspeedI2CClass {
+     uint64_t pool_size;
+     hwaddr pool_base;
+     uint32_t pool_gap_size;
++    /*
++     * AST2700 gives the target its own pool region and drives it through the
++     * DMA register set instead of the buffer registers earlier SoCs use. Left
++     * false for AST1040, which is otherwise AST2700-compatible but has no
++     * target-mode coverage here.
++     */
++    bool target_pool_via_dma_regs;
+     uint8_t *(*bus_pool_base)(AspeedI2CBus *);
+     bool check_sram;
+     bool has_dma;
+-- 
+2.52.0
+

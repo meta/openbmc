@@ -1,0 +1,65 @@
+From c09d0a7a29da4311d484f9d5e8719889e92a4aba Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Mon, 20 Jul 2026 11:25:29 +0200
+Subject: [PATCH 608/682] hw/rtc: ds1338: move TYPE_DS1338 to a public header
+
+Move the TYPE_DS1338 type name definition from ds1338.c into a new
+include/hw/rtc/ds1338.h header so that boards instantiating the device
+no longer need to redefine the type name string locally.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ hw/rtc/ds1338.c         |  2 +-
+ include/hw/rtc/ds1338.h | 20 ++++++++++++++++++++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
+ create mode 100644 include/hw/rtc/ds1338.h
+
+diff --git a/hw/rtc/ds1338.c b/hw/rtc/ds1338.c
+index 5f1ee2e410..f8b3340bf0 100644
+--- a/hw/rtc/ds1338.c
++++ b/hw/rtc/ds1338.c
+@@ -12,6 +12,7 @@
+ 
+ #include "qemu/osdep.h"
+ #include "hw/i2c/i2c.h"
++#include "hw/rtc/ds1338.h"
+ #include "migration/vmstate.h"
+ #include "qemu/bcd.h"
+ #include "qom/object.h"
+@@ -29,7 +30,6 @@
+ #define HOURS_PM   0x20
+ #define CTRL_OSF   0x20
+ 
+-#define TYPE_DS1338 "ds1338"
+ OBJECT_DECLARE_SIMPLE_TYPE(DS1338State, DS1338)
+ 
+ struct DS1338State {
+diff --git a/include/hw/rtc/ds1338.h b/include/hw/rtc/ds1338.h
+new file mode 100644
+index 0000000000..f4cfe6a8e7
+--- /dev/null
++++ b/include/hw/rtc/ds1338.h
+@@ -0,0 +1,20 @@
++/*
++ * MAXIM DS1338 I2C RTC+NVRAM
++ *
++ * Copyright (c) 2009 CodeSourcery.
++ * Written by Paul Brook
++ *
++ * This code is licensed under the GNU GPL v2.
++ *
++ * Contributions after 2012-01-13 are licensed under the terms of the
++ * GNU GPL, version 2 or (at your option) any later version.
++ *
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ */
++
++#ifndef HW_RTC_DS1338_H
++#define HW_RTC_DS1338_H
++
++#define TYPE_DS1338 "ds1338"
++
++#endif
+-- 
+2.53.0-Meta
+

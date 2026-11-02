@@ -1,0 +1,41 @@
+From 7ab1abccf5963975b4d48b0fc5b37b8b4bc6ae69 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Fri, 7 Aug 2026 11:25:16 +0200
+Subject: [PATCH] hw/arm: bletchley: correct the file copyright header
+
+The header carried "Copyright 2016 IBM Corp.", which does not reflect
+the machine's actual history:
+
+  - The Bletchley machine was added in 2022 by Patrick Williams
+    (a20c54b1231 "hw/arm/aspeed: add Bletchley machine type") as code
+    inside the shared hw/arm/aspeed.c, with no per-file copyright.
+  - It was later extracted into its own source file by Jamin Lin
+    (2bf16a24d61 "hw/arm/aspeed: Split Bletchley machine into a
+    separate source file for maintainability"), and the new file
+    header was seeded with an unrelated "2016 IBM Corp." line.
+
+Bletchley is a Facebook board, so credit Meta Platforms for its 2022
+authorship instead.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ hw/arm/aspeed_ast2600_bletchley.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hw/arm/aspeed_ast2600_bletchley.c b/hw/arm/aspeed_ast2600_bletchley.c
+index 7954202fff..8fa3c3d7da 100644
+--- a/hw/arm/aspeed_ast2600_bletchley.c
++++ b/hw/arm/aspeed_ast2600_bletchley.c
+@@ -1,7 +1,7 @@
+ /*
+- * Facebook Bletchley
++ * Facebook Bletchley BMC
+  *
+- * Copyright 2016 IBM Corp.
++ * Copyright (c) 2022 Meta Platforms, Inc. and affiliates
+  *
+  * SPDX-License-Identifier: GPL-2.0-or-later
+  *
+-- 
+2.54.0
+

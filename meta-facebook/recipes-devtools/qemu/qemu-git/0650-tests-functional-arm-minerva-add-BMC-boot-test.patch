@@ -1,0 +1,77 @@
+From 93747a1c54e3548191a76a9b3f4fe0ec8f011d3d Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Mon, 20 Jul 2026 10:45:21 +0200
+Subject: [PATCH 650/682] tests/functional/arm: minerva: add BMC boot test
+
+Add a functional test booting the Facebook Minerva BMC machine.
+
+Note: The boot image currently lives on a personal fork; a TODO in the
+test notes it should be relocated under legoater/qemu-aspeed-boot before
+upstreaming.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/functional/arm/meson.build            |  2 ++
+ tests/functional/arm/test_aspeed_minerva.py | 30 +++++++++++++++++++++
+ 2 files changed, 32 insertions(+)
+ create mode 100644 tests/functional/arm/test_aspeed_minerva.py
+
+diff --git a/tests/functional/arm/meson.build b/tests/functional/arm/meson.build
+index 61b00932db..dd1ddf7f6f 100644
+--- a/tests/functional/arm/meson.build
++++ b/tests/functional/arm/meson.build
+@@ -16,6 +16,7 @@ test_arm_timeouts = {
+   'aspeed_bletchley' : 480,
+   'aspeed_catalina' : 480,
+   'aspeed_gb200nvl_bmc' : 480,
++  'aspeed_minerva' : 480,
+   'aspeed_rainier' : 480,
+   'bpim2u' : 500,
+   'collie' : 180,
+@@ -51,6 +52,7 @@ tests_arm_system_thorough = [
+   'aspeed_bletchley',
+   'aspeed_catalina',
+   'aspeed_gb200nvl_bmc',
++  'aspeed_minerva',
+   'aspeed_rainier',
+   'bpim2u',
+   'canona1100',
+diff --git a/tests/functional/arm/test_aspeed_minerva.py b/tests/functional/arm/test_aspeed_minerva.py
+new file mode 100644
+index 0000000000..925a82b139
+--- /dev/null
++++ b/tests/functional/arm/test_aspeed_minerva.py
+@@ -0,0 +1,30 @@
++#!/usr/bin/env python3
++#
++# Functional test that boots the ASPEED machines
++#
++# Copyright (c) 2026 Meta Platforms, Inc. and affiliates.
++#
++# SPDX-License-Identifier: GPL-2.0-or-later
++
++from qemu_test import Asset
++from aspeed import AspeedTest
++
++
++class MinervaMachine(AspeedTest):
++
++    # TODO: the boot image currently lives on a personal fork; move it under
++    # legoater/qemu-aspeed-boot before upstreaming.
++    ASSET_MINERVA_FLASH = Asset(
++        'https://github.com/eblot/qemu-aspeed-boot/raw/refs/heads/minerva-bmc/images/minerva-bmc/openbmc-20260720025047/'
++            'obmc-phosphor-image-minerva-20260720025047.static.mtd.xz',
++        'bd713df39d3c09846299a2377315465187a4dcd33c29d3b3d683ef13b59f36bb')
++
++    def test_arm_ast2600_minerva_openbmc(self):
++        image_path = self.uncompress(self.ASSET_MINERVA_FLASH)
++
++        self.do_test_arm_aspeed_openbmc('minerva-bmc', image=image_path,
++                                        uboot='2019.04', cpu_id='0xf00',
++                                        soc='AST2600 rev A3')
++
++if __name__ == '__main__':
++    AspeedTest.main()
+-- 
+2.53.0-Meta
+

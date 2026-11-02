@@ -1,0 +1,76 @@
+From cf72be2ac24cdbd0da0aef854971f7d76224e85f Mon Sep 17 00:00:00 2001
+From: Zinc Lim <zinclim@meta.com>
+Date: Wed, 19 Aug 2026 23:00:38 -0700
+Subject: [PATCH] hw/i2c/aspeed_i2c: only raise the target IRQ for enabled
+ sources
+
+aspeed_i2c_bus_raise_slave_interrupt() asserts the bus IRQ whenever
+I2CS_INTR_STS is non-zero, without masking against I2CS_INTR_CTRL. Its
+master-side counterpart aspeed_i2c_bus_raise_interrupt() has always
+masked (raise_irq = sts & intr_ctrl_mask), so we should follow that here.
+
+Master and target share a single output line, and that line is level
+triggered: qemu_irq_lower() is reached only from the INTR_STS write
+handlers. Asserting for a status bit the guest has masked therefore
+creates a request the guest cannot satisfy. Its ISR computes sts & ctrl,
+finds nothing it subscribed to, returns IRQ_NONE and consequently never
+writes I2CS_INTR_STS, so the line stays high and the CPU re-enters the
+handler immediately. Linux counts 100k unhandled interrupts and disables
+the line outright:
+
+  irq 50: nobody cared (try booting with the "irqpoll" option)
+  Comm: mctpi2c4/tx
+   ast2600_i2c_setup_buff_tx from ast2600_i2c_controller_xfer
+   ast2600_i2c_controller_xfer from __i2c_transfer
+   __i2c_transfer from mctp_i2c_tx_thread
+  handlers: [<...>] ast2600_i2c_bus_irq
+  Disabling IRQ #50
+
+Once IRQ 50 is gone the bus is dead and every later transfer fails with
+-EBUSY:
+
+  i2c i2c-4: __i2c_transfer failed -16
+
+Every target raise is exposed to this, including the DMA mode I2C_FINISH
+path that has been there since target support was added. Buffer mode RX
+just makes it easy to hit, because it raises mid-transfer each time the
+pool needs re-arming rather than only at STOP.
+
+Mask the raise against I2CS_INTR_CTRL. Status bits still latch while
+masked; they simply do not drive the line. Since suppressing the raise
+would otherwise lose an interrupt that the guest enables later, also
+re-evaluate pending target status on writes to I2CS_INTR_CTRL, matching
+how a real controller asserts on unmask.
+
+Signed-off-by: Zinc Lim <zinclim@meta.com>
+---
+ hw/i2c/aspeed_i2c.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
+index 725c253a47..022b47ed36 100644
+--- a/hw/i2c/aspeed_i2c.c
++++ b/hw/i2c/aspeed_i2c.c
+@@ -83,8 +83,10 @@ static inline void aspeed_i2c_bus_raise_interrupt(AspeedI2CBus *bus)
+ static inline void aspeed_i2c_bus_raise_slave_interrupt(AspeedI2CBus *bus)
+ {
+     AspeedI2CClass *aic = ASPEED_I2C_GET_CLASS(bus->controller);
++    uint32_t sts = bus->regs[R_I2CS_INTR_STS];
++    uint32_t ctrl = bus->regs[R_I2CS_INTR_CTRL];
+ 
+-    if (!bus->regs[R_I2CS_INTR_STS]) {
++    if (!(sts & ctrl)) {
+         return;
+     }
+ 
+@@ -933,6 +935,7 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+         break;
+     case A_I2CS_INTR_CTRL:
+         bus->regs[R_I2CS_INTR_CTRL] = value;
++        aspeed_i2c_bus_raise_slave_interrupt(bus);
+         break;
+ 
+     case A_I2CS_INTR_STS:
+-- 
+2.54.0
+

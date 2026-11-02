@@ -1,0 +1,88 @@
+From 951ad2d5b906bedde350e194dc1ea691a4e5b545 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 3 Sep 2026 17:15:29 +0200
+Subject: [PATCH 624/682] tests/qtest: ds1339: cover power-on defaults and
+ reserved-bit masking
+
+Neither the power-on defaults nor the reserved bits of the register
+file were pinned.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/qtest/ds1339-test.c | 51 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
+
+diff --git a/tests/qtest/ds1339-test.c b/tests/qtest/ds1339-test.c
+index 08fc16acda..e9dcdc36da 100644
+--- a/tests/qtest/ds1339-test.c
++++ b/tests/qtest/ds1339-test.c
+@@ -74,6 +74,53 @@ static void test_osf_write_protect(void *obj, void *data,
+     g_assert_cmphex(i2c_get8(i2cdev, DS1339_STATUS) & DS1339_STATUS_OSF, ==, 0);
+ }
+ 
++/* The control and status registers come up in their power-on state. */
++static void test_reset_defaults(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *i2cdev = (QI2CDevice *)obj;
++
++    g_assert_cmphex(i2c_get8(i2cdev, DS1339_CONTROL), ==, 0x18);
++    g_assert_cmphex(i2c_get8(i2cdev, DS1339_STATUS) & DS1339_STATUS_OSF,
++                    ==, DS1339_STATUS_OSF);
++}
++
++/* Neither the reserved status bits nor the alarm flags are guest-writable. */
++static void test_status_register(void *obj, void *data,
++                                 QGuestAllocator *alloc)
++{
++    QI2CDevice *i2cdev = (QI2CDevice *)obj;
++
++    i2c_set8(i2cdev, DS1339_STATUS, 0x7c);
++    g_assert_cmphex(i2c_get8(i2cdev, DS1339_STATUS), ==, 0x00);
++
++    i2c_set8(i2cdev, DS1339_STATUS, 0x03);
++    g_assert_cmphex(i2c_get8(i2cdev, DS1339_STATUS), ==, 0x00);
++
++    i2c_set8(i2cdev, DS1339_STATUS, 0xff);
++    g_assert_cmphex(i2c_get8(i2cdev, DS1339_STATUS), ==, 0x00);
++}
++
++/* Reserved time-register bits read back zero even with the clock stopped. */
++static void test_stopped_reserved_bits(void *obj, void *data,
++                                       QGuestAllocator *alloc)
++{
++    QI2CDevice *i2cdev = (QI2CDevice *)obj;
++    const uint8_t all_ones[7] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
++    uint8_t resp[7];
++
++    i2c_set8(i2cdev, DS1339_CONTROL, 0x18 | 0x80);
++    i2c_write_block(i2cdev, DS1339_SECONDS, all_ones, sizeof(all_ones));
++
++    i2c_read_block(i2cdev, DS1339_SECONDS, resp, sizeof(resp));
++    g_assert_cmphex(resp[0], ==, 0x7f);
++    g_assert_cmphex(resp[1], ==, 0x7f);
++    g_assert_cmphex(resp[2], ==, 0x7f);
++    g_assert_cmphex(resp[3], ==, 0x07);
++    g_assert_cmphex(resp[4], ==, 0x3f);
++    g_assert_cmphex(resp[5], ==, 0x9f);
++    g_assert_cmphex(resp[6], ==, 0xff);
++}
++
+ /* The register pointer wraps at the end of the map. */
+ static void test_address_wrap(void *obj, void *data, QGuestAllocator *alloc)
+ {
+@@ -155,8 +202,12 @@ static void ds1339_register_nodes(void)
+     qos_node_consumes("ds1339", "i2c-bus", &opts);
+ 
+     qos_add_test("time", "ds1339", test_time, NULL);
++    qos_add_test("reset-defaults", "ds1339", test_reset_defaults, NULL);
+     qos_add_test("control-register", "ds1339", test_control_register, NULL);
++    qos_add_test("status-register", "ds1339", test_status_register, NULL);
+     qos_add_test("osf-write-protect", "ds1339", test_osf_write_protect, NULL);
++    qos_add_test("stopped-reserved-bits", "ds1339",
++                 test_stopped_reserved_bits, NULL);
+     qos_add_test("address-wrap", "ds1339", test_address_wrap, NULL);
+     qos_add_test("block-wrap", "ds1339", test_block_wrap, NULL);
+     qos_add_test("alarm-registers", "ds1339", test_alarm_registers,
+-- 
+2.53.0-Meta
+

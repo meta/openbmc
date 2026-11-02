@@ -1,0 +1,97 @@
+From 06aafcc6e89441bc5b15ce2f77362efce31eb452 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Mon, 7 Sep 2026 11:03:14 +0200
+Subject: [PATCH 677/682] tests/qtest: pca9539: cover the output levels across
+ a migration
+
+Check the destination restates what it restored: a pin the source
+drove high has to reach the consumer wired to it, not just the input
+register.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/qtest/pca9539-test.c | 53 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+
+diff --git a/tests/qtest/pca9539-test.c b/tests/qtest/pca9539-test.c
+index 04834e7ccb..774f665f29 100644
+--- a/tests/qtest/pca9539-test.c
++++ b/tests/qtest/pca9539-test.c
+@@ -7,7 +7,9 @@
+  */
+ 
+ #include "qemu/osdep.h"
++#include <glib/gstdio.h>
+ #include "hw/gpio/pca9552_regs.h"
++#include "libqtest.h"
+ #include "libqtest-single.h"
+ #include "libqos/i2c.h"
+ #include "libqos/qgraph.h"
+@@ -313,6 +315,56 @@ static void test_reset_pin_output_level(void *obj, void *data,
+     g_assert_true(get_irq(0));
+ }
+ 
++/* The destination has to restate the restored levels, not just the regs. */
++static void test_migration(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++    g_autofree char *tmpfs = NULL;
++    g_autofree char *mig_path = NULL;
++    g_autofree char *uri = NULL;
++    GString *dest_cmdline;
++    GError *err = NULL;
++    QTestState *from, *to;
++    QDict *rsp;
++
++    tmpfs = g_dir_make_tmp("pca9539-test-XXXXXX", &err);
++    g_assert_no_error(err);
++    g_assert(tmpfs);
++
++    mig_path = g_strdup_printf("%s/socket.mig", tmpfs);
++    uri = g_strdup_printf("unix:%s", mig_path);
++
++    /* Pin 0 driven high, pin 1 low: only a high pin can be observed. */
++    i2c_set8(dev, PCA9535_OUTPUT0, 0xFD);
++    i2c_set8(dev, PCA9535_CONFIG0, 0xFC);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xFD);
++
++    dest_cmdline = g_string_new(qos_get_current_command_line());
++    g_string_append_printf(dest_cmdline, " -incoming %s", uri);
++    to = qtest_init(dest_cmdline->str);
++    qtest_irq_intercept_out(to, PCA9539_TEST_PATH);
++
++    rsp = qmp("{ 'execute': 'migrate', 'arguments': { 'uri': %s } }", uri);
++    g_assert(qdict_haskey(rsp, "return"));
++    qobject_unref(rsp);
++
++    qmp_eventwait("STOP");
++    qtest_qmp_eventwait(to, "RESUME");
++
++    from = dev->bus->qts;
++    dev->bus->qts = to;
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xFD);
++    dev->bus->qts = from;
++
++    g_assert_true(qtest_get_irq(to, 0));
++    g_assert_false(qtest_get_irq(to, 1));
++
++    qtest_quit(to);
++    g_unlink(mig_path);
++    g_rmdir(tmpfs);
++    g_string_free(dest_cmdline, true);
++}
++
+ static void pca9539_register_nodes(void)
+ {
+     QOSGraphEdgeOptions opts = {
+@@ -348,6 +400,7 @@ static void pca9539_register_nodes(void)
+                  test_reset_publishes_levels, NULL);
+     qos_add_test("reset-pin-output-level", "pca9539",
+                  test_reset_pin_output_level, NULL);
++    qos_add_test("migration", "pca9539", test_migration, NULL);
+ }
+ 
+ libqos_init(pca9539_register_nodes);
+-- 
+2.53.0-Meta
+

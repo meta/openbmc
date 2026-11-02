@@ -1,0 +1,310 @@
+From 5869eb7299e0aa41c4dabf0d26eb63298d14d7d8 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 6 Aug 2026 15:25:05 +0200
+Subject: [PATCH] hw/arm: santabarbara: add Facebook Santabarbara BMC machine
+
+Add the 'santabarbara-bmc' machine type, an AST2600-based BMC, modelled
+from its device tree (aspeed-bmc-facebook-santabarbara.dts).
+
+The board uses TMP75, TMP175 and TMP421 temperature sensors, INA230 and
+INA238 power monitors, ADC128D818 ADCs, PCA9539 and PCA9555 IO
+expanders, PCA9546 and PCA9548 I2C muxes, AT24C EEPROMs and a DS1339
+RTC, including the repeated "Rainbow" accelerator subtree.
+
+Every device the Santabarbara device tree describes and QEMU already
+models is instantiated. The remaining ones (MAX31790 fan controllers,
+the SBRMI and SBTSI side-band interfaces, ADS7830 ADCs, MCP9600
+thermocouple sensors, MP2971 voltage regulators, AD5272 potentiometers,
+the SLB9670 SPI TPM, IPMB and MCTP) have no QEMU model and are left
+documented as comments.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ docs/system/arm/aspeed.rst           |   1 +
+ hw/arm/aspeed_ast2600_santabarbara.c | 249 +++++++++++++++++++++++++++
+ hw/arm/meson.build                   |   1 +
+ 3 files changed, 251 insertions(+)
+ create mode 100644 hw/arm/aspeed_ast2600_santabarbara.c
+
+diff --git a/docs/system/arm/aspeed.rst b/docs/system/arm/aspeed.rst
+index db0035189b..aa43e0d47b 100644
+--- a/docs/system/arm/aspeed.rst
++++ b/docs/system/arm/aspeed.rst
+@@ -35,6 +35,7 @@ AST2600 SoC based machines :
+ - ``fby35-bmc``            Facebook fby35 BMC
+ - ``catalina-bmc``         Facebook Catalina BMC
+ - ``clemente-bmc``         Facebook Clemente BMC
++- ``santabarbara-bmc``     Facebook Santabarbara BMC
+ - ``sanmiguel-bmc``        Facebook SanMiguel BMC
+ - ``anacapa-bmc``          Facebook Anacapa BMC
+ - ``minerva-bmc``          Facebook Minerva BMC
+diff --git a/hw/arm/aspeed_ast2600_santabarbara.c b/hw/arm/aspeed_ast2600_santabarbara.c
+new file mode 100644
+index 0000000000..c2f4a4bfbc
+--- /dev/null
++++ b/hw/arm/aspeed_ast2600_santabarbara.c
+@@ -0,0 +1,249 @@
++/*
++ * Facebook Santabarbara BMC
++ *
++ * Copyright (c) 2026 Meta Platforms, Inc. and affiliates.
++ *
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ *
++ * Current limitations: the following devices from the device tree have no
++ * QEMU model and are therefore not emulated:
++ *   - maxim,max31790 fan controllers
++ *   - amd,sbrmi / amd,sbtsi CPU side-band interfaces
++ *   - ti,ads7830 ADCs
++ *   - microchip,mcp9600 thermocouple sensors
++ *   - mps,mp2971 voltage regulators
++ *   - adi,ad5272 digital potentiometers
++ *   - infineon,slb9670 TPM (SPI)
++ *   - ipmb-dev IPMB interface
++ *   - mctp-i2c-controller MCTP endpoints
++ */
++
++#include "qemu/osdep.h"
++#include "hw/arm/aspeed.h"
++#include "hw/arm/aspeed_soc.h"
++#include "hw/i2c/i2c_mux_pca954x.h"
++#include "hw/gpio/pca9552.h"
++#include "hw/nvram/eeprom_at24c.h"
++#include "hw/rtc/ds1338.h"
++#include "hw/sensor/adc128d818.h"
++#include "hw/sensor/tmp105.h"
++#include "hw/sensor/tmp421.h"
++#include "hw/sensor/ina230.h"
++#include "hw/sensor/ina238.h"
++
++/* Santabarbara hardware values. */
++#define SANTABARBARA_BMC_HW_STRAP1 0x00002002
++#define SANTABARBARA_BMC_HW_STRAP2 0x00000000
++#define SANTABARBARA_BMC_RAM_SIZE (2 * GiB)
++
++/*
++ * A "Rainbow" accelerator module, replicated on i2c6/8/10/13: a FRU EEPROM,
++ * a fan-out PCA9546 fronting power monitors and temperature sensors, and a
++ * nested PCA9546 behind its first channel.
++ */
++static void santabarbara_rainbow_init(I2CBus *bus)
++{
++    /* eeprom@52 - atmel,24c256 (module FRU) */
++    at24c_eeprom_init(bus, 0x52, 32 * KiB);
++
++    /* i2c-mux@71 - PCA9546 */
++    I2CSlave *mux = i2c_slave_create_simple(bus, TYPE_PCA9546, 0x71);
++
++    /* channel 0 */
++    /* temperature-sensor@64/65/67 - microchip,mcp9600 (no model) */
++    /* nested i2c-mux@72 - PCA9546 */
++    I2CSlave *mux2 = i2c_slave_create_simple(pca954x_i2c_get_bus(mux, 0),
++                                             TYPE_PCA9546, 0x72);
++    /* channel 1 */
++    I2CBus *sub = pca954x_i2c_get_bus(mux2, 1);
++    /* voltage-sensor@48/49 - ti,ads7830 (no model) */
++    i2c_slave_create_simple(sub, TYPE_TMP175, 0x4a);
++    i2c_slave_create_simple(sub, TYPE_TMP175, 0x4b);
++    at24c_eeprom_init(sub, 0x56, 32 * KiB);
++
++    /* channel 1 */
++    I2CBus *ch1 = pca954x_i2c_get_bus(mux, 1);
++    /* potentiometer@2c/2e/2f - adi,ad5272 (no model) */
++    i2c_slave_create_simple(ch1, TYPE_INA238, 0x40);
++    i2c_slave_create_simple(ch1, TYPE_INA238, 0x44);
++    i2c_slave_create_simple(ch1, TYPE_INA238, 0x45);
++
++    /* channel 2 - same layout as channel 1 */
++    I2CBus *ch2 = pca954x_i2c_get_bus(mux, 2);
++    i2c_slave_create_simple(ch2, TYPE_INA238, 0x40);
++    i2c_slave_create_simple(ch2, TYPE_INA238, 0x44);
++    i2c_slave_create_simple(ch2, TYPE_INA238, 0x45);
++
++    /* channel 3 */
++    I2CBus *ch3 = pca954x_i2c_get_bus(mux, 3);
++    /* voltage-sensor@1d/37 - ti,adc128d818 (mode 1: 8 voltage channels) */
++    i2c_slave_create_simple(ch3, TYPE_ADC128D818, 0x1d);
++    i2c_slave_create_simple(ch3, TYPE_ADC128D818, 0x37);
++    i2c_slave_create_simple(ch3, TYPE_INA238, 0x40);
++    i2c_slave_create_simple(ch3, TYPE_INA238, 0x45);
++    i2c_slave_create_simple(ch3, TYPE_TMP175, 0x48);
++    i2c_slave_create_simple(ch3, TYPE_TMP175, 0x49);
++}
++
++static void santabarbara_bmc_i2c_init(AspeedMachineState *bmc)
++{
++    /* Reference: aspeed-bmc-facebook-santabarbara.dts */
++
++    AspeedSoCState *soc = bmc->soc;
++    I2CBus *i2c[16] = {};
++    I2CSlave *mux;
++    I2CBus *bus;
++
++    for (unsigned idx = 0; idx < ARRAY_SIZE(i2c); idx++) {
++        i2c[idx] = aspeed_i2c_get_bus(&soc->i2c, idx);
++    }
++
++    /* &i2c0 */
++    /* eeprom@53 - atmel,24c128 (MB FRU) */
++    at24c_eeprom_init(i2c[0], 0x53, 16 * KiB);
++    /* rtc@68 - dallas,ds1339 */
++    i2c_slave_create_simple(i2c[0], TYPE_DS1339, 0x68);
++
++    /* &i2c1 */
++    /* gpio@20/22/24/26 - nxp,pca9555 */
++    i2c_slave_create_simple(i2c[1], TYPE_PCA9555, 0x20);
++    /* fan-controller@21 - maxim,max31790 (no model) */
++    i2c_slave_create_simple(i2c[1], TYPE_PCA9555, 0x22);
++    i2c_slave_create_simple(i2c[1], TYPE_PCA9555, 0x24);
++    i2c_slave_create_simple(i2c[1], TYPE_PCA9555, 0x26);
++
++    /* &i2c3 */
++    /* sbrmi@3c - amd,sbrmi (no model) */
++    /* sbtsi@4c - amd,sbtsi (no model) */
++
++    /* &i2c4 */
++    /* i2c-mux@70 - PCA9548 */
++    mux = i2c_slave_create_simple(i2c[4], TYPE_PCA9548, 0x70);
++    /* channel 0 - HPM and SCM board-id EEPROMs (atmel,24c128) */
++    bus = pca954x_i2c_get_bus(mux, 0);
++    at24c_eeprom_init(bus, 0x51, 16 * KiB);
++    at24c_eeprom_init(bus, 0x53, 16 * KiB);
++    /* channel 3 */
++    bus = pca954x_i2c_get_bus(mux, 3);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x40);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x42);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x44);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x46);
++    /* voltage-sensor@48/4a - ti,ads7830 (no model) */
++    i2c_slave_create_simple(bus, TYPE_TMP75, 0x4c);
++    i2c_slave_create_simple(bus, TYPE_TMP75, 0x4e);
++    /* channel 6 */
++    bus = pca954x_i2c_get_bus(mux, 6);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x40);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x42);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x44);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x46);
++    /* voltage-sensor@48 - ti,ads7830 (no model) */
++    /* channel 7 */
++    bus = pca954x_i2c_get_bus(mux, 7);
++    i2c_slave_create_simple(bus, TYPE_TMP75, 0x4b);
++    i2c_slave_create_simple(bus, TYPE_TMP75, 0x4f);
++    /* eeprom@53 - atmel,24c512 (FIO FRU) */
++    at24c_eeprom_init(bus, 0x53, 64 * KiB);
++
++    /* &i2c5 */
++    /* eeprom@52 - atmel,24c64 (E1.S backplane FRU) */
++    at24c_eeprom_init(i2c[5], 0x52, 8 * KiB);
++    /* i2c-mux@71 - PCA9546 (channels empty) */
++    i2c_slave_create_simple(i2c[5], TYPE_PCA9546, 0x71);
++    /* i2c-mux@72 - PCA9546 */
++    mux = i2c_slave_create_simple(i2c[5], TYPE_PCA9546, 0x72);
++    /* channel 0 - voltage-sensor@48 ti,ads7830 (no model) */
++    /* channel 1 */
++    i2c_slave_create_simple(pca954x_i2c_get_bus(mux, 1), TYPE_TMP75, 0x48);
++    /* channel 2 */
++    bus = pca954x_i2c_get_bus(mux, 2);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x40);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x41);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x44);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x45);
++    /* channel 3 - gpio@74 nxp,pca9539 */
++    i2c_slave_create_simple(pca954x_i2c_get_bus(mux, 3), TYPE_PCA9539, 0x74);
++
++    /* &i2c6 - Rainbow 0 */
++    santabarbara_rainbow_init(i2c[6]);
++
++    /* &i2c7 - ipmb@10 ipmb-dev (no model) */
++
++    /* &i2c8 - Rainbow 2 */
++    santabarbara_rainbow_init(i2c[8]);
++
++    /* &i2c9 */
++    /* temperature-sensor@4b - ti,tmp75 */
++    i2c_slave_create_simple(i2c[9], TYPE_TMP75, 0x4b);
++    /* eeprom@50/51 - atmel,24c128 (SCM FRU) */
++    at24c_eeprom_init(i2c[9], 0x50, 16 * KiB);
++    at24c_eeprom_init(i2c[9], 0x51, 16 * KiB);
++    /* eeprom@56 - atmel,24c64 (BSM FRU) */
++    at24c_eeprom_init(i2c[9], 0x56, 8 * KiB);
++
++    /* &i2c10 - Rainbow 3 */
++    santabarbara_rainbow_init(i2c[10]);
++
++    /* &i2c11 */
++    /* mctp@10 - mctp-i2c-controller (no model) */
++    /* temperature-sensor@1f - ti,tmp421 (OCP NIC) */
++    i2c_slave_create_simple(i2c[11], TYPE_TMP421, 0x1f);
++    /* eeprom@50 - atmel,24c64 (OCP NIC FRU) */
++    at24c_eeprom_init(i2c[11], 0x50, 8 * KiB);
++
++    /* &i2c12 */
++    /* gpio@27 - nxp,pca9555 */
++    i2c_slave_create_simple(i2c[12], TYPE_PCA9555, 0x27);
++    /* eeprom@52 - atmel,24c64 (SWB FRU) */
++    at24c_eeprom_init(i2c[12], 0x52, 8 * KiB);
++    /* i2c-mux@72 - PCA9548 */
++    mux = i2c_slave_create_simple(i2c[12], TYPE_PCA9548, 0x72);
++    /* channel 0 */
++    i2c_slave_create_simple(pca954x_i2c_get_bus(mux, 0), TYPE_TMP75, 0x48);
++    /* channel 1 - power-monitor@42/43 mps,mp2971 (no model) */
++    /* channel 2 */
++    bus = pca954x_i2c_get_bus(mux, 2);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x40);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x41);
++    /* channel 3 */
++    bus = pca954x_i2c_get_bus(mux, 3);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x44);
++    i2c_slave_create_simple(bus, TYPE_INA230, 0x45);
++    /* channel 4 - voltage-sensor@49 ti,ads7830 (no model) */
++
++    /* &i2c13 - Rainbow 1 */
++    santabarbara_rainbow_init(i2c[13]);
++
++    /* &i2c14 - empty */
++    /* &i2c15 - empty */
++}
++
++static void aspeed_machine_santabarbara_class_init(ObjectClass *oc,
++                                                   const void *data)
++{
++    MachineClass *mc = MACHINE_CLASS(oc);
++    AspeedMachineClass *amc = ASPEED_MACHINE_CLASS(oc);
++
++    mc->desc       = "Facebook Santabarbara BMC (Cortex-A7)";
++    amc->soc_name  = "ast2600-a3";
++    amc->hw_strap1 = SANTABARBARA_BMC_HW_STRAP1;
++    amc->hw_strap2 = SANTABARBARA_BMC_HW_STRAP2;
++    amc->fmc_model = "w25q01jvq";
++    amc->spi_model = NULL;
++    amc->num_cs    = 2;
++    amc->macs_mask = ASPEED_MAC2_ON | ASPEED_MAC3_ON;
++    amc->i2c_init  = santabarbara_bmc_i2c_init;
++    mc->default_ram_size = SANTABARBARA_BMC_RAM_SIZE;
++    aspeed_machine_class_init_cpus_defaults(mc);
++}
++
++static const TypeInfo aspeed_ast2600_santabarbara_types[] = {
++    {
++        .name          = MACHINE_TYPE_NAME("santabarbara-bmc"),
++        .parent        = TYPE_ASPEED_MACHINE,
++        .class_init    = aspeed_machine_santabarbara_class_init,
++    }
++};
++
++DEFINE_TYPES(aspeed_ast2600_santabarbara_types)
+diff --git a/hw/arm/meson.build b/hw/arm/meson.build
+index ecf1ec9b1b..6055c93128 100644
+--- a/hw/arm/meson.build
++++ b/hw/arm/meson.build
+@@ -66,6 +66,7 @@ arm_common_ss.add(when: 'CONFIG_ASPEED_SOC', if_true: files(
+   'aspeed_ast2600_gb200nvl.c',
+   'aspeed_ast2600_minerva.c',
+   'aspeed_ast2600_rainier.c',
++  'aspeed_ast2600_santabarbara.c',
+   'aspeed_ast2600_sanmiguel.c',
+   'aspeed_ast10x0.c',
+   'aspeed_ast10x0_evb.c',
+-- 
+2.53.0-Meta
+

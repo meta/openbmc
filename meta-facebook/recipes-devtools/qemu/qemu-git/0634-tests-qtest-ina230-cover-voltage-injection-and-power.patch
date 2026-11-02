@@ -1,0 +1,167 @@
+From f16e293fc3f7d679eec800b718815cc5ab79f6ac Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 23 Jul 2026 16:49:27 +0200
+Subject: [PATCH 634/682] tests/qtest: ina230: cover voltage injection and
+ power derivation
+
+Cover the shunt- and bus-voltage injection properties and the current
+and power values the device derives from them through the Calibration
+register, including the zero-calibration case and the clamp/overflow
+edges.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/qtest/ina230-test.c | 124 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 124 insertions(+)
+
+diff --git a/tests/qtest/ina230-test.c b/tests/qtest/ina230-test.c
+index f7aefd2d97..b01f9445d1 100644
+--- a/tests/qtest/ina230-test.c
++++ b/tests/qtest/ina230-test.c
+@@ -49,6 +49,33 @@
+ 
+ #define DIE_ID_VAL          0x2310
+ 
++/* QMP helpers for injecting the physical inputs */
++
++static void qmp_ina230_set(const char *property, int value)
++{
++    QDict *resp;
++
++    resp = qmp("{ 'execute': 'qom-set', 'arguments':"
++               " { 'path': %s, 'property': %s, 'value': %d } }",
++               INA230_TEST_ID, property, value);
++    g_assert(qdict_haskey(resp, "return"));
++    qobject_unref(resp);
++}
++
++static int qmp_ina230_get(const char *property)
++{
++    QDict *resp;
++    int ret;
++
++    resp = qmp("{ 'execute': 'qom-get', 'arguments':"
++               " { 'path': %s, 'property': %s } }",
++               INA230_TEST_ID, property);
++    g_assert(qdict_haskey(resp, "return"));
++    ret = qdict_get_int(resp, "return");
++    qobject_unref(resp);
++    return ret;
++}
++
+ /* Power-on-reset default values and the Die ID */
+ static void test_defaults(void *obj, void *data, QGuestAllocator *alloc)
+ {
+@@ -98,6 +125,96 @@ static void test_config_wmask(void *obj, void *data, QGuestAllocator *alloc)
+     g_assert_cmphex(i2c_get16(dev, REG_CONFIG), ==, 0x7FFF);
+ }
+ 
++/* Shunt voltage register, including two's-complement negatives */
++static void test_shunt_injection(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    qmp_ina230_set("shunt-voltage", 20000000);
++    g_assert_cmphex(i2c_get16(dev, REG_SHUNT), ==, 0x1F40);
++
++    qmp_ina230_set("shunt-voltage", -80000000);
++    g_assert_cmphex(i2c_get16(dev, REG_SHUNT), ==, 0x8300);
++
++    g_assert_cmpint(qmp_ina230_get("shunt-voltage"), ==, -80000000);
++}
++
++/* Bus voltage register */
++static void test_bus_injection(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    qmp_ina230_set("bus-voltage", 12000000);
++    g_assert_cmphex(i2c_get16(dev, REG_BUS), ==, 0x2580);
++
++    qmp_ina230_set("bus-voltage", 11980000);
++    g_assert_cmphex(i2c_get16(dev, REG_BUS), ==, 0x2570);
++}
++
++/* Calibration-derived current, using the datasheet worked example */
++static void test_calibration_current(void *obj, void *data,
++                                     QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++
++    qmp_ina230_set("shunt-voltage", 20000000);
++    g_assert_cmphex(i2c_get16(dev, REG_CURRENT), ==, 0x0000);
++
++    i2c_set16(dev, REG_CALIBRATION, 0x0A00);
++    g_assert_cmphex(i2c_get16(dev, REG_CURRENT), ==, 0x2710);
++}
++
++/* Calibration-derived power, using the datasheet worked example */
++static void test_power(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++
++    qmp_ina230_set("shunt-voltage", 20000000);
++    qmp_ina230_set("bus-voltage", 11980000);
++    i2c_set16(dev, REG_CALIBRATION, 0x0A00);
++
++    g_assert_cmphex(i2c_get16(dev, REG_POWER), ==, 0x12B8);
++}
++
++/* With Calibration == 0 the Current and Power registers stay at zero */
++static void test_zero_cal(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++
++    qmp_ina230_set("shunt-voltage", 20000000);
++    qmp_ina230_set("bus-voltage", 11980000);
++
++    g_assert_cmphex(i2c_get16(dev, REG_CURRENT), ==, 0x0000);
++    g_assert_cmphex(i2c_get16(dev, REG_POWER), ==, 0x0000);
++}
++
++/* Clamping at full scale and the OVF (math overflow) flag */
++static void test_edges_overflow(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++
++    qmp_ina230_set("shunt-voltage", 81917500);
++    g_assert_cmphex(i2c_get16(dev, REG_SHUNT), ==, 0x7FFF);
++    qmp_ina230_set("shunt-voltage", -81920000);
++    g_assert_cmphex(i2c_get16(dev, REG_SHUNT), ==, 0x8000);
++
++    qmp_ina230_set("bus-voltage", 36000000);
++    g_assert_cmphex(i2c_get16(dev, REG_BUS), ==, 0x7080);
++
++    qmp_ina230_set("shunt-voltage", 20000000);
++    i2c_set16(dev, REG_CALIBRATION, 0x7FFF);
++    g_assert_cmphex(i2c_get16(dev, REG_CURRENT), ==, 0x7FFF);
++    g_assert_cmphex(i2c_get16(dev, REG_MASK_ENABLE) & ME_OVF, ==, ME_OVF);
++}
++
+ static void ina230_register_nodes(void)
+ {
+     QOSGraphEdgeOptions opts = {
+@@ -111,5 +228,12 @@ static void ina230_register_nodes(void)
+     qos_add_test("defaults", "ina230", test_defaults, NULL);
+     qos_add_test("soft-reset", "ina230", test_soft_reset, NULL);
+     qos_add_test("config-wmask", "ina230", test_config_wmask, NULL);
++    qos_add_test("shunt-injection", "ina230", test_shunt_injection, NULL);
++    qos_add_test("bus-injection", "ina230", test_bus_injection, NULL);
++    qos_add_test("calibration-current", "ina230", test_calibration_current,
++                 NULL);
++    qos_add_test("power", "ina230", test_power, NULL);
++    qos_add_test("zero-cal", "ina230", test_zero_cal, NULL);
++    qos_add_test("edges-overflow", "ina230", test_edges_overflow, NULL);
+ }
+ libqos_init(ina230_register_nodes);
+-- 
+2.53.0-Meta
+

@@ -1,0 +1,52 @@
+From fa772693a5548506fae388d1bdc974285b8e0b0d Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 3 Sep 2026 10:51:26 +0200
+Subject: [PATCH 618/682] tests/qtest: ds1338: cover the power-on register
+ defaults
+
+Nothing pinned the reset value of the control register, which is how it
+sat at zero rather than at its documented power-on state.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/qtest/ds1338-test.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/tests/qtest/ds1338-test.c b/tests/qtest/ds1338-test.c
+index 6066a34846..fad0ca53d4 100644
+--- a/tests/qtest/ds1338-test.c
++++ b/tests/qtest/ds1338-test.c
+@@ -31,6 +31,7 @@
+ #define DS1338_NUM_REGS  0x40
+ 
+ #define DS1338_CTRL_OSF  0x20
++#define DS1338_CTRL_POR  0xb3
+ 
+ /* The clock and calendar come up on the host time. */
+ static void send_and_receive(void *obj, void *data, QGuestAllocator *alloc)
+@@ -49,6 +50,14 @@ static void send_and_receive(void *obj, void *data, QGuestAllocator *alloc)
+     g_assert_cmpuint(2000 + from_bcd(resp[6]), == , 1900 + tm_ptr->tm_year);
+ }
+ 
++/* The control register comes up in its documented power-on state. */
++static void test_reset_defaults(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *i2cdev = (QI2CDevice *)obj;
++
++    g_assert_cmphex(i2c_get8(i2cdev, DS1338_CONTROL), ==, DS1338_CTRL_POR);
++}
++
+ /* Writable control bits round-trip; the reserved ones read back zero. */
+ static void test_control_register(void *obj, void *data,
+                                   QGuestAllocator *alloc)
+@@ -110,6 +119,7 @@ static void ds1338_register_nodes(void)
+     qos_node_consumes("ds1338", "i2c-bus", &opts);
+ 
+     qos_add_test("tx-rx", "ds1338", send_and_receive, NULL);
++    qos_add_test("reset-defaults", "ds1338", test_reset_defaults, NULL);
+     qos_add_test("control-register", "ds1338", test_control_register, NULL);
+     qos_add_test("osf-write-protect", "ds1338", test_osf_write_protect, NULL);
+     qos_add_test("nvram", "ds1338", test_nvram, NULL);
+-- 
+2.53.0-Meta
+

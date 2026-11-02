@@ -1,0 +1,55 @@
+From 2c2d1d1db19710c4af06cabf14a0da5cabd4078e Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot via <qemu-arm@nongnu.org>
+Date: Fri, 31 Jul 2026 12:45:24 +0200
+Subject: [PATCH] tests/functional/arm: catalina: test PCA9554 IO expander via
+ QOM
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Cover io_expander5 (pca9554@27, behind pca9548@70 channel 6 on i2c1), an
+8-bit expander reached through the pca9548 mux.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Link: https://lore.kernel.org/qemu-devel/20260731-sanmiguel-bmc-locator-v2-25-1266926ba769@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ tests/functional/arm/test_aspeed_catalina.py | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/tests/functional/arm/test_aspeed_catalina.py b/tests/functional/arm/test_aspeed_catalina.py
+index 5624774891..f9ee62260b 100755
+--- a/tests/functional/arm/test_aspeed_catalina.py
++++ b/tests/functional/arm/test_aspeed_catalina.py
+@@ -33,6 +33,11 @@ class CatalinaMachine(AspeedTest):
+     # io_expander0: pca9555@20 on i2c2, a 16-bit expander directly on the bus.
+     IOEXP0_LOCATOR = "/machine/soc::aspeed.i2c-ast2600[0]~i2c[2]~pca9555@0x20"
+     IOEXP0_GPIODETECT = r"\[2-0020\]"
++    # io_expander5: pca9554@27 behind pca9548@70 channel 6 on i2c1, an 8-bit
++    # expander reached through the mux; gpiodetect confirms its 8 lines.
++    IOEXP5_LOCATOR = ("/machine/soc::aspeed.i2c-ast2600[0]"
++                      "~i2c[1]~pca9548@0x70~i2c[6]~pca9554@0x27")
++    IOEXP5_GPIODETECT = r"-0027] \(8 lines\)"
+ 
+     def test_arm_ast2600_catalina_openbmc(self):
+         image_path = self.uncompress(self.ASSET_CATALINA_FLASH)
+@@ -54,6 +59,7 @@ def test_arm_ast2600_catalina_openbmc(self):
+         locator = DeviceLocator(self.vm.cmd)
+         tmp75 = locator.resolve(self.TMP75_LOCATOR, "tmp75")
+         ioexp0 = locator.resolve(self.IOEXP0_LOCATOR, "pca9555")
++        ioexp5 = locator.resolve(self.IOEXP5_LOCATOR, "pca9554")
+ 
+         # temp1_input reports the temperature in millidegrees Celsius. Drive it
+         # through QOM (units of 0.001 C) and check the kernel hwmon interface
+@@ -65,6 +71,8 @@ def test_arm_ast2600_catalina_openbmc(self):
+ 
+         # pca9555@20 spans two 8-bit ports (pins 0-7 and 8-15).
+         self.check_ioexp(ioexp0, self.IOEXP0_GPIODETECT, (0, 7, 8, 15))
++        # pca9554@27 is a single 8-bit port.
++        self.check_ioexp(ioexp5, self.IOEXP5_GPIODETECT, (0, 3, 7))
+ 
+     def check_ioexp(self, qom, gpiodetect, pins):
+         # The guest drives these lines as inputs: set_pin injects an external
+-- 
+2.54.0
+

@@ -1,0 +1,248 @@
+From 4e91c8fd8dde8d6ad2e82daa84f96ac1ec3817b2 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Fri, 7 Aug 2026 12:09:47 +0200
+Subject: [PATCH] hw/arm: harma: add Facebook Harma BMC machine
+
+Add an AST2600-based machine for the Facebook Harma platform, modelled
+from its device tree (aspeed-bmc-facebook-harma.dts).
+
+The board uses TMP75 temperature sensors, INA230 and INA238 power
+monitors, ADC128D818 ADCs, ISL69260 voltage regulators, PCA9555 IO
+expanders, PCA9545 and PCA9546 I2C muxes and AT24C EEPROMs. The two
+identical fan control boards share a helper.
+
+The 2-channel PCA9543 muxes have no dedicated model and are stood in
+with a PCA9546, which keeps the devices behind their used channels
+reachable. Peripherals that have no QEMU model are noted in the source
+so the gaps are explicit.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ docs/system/arm/aspeed.rst    |   1 +
+ hw/arm/aspeed_ast2600_harma.c | 189 ++++++++++++++++++++++++++++++++++
+ hw/arm/meson.build            |   1 +
+ 3 files changed, 191 insertions(+)
+ create mode 100644 hw/arm/aspeed_ast2600_harma.c
+
+diff --git a/docs/system/arm/aspeed.rst b/docs/system/arm/aspeed.rst
+index bef1c9986f..b011ceca0d 100644
+--- a/docs/system/arm/aspeed.rst
++++ b/docs/system/arm/aspeed.rst
+@@ -39,6 +39,7 @@ AST2600 SoC based machines :
+ - ``sanmiguel-bmc``        Facebook SanMiguel BMC
+ - ``anacapa-bmc``          Facebook Anacapa BMC
+ - ``minerva-bmc``          Facebook Minerva BMC
++- ``harma-bmc``            Facebook Harma BMC
+ - ``yosemite5-bmc``        Facebook Yosemite 5 BMC
+ - ``gb200nvl-bmc``         Nvidia GB200nvl BMC
+ 
+diff --git a/hw/arm/aspeed_ast2600_harma.c b/hw/arm/aspeed_ast2600_harma.c
+new file mode 100644
+index 0000000000..a87ca37957
+--- /dev/null
++++ b/hw/arm/aspeed_ast2600_harma.c
+@@ -0,0 +1,189 @@
++/*
++ * Facebook Harma BMC
++ *
++ * Copyright (c) 2026 Meta Platforms, Inc. and affiliates.
++ *
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ *
++ * Current limitations: the following devices from the device tree have no
++ * QEMU model and are therefore not emulated:
++ *   - maxim,max31790 fan controllers
++ *   - asteralabs,pt5161l PCIe retimers
++ *   - mps,mp5990 / infineon,xdp710 power monitors
++ *   - lltc,ltc4287 hot-swap controllers
++ *   - infineon,xdpe152c4 voltage regulators
++ *   - pmbus generic power monitors
++ *   - nxp,pcf8563 RTC
++ *   - infineon,slb9670 TPM (SPI)
++ *   - mctp-i2c-controller MCTP endpoints
++ *   - ipmb-dev IPMB interface
++ */
++
++#include "qemu/osdep.h"
++#include "hw/arm/aspeed.h"
++#include "hw/arm/aspeed_soc.h"
++#include "hw/i2c/i2c_mux_pca954x.h"
++#include "hw/gpio/pca9552.h"
++#include "hw/nvram/eeprom_at24c.h"
++#include "hw/sensor/adc128d818.h"
++#include "hw/sensor/isl_pmbus_vr.h"
++#include "hw/sensor/tmp105.h"
++#include "hw/sensor/ina230.h"
++#include "hw/sensor/ina238.h"
++
++/* Harma hardware values. */
++#define HARMA_BMC_HW_STRAP1 0x00002002
++#define HARMA_BMC_HW_STRAP2 0x00000800
++#define HARMA_BMC_RAM_SIZE (2 * GiB)
++
++/*
++ * Fan control board: a fan controller, four power sensors, a temperature
++ * sensor and an I/O expander, replicated on i2c0 and i2c2.
++ */
++static void harma_fan_board_init(I2CBus *bus)
++{
++    /* pwm@5e - maxim,max31790 (no model) */
++    /* power-sensor@40/41/44/45 - ti,ina238 */
++    i2c_slave_create_simple(bus, TYPE_INA238, 0x40);
++    i2c_slave_create_simple(bus, TYPE_INA238, 0x41);
++    i2c_slave_create_simple(bus, TYPE_INA238, 0x44);
++    i2c_slave_create_simple(bus, TYPE_INA238, 0x45);
++    /* temperature-sensor@4b - ti,tmp75 */
++    i2c_slave_create_simple(bus, TYPE_TMP75, 0x4b);
++    /* gpio@12 - nxp,pca9555 */
++    i2c_slave_create_simple(bus, TYPE_PCA9555, 0x12);
++}
++
++static void harma_bmc_i2c_init(AspeedMachineState *bmc)
++{
++    /* Reference: aspeed-bmc-facebook-harma.dts */
++
++    AspeedSoCState *soc = bmc->soc;
++    I2CBus *i2c[16] = {};
++    I2CSlave *mux;
++    I2CBus *bus;
++
++    for (unsigned idx = 0; idx < ARRAY_SIZE(i2c); idx++) {
++        i2c[idx] = aspeed_i2c_get_bus(&soc->i2c, idx);
++    }
++
++    /* &i2c0 - fan control board 2 */
++    harma_fan_board_init(i2c[0]);
++
++    /* &i2c1 */
++    /* mctp@10 - mctp-i2c-controller (no model) */
++    /* temperature-sensor@4b - ti,tmp75 */
++    i2c_slave_create_simple(i2c[1], TYPE_TMP75, 0x4b);
++    /* eeprom@50 - atmel,24c64 (MB NIC FRU) */
++    at24c_eeprom_init(i2c[1], 0x50, 8 * KiB);
++
++    /* &i2c2 - fan control board 1 */
++    harma_fan_board_init(i2c[2]);
++
++    /* &i2c3 */
++    /* i2c-mux@70 - nxp,pca9543 2-channel (PCA9546 stand-in) */
++    mux = i2c_slave_create_simple(i2c[3], TYPE_PCA9546, 0x70);
++    /* channel 0 - retimer flash eeprom@50 atmel,24c2048 */
++    at24c_eeprom_init(pca954x_i2c_get_bus(mux, 0), 0x50, 256 * KiB);
++    /* channel 1 - retimer@24 asteralabs,pt5161l (no model) */
++
++    /* &i2c4 */
++    /* eeprom@52 - atmel,24c64 (PDB FRU) */
++    at24c_eeprom_init(i2c[4], 0x52, 8 * KiB);
++    /* power-monitor@69 - pmbus (no model) */
++    /* temperature-sensor@49 - ti,tmp75 */
++    i2c_slave_create_simple(i2c[4], TYPE_TMP75, 0x49);
++    /* power-monitor@44 - lltc,ltc4287 (no model) */
++    /* power-monitor@40 - infineon,xdp710 (no model) */
++    /* power-sensor@45 - ti,ina238 */
++    i2c_slave_create_simple(i2c[4], TYPE_INA238, 0x45);
++
++    /* &i2c5 - empty */
++
++    /* &i2c6 */
++    /* i2c-mux@70 - nxp,pca9543 2-channel (PCA9546 stand-in) */
++    mux = i2c_slave_create_simple(i2c[6], TYPE_PCA9546, 0x70);
++    /* channel 0 - power-monitor@45 ti,ina230 */
++    i2c_slave_create_simple(pca954x_i2c_get_bus(mux, 0), TYPE_INA230, 0x45);
++    /* channel 1 - power-monitor@45 ti,ina230 */
++    i2c_slave_create_simple(pca954x_i2c_get_bus(mux, 1), TYPE_INA230, 0x45);
++
++    /* &i2c7 - empty */
++    /* &i2c8 - empty */
++
++    /* &i2c9 */
++    /* mctp@10 - mctp-i2c-controller (no model) */
++    /* gpio@30/31 - nxp,pca9555 */
++    i2c_slave_create_simple(i2c[9], TYPE_PCA9555, 0x30);
++    i2c_slave_create_simple(i2c[9], TYPE_PCA9555, 0x31);
++    /* eeprom@52 - atmel,24c64 (PTTV FRU) */
++    at24c_eeprom_init(i2c[9], 0x52, 8 * KiB);
++
++    /* &i2c11 */
++    /* gpio@13/30/31 - nxp,pca9555 */
++    i2c_slave_create_simple(i2c[11], TYPE_PCA9555, 0x13);
++    i2c_slave_create_simple(i2c[11], TYPE_PCA9555, 0x30);
++    i2c_slave_create_simple(i2c[11], TYPE_PCA9555, 0x31);
++    /* eeprom@52 - atmel,24c64 (Aegis FRU) */
++    at24c_eeprom_init(i2c[11], 0x52, 8 * KiB);
++
++    /* &i2c12 */
++    /* retimer@24 - asteralabs,pt5161l (no model) */
++
++    /* &i2c13 */
++    /* i2c-mux@70 - nxp,pca9545 */
++    mux = i2c_slave_create_simple(i2c[13], TYPE_PCA9545, 0x70);
++    /* channel 0 - server board voltage regulators */
++    bus = pca954x_i2c_get_bus(mux, 0);
++    /* power-sensor@20 - mps,mp5990 (no model) */
++    /* power-monitor@61/62/63 - isil,isl69260 */
++    i2c_slave_create_simple(bus, TYPE_ISL69260, 0x61);
++    i2c_slave_create_simple(bus, TYPE_ISL69260, 0x62);
++    i2c_slave_create_simple(bus, TYPE_ISL69260, 0x63);
++    /* power-monitor@64/66/68 - infineon,xdpe152c4 (no model) */
++    /* channel 1 */
++    bus = pca954x_i2c_get_bus(mux, 1);
++    /* eeprom@54 - atmel,24c64 (MB FRU) */
++    at24c_eeprom_init(bus, 0x54, 8 * KiB);
++    /* adc@1d/1f - ti,adc128d818 (mode 1) */
++    i2c_slave_create_simple(bus, TYPE_ADC128D818, 0x1d);
++    i2c_slave_create_simple(bus, TYPE_ADC128D818, 0x1f);
++    /* channel 2 - empty */
++    /* channel 3 - rtc@51 nxp,pcf8563 (no model) */
++
++    /* &i2c14 - ipmb@10 ipmb-dev (no model) */
++
++    /* &i2c15 */
++    /* eeprom@50 - atmel,24c64 (SCM FRU) */
++    at24c_eeprom_init(i2c[15], 0x50, 8 * KiB);
++    /* eeprom@56 - atmel,24c64 (BSM FRU) */
++    at24c_eeprom_init(i2c[15], 0x56, 8 * KiB);
++}
++
++static void aspeed_machine_harma_class_init(ObjectClass *oc, const void *data)
++{
++    MachineClass *mc = MACHINE_CLASS(oc);
++    AspeedMachineClass *amc = ASPEED_MACHINE_CLASS(oc);
++
++    mc->desc       = "Facebook Harma BMC (Cortex-A7)";
++    amc->soc_name  = "ast2600-a3";
++    amc->hw_strap1 = HARMA_BMC_HW_STRAP1;
++    amc->hw_strap2 = HARMA_BMC_HW_STRAP2;
++    amc->fmc_model = "w25q01jvq";
++    amc->spi_model = NULL;
++    amc->num_cs    = 2;
++    amc->macs_mask = ASPEED_MAC3_ON;
++    amc->i2c_init  = harma_bmc_i2c_init;
++    mc->default_ram_size = HARMA_BMC_RAM_SIZE;
++    aspeed_machine_class_init_cpus_defaults(mc);
++}
++
++static const TypeInfo aspeed_ast2600_harma_types[] = {
++    {
++        .name          = MACHINE_TYPE_NAME("harma-bmc"),
++        .parent        = TYPE_ASPEED_MACHINE,
++        .class_init    = aspeed_machine_harma_class_init,
++    }
++};
++
++DEFINE_TYPES(aspeed_ast2600_harma_types)
+diff --git a/hw/arm/meson.build b/hw/arm/meson.build
+index 69b98348c5..79f366127a 100644
+--- a/hw/arm/meson.build
++++ b/hw/arm/meson.build
+@@ -64,6 +64,7 @@ arm_common_ss.add(when: 'CONFIG_ASPEED_SOC', if_true: files(
+   'aspeed_ast2600_fby35.c',
+   'aspeed_ast2600_fuji.c',
+   'aspeed_ast2600_gb200nvl.c',
++  'aspeed_ast2600_harma.c',
+   'aspeed_ast2600_minerva.c',
+   'aspeed_ast2600_rainier.c',
+   'aspeed_ast2600_santabarbara.c',
+-- 
+2.53.0-Meta
+

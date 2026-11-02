@@ -1,0 +1,68 @@
+From 12f1e2b3aef96a33bc9cbbcf30d57d404f001fa9 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 23 Jul 2026 12:17:51 +0200
+Subject: [PATCH 606/682] hw/i2c: pca954x: migrate mux state
+
+The pca954x model had no VMStateDescription, so neither the channel
+selection nor the PCA9545 interrupt status survived a migration.
+
+This changes the migration stream of the pre-existing PCA9546 and
+PCA9548, which an older QEMU rejects.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ hw/i2c/i2c_mux_pca954x.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
+
+diff --git a/hw/i2c/i2c_mux_pca954x.c b/hw/i2c/i2c_mux_pca954x.c
+index 4bb078a03c..597e57d99a 100644
+--- a/hw/i2c/i2c_mux_pca954x.c
++++ b/hw/i2c/i2c_mux_pca954x.c
+@@ -28,6 +28,7 @@
+ #include "hw/core/irq.h"
+ #include "hw/core/qdev.h"
+ #include "hw/core/qdev-properties.h"
++#include "migration/vmstate.h"
+ #include "qemu/log.h"
+ #include "qemu/queue.h"
+ #include "qom/object.h"
+@@ -270,6 +271,28 @@ static void pca954x_init(Object *obj)
+     }
+ }
+ 
++static int pca954x_post_load(void *opaque, int version_id)
++{
++    Pca954xState *s = PCA954X(opaque);
++
++    pca954x_enable_channel(s, s->control);
++    qemu_set_irq(s->int_out, s->int_status == 0);
++    return 0;
++}
++
++static const VMStateDescription vmstate_pca954x = {
++    .name = "pca954x",
++    .version_id = 1,
++    .minimum_version_id = 1,
++    .post_load = pca954x_post_load,
++    .fields = (const VMStateField[]) {
++        VMSTATE_SMBUS_DEVICE(parent, Pca954xState),
++        VMSTATE_UINT8(control, Pca954xState),
++        VMSTATE_UINT8(int_status, Pca954xState),
++        VMSTATE_END_OF_LIST()
++    },
++};
++
+ static const Property pca954x_props[] = {
+     DEFINE_PROP_STRING("name", Pca954xState, name),
+ };
+@@ -287,6 +310,7 @@ static void pca954x_class_init(ObjectClass *klass, const void *data)
+ 
+     dc->desc = "Pca954x i2c-mux";
+     dc->realize = pca954x_realize;
++    dc->vmsd = &vmstate_pca954x;
+ 
+     k->write_data = pca954x_write_data;
+     k->receive_byte = pca954x_read_byte;
+-- 
+2.53.0-Meta
+

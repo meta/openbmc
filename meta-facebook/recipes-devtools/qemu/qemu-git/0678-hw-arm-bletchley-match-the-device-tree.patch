@@ -1,0 +1,88 @@
+From e23b79cfcab3f7fad234bbd76d5d1317f88eb3a5 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Fri, 4 Sep 2026 15:03:55 +0200
+Subject: [PATCH 678/682] hw/arm: bletchley: match the device tree
+
+The board had drifted from the platform device tree: an I/O expander,
+the power monitor and the six per-sled EEPROMs were absent, a PCA9552
+stood in for a PCA9539, the two EEPROMs that were present were declared
+eight times their real size, and a comment named a humidity sensor the
+device tree does not have.
+
+The substitute was not harmless: the guest binds a driver to the address
+the device tree gives, and pca953x cannot drive a PCA9552.
+
+The board's migration stream changes with its device set.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ hw/arm/aspeed_ast2600_bletchley.c | 22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
+
+diff --git a/hw/arm/aspeed_ast2600_bletchley.c b/hw/arm/aspeed_ast2600_bletchley.c
+index 536e910229..d0a4f53dfe 100644
+--- a/hw/arm/aspeed_ast2600_bletchley.c
++++ b/hw/arm/aspeed_ast2600_bletchley.c
+@@ -11,8 +11,10 @@
+ #include "hw/arm/aspeed.h"
+ #include "hw/arm/aspeed_soc.h"
+ #include "hw/gpio/pca9552.h"
++#include "hw/gpio/pca9554.h"
+ #include "hw/nvram/eeprom_at24c.h"
+ #include "hw/rtc/ds1338.h"
++#include "hw/sensor/ina230.h"
+ #include "hw/sensor/tmp421.h"
+ /* Bletchley hardware value */
+ #define BLETCHLEY_BMC_HW_STRAP1 0x00002000
+@@ -32,30 +34,29 @@ static void bletchley_bmc_i2c_init(AspeedMachineState *bmc)
+ 
+     /* Bus 0 - 5 all have the same config. */
+     for (int i = 0; i < 6; i++) {
+-        /* Missing model: ti,ina230 @ 0x45 */
++        /* Missing model: fcs,fusb302 @ 0x22 */
+         /* Missing model: mps,mp5023 @ 0x40 */
++        i2c_slave_create_simple(i2c[i], TYPE_PCA9536, 0x41);
++        i2c_slave_create_simple(i2c[i], TYPE_INA230, 0x45);
+         i2c_slave_create_simple(i2c[i], TYPE_TMP421, 0x4f);
+-        /* Missing model: nxp,pca9539 @ 0x76, but PCA9552 works enough */
+-        i2c_slave_create_simple(i2c[i], TYPE_PCA9552, 0x76);
++        at24c_eeprom_init(i2c[i], 0x54, 8 * KiB);
+         i2c_slave_create_simple(i2c[i], TYPE_PCA9552, 0x67);
+-        /* Missing model: fsc,fusb302 @ 0x22 */
++        i2c_slave_create_simple(i2c[i], TYPE_PCA9539, 0x76);
+     }
+ 
+     /* Bus 6 */
+-    at24c_eeprom_init(i2c[6], 0x56, 65536);
+-    /* Missing model: nxp,pcf85263 @ 0x51 , but ds1338 works enough */
++    /* Missing model: nxp,pcf85263 @ 0x51, but ds1338 works enough */
+     i2c_slave_create_simple(i2c[6], TYPE_DS1338, 0x51);
+-
++    at24c_eeprom_init(i2c[6], 0x56, 8 * KiB);
+ 
+     /* Bus 7 */
+-    at24c_eeprom_init(i2c[7], 0x54, 65536);
++    at24c_eeprom_init(i2c[7], 0x54, 8 * KiB);
+ 
+     /* Bus 9 */
+     i2c_slave_create_simple(i2c[9], TYPE_TMP421, 0x4f);
+ 
+     /* Bus 10 */
+     i2c_slave_create_simple(i2c[10], TYPE_TMP421, 0x4f);
+-    /* Missing model: ti,hdc1080 @ 0x40 */
+     i2c_slave_create_simple(i2c[10], TYPE_PCA9552, 0x67);
+ 
+     /* Bus 12 */
+@@ -63,6 +64,9 @@ static void bletchley_bmc_i2c_init(AspeedMachineState *bmc)
+     i2c_slave_create_simple(i2c[12], TYPE_TMP421, 0x4c);
+     i2c_slave_create_simple(i2c[12], TYPE_TMP421, 0x4d);
+     i2c_slave_create_simple(i2c[12], TYPE_PCA9552, 0x67);
++
++    /* Bus 13 */
++    /* Missing model: ipmb-dev @ 0x10 */
+ }
+ 
+ static void aspeed_machine_bletchley_class_init(ObjectClass *oc,
+-- 
+2.53.0-Meta
+

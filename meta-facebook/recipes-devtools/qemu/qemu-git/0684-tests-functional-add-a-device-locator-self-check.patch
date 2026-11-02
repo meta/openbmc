@@ -1,0 +1,167 @@
+From fa336dce97feba880aaad1592dc6975d48f2793d Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot via <qemu-arm@nongnu.org>
+Date: Fri, 31 Jul 2026 12:45:18 +0200
+Subject: [PATCH] tests/functional: add a device-locator self-check
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Launch the SanMiguel BMC paused (-S) and resolve its I2C temperature
+sensors and SPI flashes by position over QMP, exercising the
+DeviceLocator grammar: controller/bus hops, the
+address/type/on-bus-index selectors, the leaf type assertion and the
+ambiguous/unknown/out-of-range error paths.
+
+The test needs no disk image and completes in about a second, so it
+joins the quick arm test set.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Link: https://lore.kernel.org/qemu-devel/20260731-sanmiguel-bmc-locator-v2-19-1266926ba769@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ tests/functional/arm/meson.build            |   1 +
+ tests/functional/arm/test_device_locator.py | 120 ++++++++++++++++++++
+ 2 files changed, 121 insertions(+)
+ create mode 100644 tests/functional/arm/test_device_locator.py
+
+diff --git a/tests/functional/arm/meson.build b/tests/functional/arm/meson.build
+index 61b00932db..bb78dcf3e4 100644
+--- a/tests/functional/arm/meson.build
++++ b/tests/functional/arm/meson.build
+@@ -29,6 +29,7 @@ test_arm_timeouts = {
+ }
+ 
+ tests_arm_system_quick = [
++  'device_locator',
+   'migration',
+ ]
+ 
+diff --git a/tests/functional/arm/test_device_locator.py b/tests/functional/arm/test_device_locator.py
+new file mode 100644
+index 0000000000..3807a49361
+--- /dev/null
++++ b/tests/functional/arm/test_device_locator.py
+@@ -0,0 +1,120 @@
++#!/usr/bin/env python3
++#
++# Functional self-check for the pure-Python DeviceLocator helper.
++#
++# It launches the SanMiguel BMC paused (-S) and resolves its I2C sensors and
++# SPI flashes by position over QMP, so it needs no disk image and runs in
++# about a second.
++#
++# SPDX-License-Identifier: GPL-2.0-or-later
++
++import sys
++
++from unittest import skipIf
++
++from qemu_test import QemuSystemTest
++
++# DeviceLocator's type hints require Python 3.10+; import it only when
++# available so this module still loads (and skips) on the 3.9 baseline.
++if sys.version_info >= (3, 10):
++    from qemu_test.locator import DeviceLocator, LocatorError
++
++
++@skipIf(sys.version_info < (3, 10), 'DeviceLocator requires Python 3.10+')
++class DeviceLocatorTest(QemuSystemTest):
++
++    def setUp(self):
++        super().setUp()
++        self.set_machine('sanmiguel-bmc')
++        # Launch paused with defaults enabled so the aspeed board instantiates
++        # its SPI flashes (created only under defaults_enabled()); still no
++        # disk image is needed.
++        self.vm.add_args('-S', '-display', 'none')
++        self.vm.launch()
++        self.locator = DeviceLocator(self.vm.cmd)
++
++    def _address(self, path):
++        return self.vm.cmd('qom-get', path=path, property='address')
++
++    def _cs(self, path):
++        return self.vm.cmd('qom-get', path=path, property='cs')
++
++    def test_resolve_tmp75_sensors(self):
++        # The SanMiguel board wires ti,tmp75 sensors on I2C buses 5, 9 and 10
++        # behind the aspeed.i2c-ast2600 controller.
++        ctrl = '/machine/soc::aspeed.i2c-ast2600[0]'
++        for locator, addr in ((f'{ctrl}~i2c[5]~@0x48', 0x48),
++                              (f'{ctrl}~i2c[9]~@0x4e', 0x4e),
++                              (f'{ctrl}~i2c[10]~@0x48', 0x48)):
++            path = self.locator.resolve(locator, 'tmp75')
++            self.assertEqual(self._address(path), addr)
++
++    def test_device_selectors(self):
++        bus = '/machine/soc::aspeed.i2c-ast2600[0]~i2c[5]'
++        by_addr = self.locator.resolve(f'{bus}~@0x48')
++        # A type selector combined with the address must reach the same device.
++        self.assertEqual(self.locator.resolve(f'{bus}~tmp75@0x48'), by_addr)
++        # The on-bus (BusChild) index selector addresses a device positionally.
++        by_index = self.locator.resolve(f'{bus}~#0')
++        self.assertTrue(by_index.startswith('/machine'))
++        # A bus hop also accepts the raw bus QOM type in place of the keyword.
++        raw = '/machine/soc::aspeed.i2c-ast2600[0]~i2c-bus[5]~@0x48'
++        self.assertEqual(self.locator.resolve(raw), by_addr)
++
++    def test_type_assertion(self):
++        # The leaf type is validated when a type argument is passed.
++        self.assertRaises(LocatorError, self.locator.resolve,
++                          '/machine/soc::aspeed.i2c-ast2600[0]~i2c[5]~@0x48',
++                          'ds1338')
++
++    def test_resolution_errors(self):
++        ctrl = '/machine/soc::aspeed.i2c-ast2600[0]'
++        # No device sits at that address on the bus.
++        self.assertRaises(LocatorError, self.locator.resolve,
++                          f'{ctrl}~i2c[5]~@0x99')
++        # A bare bus hop under /machine/soc spans every i2c bus on both the
++        # i2c and i3c controllers, so it is ambiguous without a controller hop.
++        self.assertRaises(LocatorError, self.locator.resolve,
++                          '/machine/soc::i2c')
++        # Unknown object type in a controller hop.
++        self.assertRaises(LocatorError, self.locator.resolve,
++                          '/machine/soc::nope')
++        # Out-of-range bus index.
++        self.assertRaises(LocatorError, self.locator.resolve,
++                          f'{ctrl}~i2c[99]~@0x48')
++        # A stray or doubled '~' yields an empty hop, which is malformed.
++        self.assertRaises(LocatorError, self.locator.resolve,
++                          f'{ctrl}~~i2c[5]~@0x48')
++        # A repeated or empty device selector is malformed, not last-wins.
++        for bad in (f'{ctrl}~i2c[5]~@0x48@0x4e',
++                    f'{ctrl}~i2c[5]~#0#1',
++                    f'{ctrl}~i2c[5]~tmp75=a=b',
++                    f'{ctrl}~i2c[5]~tmp75='):
++            self.assertRaises(LocatorError, self.locator.resolve, bad)
++
++    def test_resolve_spi_flashes(self):
++        # The FMC controller carries two flashes on chip-selects 0 and 1; the
++        # first SPI controller carries one on chip-select 0.
++        for locator, cs in (
++                ('/machine/soc::aspeed.fmc-ast2600[0]~spi[0]~@0', 0),
++                ('/machine/soc::aspeed.fmc-ast2600[0]~spi[0]~@1', 1),
++                ('/machine/soc::aspeed.spi1-ast2600[0]~spi[0]~@0', 0)):
++            path = self.locator.resolve(locator, 'ssi-peripheral')
++            self.assertEqual(self._cs(path), cs)
++
++    def test_spi_selectors(self):
++        bus = '/machine/soc::aspeed.fmc-ast2600[0]~spi[0]'
++        by_cs = self.locator.resolve(f'{bus}~@0')
++        # A type selector plus the chip-select reaches the same flash.
++        self.assertEqual(
++            self.locator.resolve(f'{bus}~ssi-peripheral@0'), by_cs)
++        # The on-bus index selector resolves positionally.
++        self.assertTrue(
++            self.locator.resolve(f'{bus}~#1').startswith('/machine'))
++        # A wrong-type assertion on an SPI leaf is rejected.
++        self.assertRaises(LocatorError, self.locator.resolve,
++                          f'{bus}~@0', 'tmp75')
++
++
++if __name__ == '__main__':
++    QemuSystemTest.main()
+-- 
+2.54.0
+

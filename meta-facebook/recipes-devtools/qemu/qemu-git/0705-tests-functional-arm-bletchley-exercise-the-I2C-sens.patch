@@ -1,0 +1,114 @@
+From 70b16eb90057d5fc70c823298ee279f7840f110a Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Fri, 7 Aug 2026 15:52:57 +0200
+Subject: [PATCH] tests/functional/arm: bletchley: exercise the I2C sensors
+
+The test stopped at the login prompt, so it only proved the machine
+boots. Log in and drive the sled power monitor and the two front-panel
+temperature sensors through QOM, confirming the readings propagate to
+the guest hwmon interface.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/functional/arm/test_aspeed_bletchley.py | 60 +++++++++++++++++++
+ 1 file changed, 60 insertions(+)
+
+diff --git a/tests/functional/arm/test_aspeed_bletchley.py b/tests/functional/arm/test_aspeed_bletchley.py
+index 7a351e5582..8d2c419e6e 100755
+--- a/tests/functional/arm/test_aspeed_bletchley.py
++++ b/tests/functional/arm/test_aspeed_bletchley.py
+@@ -4,10 +4,17 @@
+ #
+ # SPDX-License-Identifier: GPL-2.0-or-later
+ 
++import sys
++
+ from qemu_test import Asset
+ from qemu_test import exec_command_and_wait_for_pattern
+ from aspeed import AspeedTest
+ 
++# DeviceLocator's type hints require Python 3.10+; on older interpreters only
++# the sensor checks are skipped.
++if sys.version_info >= (3, 10):
++    from qemu_test.locator import DeviceLocator
++
+ 
+ class BletchleyMachine(AspeedTest):
+ 
+@@ -17,6 +24,18 @@ class BletchleyMachine(AspeedTest):
+ 
+     PROMPT = "root@bletchley:~#"
+ 
++    I2C = "/machine/soc::aspeed.i2c-ast2600[0]"
++
++    INA230 = (f"{I2C}~i2c[0]~ina230@0x45",
++              "/sys/bus/i2c/devices/0-0045/hwmon/hwmon*")
++    """The sled INA230 power monitor."""
++
++    TMP421 = ((f"{I2C}~i2c[12]~tmp421@0x4c",
++               "/sys/bus/i2c/devices/12-004c/hwmon/hwmon*"),
++              (f"{I2C}~i2c[12]~tmp421@0x4d",
++               "/sys/bus/i2c/devices/12-004d/hwmon/hwmon*"))
++    """The two front-panel TMP421 sensors."""
++
+     SCU500 = 0x1e6e2500
+     """Hardware strap register 1."""
+ 
+@@ -32,6 +51,7 @@ class BletchleyMachine(AspeedTest):
+ 
+     def test_arm_ast2600_bletchley_openbmc(self):
+         self.boot_openbmc()
++        self.check_sensors()
+         self.check_revision("1.0", "Bletchley Chassis Controller-Class 1",
+                             "Bletchley MP", "C01850")
+ 
+@@ -73,6 +93,46 @@ def check_revision(self, revision, cc_board, bsm_product, mac_oui):
+         for dev, header in self.FRU_HEADERS[revision].items():
+             self.assertIn(header.encode(), self.read_eeprom_header(dev))
+ 
++    def check_sensors(self):
++        if sys.version_info < (3, 10):
++            return
++        locator = DeviceLocator(self.vm.cmd)
++
++        ina230 = locator.resolve(self.INA230[0], 'ina230')
++        ina230_hwmon = self.INA230[1]
++        self.assertIn(b"ina230", self.read_hwmon(ina230_hwmon, "name"))
++
++        # in0_input reports the shunt voltage in mV (2.5 uV/LSB), in1_input
++        # the bus voltage in mV (1.25 mV/LSB). Drive both through QOM and
++        # check the kernel hwmon interface reports each independently.
++        for shunt_nv, bus_uv in ((10000000, 12000000), (40000000, 3300000)):
++            self.vm.cmd("qom-set", path=ina230,
++                        property="shunt-voltage", value=shunt_nv)
++            self.vm.cmd("qom-set", path=ina230,
++                        property="bus-voltage", value=bus_uv)
++            self.wait_hwmon_value(ina230_hwmon, "in0_input",
++                                  shunt_nv // 1000000)
++            self.wait_hwmon_value(ina230_hwmon, "in1_input",
++                                  bus_uv // 1000)
++
++        # temperature0 is the local channel (hwmon temp1_input), temperature1
++        # the first remote channel (temp2_input), both in millidegrees C. A
++        # set point on the TMP421's 1/16 C grid survives the round trip; one
++        # off the grid truncates down to it.
++        for sensor, hwmon in self.TMP421:
++            qom = locator.resolve(sensor, 'tmp421')
++            self.assertIn(b"tmp421", self.read_hwmon(hwmon, "name"))
++
++            for (local_mc, local_rb), (remote_mc, remote_rb) in \
++                    (((30000, 30000), (55000, 55000)),
++                     ((25020, 25000), (45020, 45000))):
++                self.vm.cmd("qom-set", path=qom,
++                            property="temperature0", value=local_mc)
++                self.vm.cmd("qom-set", path=qom,
++                            property="temperature1", value=remote_mc)
++                self.wait_hwmon_value(hwmon, "temp1_input", local_rb)
++                self.wait_hwmon_value(hwmon, "temp2_input", remote_rb)
++
+     def read_eeprom_strings(self, dev):
+         return exec_command_and_wait_for_pattern(
+             self, f"strings -n 4 /sys/bus/i2c/devices/{dev}/eeprom",
+-- 
+2.53.0-Meta
+

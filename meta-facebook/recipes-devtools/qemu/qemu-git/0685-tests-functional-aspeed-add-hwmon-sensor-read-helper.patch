@@ -1,0 +1,56 @@
+From d29bb957b79359d7b1c86c8b908a50e36047f17c Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot via <qemu-arm@nongnu.org>
+Date: Fri, 31 Jul 2026 12:45:19 +0200
+Subject: [PATCH] tests/functional: aspeed: add hwmon sensor read helpers
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Add read_hwmon()/wait_hwmon_value() to AspeedTest so board tests can
+read a sysfs hwmon attribute over the console and poll it until it
+reaches an expected value, instead of each test carrying its own copy.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Link: https://lore.kernel.org/qemu-devel/20260731-sanmiguel-bmc-locator-v2-20-1266926ba769@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ tests/functional/aspeed.py | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/tests/functional/aspeed.py b/tests/functional/aspeed.py
+index 08af6b4839..84d40fc0e9 100644
+--- a/tests/functional/aspeed.py
++++ b/tests/functional/aspeed.py
+@@ -2,6 +2,9 @@
+ #
+ # SPDX-License-Identifier: GPL-2.0-or-later
+ 
++import re
++import time
++
+ from qemu_test import exec_command_and_wait_for_pattern
+ from qemu_test import LinuxKernelTest
+ 
+@@ -29,6 +32,19 @@ def do_test_arm_aspeed_openbmc(self, machine, image, uboot='2019.04',
+     def wait_for_boot_complete(self):
+         self.wait_for_console_pattern('login:')
+ 
++    def read_hwmon(self, hwmon, attr):
++        return exec_command_and_wait_for_pattern(
++            self, f'cat {hwmon}/{attr}', self.PROMPT)
++
++    def wait_hwmon_value(self, hwmon, attr, expected):
++        pattern = re.compile(rb'(?m)^%d\r*$' % expected)
++        if pattern.search(self.read_hwmon(hwmon, attr)):
++            return
++        time.sleep(2)
++        out = self.read_hwmon(hwmon, attr)
++        if not pattern.search(out):
++            self.fail(f'{attr} did not reach {expected}: {out!r}')
++
+     def do_test_arm_aspeed_buildroot_start(self, image, cpu_id, pattern='Aspeed EVB'):
+         self.require_netdev('user')
+         self.vm.set_console()
+-- 
+2.54.0
+

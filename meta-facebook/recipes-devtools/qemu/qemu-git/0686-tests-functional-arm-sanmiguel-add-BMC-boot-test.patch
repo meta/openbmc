@@ -1,0 +1,126 @@
+From 9b3a3b388d99a9c172e7d0ea31b93cbcfbd491b5 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot via qemu development <qemu-devel@nongnu.org>
+Date: Fri, 31 Jul 2026 12:45:20 +0200
+Subject: [PATCH] tests/functional/arm: sanmiguel: add BMC boot test
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Boot the SanMiguel BMC from its OpenBMC image and exercise its three
+TMP75 sensors: inject a temperature into each over QOM and check the
+guest hwmon interface reports it back.
+
+Address the sensors through the device locator rather than hardcoded QOM
+paths.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Link: https://lore.kernel.org/qemu-devel/20260731-sanmiguel-bmc-locator-v2-21-1266926ba769@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ tests/functional/arm/meson.build              |  2 +
+ tests/functional/arm/test_aspeed_sanmiguel.py | 73 +++++++++++++++++++
+ 2 files changed, 75 insertions(+)
+ create mode 100644 tests/functional/arm/test_aspeed_sanmiguel.py
+
+diff --git a/tests/functional/arm/meson.build b/tests/functional/arm/meson.build
+index 18e6d48120..8000d2f2f8 100644
+--- a/tests/functional/arm/meson.build
++++ b/tests/functional/arm/meson.build
+@@ -18,6 +18,7 @@ test_arm_timeouts = {
+   'aspeed_gb200nvl_bmc' : 480,
+   'aspeed_minerva' : 480,
+   'aspeed_rainier' : 480,
++  'aspeed_sanmiguel' : 480,
+   'bpim2u' : 500,
+   'collie' : 180,
+   'cubieboard' : 360,
+@@ -55,6 +56,7 @@ tests_arm_system_thorough = [
+   'aspeed_gb200nvl_bmc',
+   'aspeed_minerva',
+   'aspeed_rainier',
++  'aspeed_sanmiguel',
+   'bpim2u',
+   'canona1100',
+   'collie',
+diff --git a/tests/functional/arm/test_aspeed_sanmiguel.py b/tests/functional/arm/test_aspeed_sanmiguel.py
+new file mode 100644
+index 0000000000..303cc3da11
+--- /dev/null
++++ b/tests/functional/arm/test_aspeed_sanmiguel.py
+@@ -0,0 +1,73 @@
++#!/usr/bin/env python3
++#
++# Functional test that boots the Facebook SanMiguel BMC machine
++#
++# Copyright (c) 2026 Meta Platforms, Inc. and affiliates.
++#
++# SPDX-License-Identifier: GPL-2.0-or-later
++
++import sys
++
++from qemu_test import Asset
++from qemu_test import exec_command_and_wait_for_pattern
++from aspeed import AspeedTest
++
++# DeviceLocator's type hints require Python 3.10+; import it only when
++# available. On the 3.9 baseline the module still loads and the boot
++# test still runs; only the locator-based sensor checks are skipped.
++if sys.version_info >= (3, 10):
++    from qemu_test.locator import DeviceLocator
++
++
++class SanMiguelMachine(AspeedTest):
++
++    ASSET_SANMIGUEL_FLASH = Asset(
++        'https://github.com/legoater/qemu-aspeed-boot/raw/refs/heads/'
++            'master/images/sanmiguel-bmc/openbmc-20260616025450/'
++            'obmc-phosphor-image-sanmiguel-20260616025450.static.mtd.xz',
++        'f0b79a09cd861d79919facc16af1dbdc85a3df55b06dd62ba0318a01580d447b')
++
++    TMP75_SENSORS = (
++        ('/machine/soc::aspeed.i2c-ast2600[0]~i2c[5]~tmp75@0x48',
++         '/sys/bus/i2c/devices/5-0048/hwmon/hwmon*'),
++        ('/machine/soc::aspeed.i2c-ast2600[0]~i2c[9]~tmp75@0x4e',
++         '/sys/bus/i2c/devices/9-004e/hwmon/hwmon*'),
++        ('/machine/soc::aspeed.i2c-ast2600[0]~i2c[10]~tmp75@0x48',
++         '/sys/bus/i2c/devices/10-0048/hwmon/hwmon*'),
++    )
++    PROMPT = 'root@sanmiguel:~#'
++
++    def test_arm_ast2600_sanmiguel_openbmc(self):
++        image_path = self.uncompress(self.ASSET_SANMIGUEL_FLASH)
++
++        self.do_test_arm_aspeed_openbmc('sanmiguel-bmc', image=image_path,
++                                        uboot='2019.04', cpu_id='0xf00',
++                                        soc='AST2600 rev A3',
++                                        dt_model='Facebook SanMiguel BMC')
++
++        exec_command_and_wait_for_pattern(self, 'root', 'Password:')
++        exec_command_and_wait_for_pattern(self, '0penBmc', self.PROMPT)
++
++        # The sensor round-trip below resolves devices with DeviceLocator, which
++        # requires Python 3.10+; skip just that part on older interpreters.
++        if sys.version_info < (3, 10):
++            return
++
++        locator = DeviceLocator(self.vm.cmd)
++
++        # Drive each sensor through QOM and check the kernel hwmon interface
++        # reports it back; a distinct 0.5 C per-sensor step (the finest the
++        # TMP75 register round-trips at any resolution) catches a mis-resolved
++        # locator hitting the wrong sensor.
++        for idx, (sensor, hwmon) in enumerate(self.TMP75_SENSORS):
++            path = locator.resolve(sensor, 'tmp75')
++            self.assertIn(b'lm75', self.read_hwmon(hwmon, 'name'))
++            offset = idx * 500
++            for milli_c in (55000 + offset, 30000 + offset):
++                self.vm.cmd('qom-set', path=path,
++                            property='temperature', value=milli_c)
++                self.wait_hwmon_value(hwmon, 'temp1_input', milli_c)
++
++
++if __name__ == '__main__':
++    AspeedTest.main()
+-- 
+2.53.0-Meta
+

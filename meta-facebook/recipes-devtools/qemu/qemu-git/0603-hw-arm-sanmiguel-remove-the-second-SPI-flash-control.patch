@@ -1,0 +1,43 @@
+From ab86ca516a5d5ffca03fc32c63c1257effa2fb77 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Fri, 7 Aug 2026 15:31:12 +0200
+Subject: [PATCH 603/682] hw/arm: sanmiguel: remove the second SPI flash
+ controller
+
+The board only populates the flash device attached to the FMC
+controller; the SoC SPI controllers are left unused. Advertising a
+part there presents the guest with a flash device the hardware does
+not have.
+
+While here, add the missing year to the copyright line.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ hw/arm/aspeed_ast2600_sanmiguel.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hw/arm/aspeed_ast2600_sanmiguel.c b/hw/arm/aspeed_ast2600_sanmiguel.c
+index 345a9c9416..ac2aef740a 100644
+--- a/hw/arm/aspeed_ast2600_sanmiguel.c
++++ b/hw/arm/aspeed_ast2600_sanmiguel.c
+@@ -1,7 +1,7 @@
+ /*
+  * Facebook SanMiguel BMC
+  *
+- * Copyright (c) Meta Platforms, Inc. and affiliates.
++ * Copyright (c) 2026 Meta Platforms, Inc. and affiliates.
+  *
+  * SPDX-License-Identifier: GPL-2.0-or-later
+  */
+@@ -384,7 +384,7 @@ static void aspeed_machine_sanmiguel_class_init(ObjectClass *oc,
+     amc->hw_strap1 = SANMIGUEL_BMC_HW_STRAP1;
+     amc->hw_strap2 = SANMIGUEL_BMC_HW_STRAP2;
+     amc->fmc_model = "mx66l1g45g";
+-    amc->spi_model = "mx66l1g45g";
++    amc->spi_model = NULL;
+     amc->num_cs    = 2;
+     amc->macs_mask = ASPEED_MAC0_ON;
+     amc->i2c_init  = sanmiguel_bmc_i2c_init;
+-- 
+2.53.0-Meta
+

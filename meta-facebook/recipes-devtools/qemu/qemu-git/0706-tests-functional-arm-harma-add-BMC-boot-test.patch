@@ -1,0 +1,156 @@
+From 739dfe2af1098afaf82c5b82e88607a953ba5702 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Fri, 7 Aug 2026 16:16:03 +0200
+Subject: [PATCH] tests/functional/arm: harma: add BMC boot test
+
+Boot the OpenBMC flash image, then drive a fan control board power
+sensor, the NIC temperature sensor, a muxed power monitor and one of
+the motherboard ADCs through QOM and confirm the readings propagate to
+the guest hwmon interface.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/functional/arm/meson.build          |   2 +
+ tests/functional/arm/test_aspeed_harma.py | 110 ++++++++++++++++++++++
+ 2 files changed, 112 insertions(+)
+ create mode 100644 tests/functional/arm/test_aspeed_harma.py
+
+diff --git a/tests/functional/arm/meson.build b/tests/functional/arm/meson.build
+index 64b2d7e17e..91b2410013 100644
+--- a/tests/functional/arm/meson.build
++++ b/tests/functional/arm/meson.build
+@@ -17,6 +17,7 @@ test_arm_timeouts = {
+   'aspeed_catalina' : 480,
+   'aspeed_clemente' : 480,
+   'aspeed_gb200nvl_bmc' : 480,
++  'aspeed_harma' : 480,
+   'aspeed_minerva' : 480,
+   'aspeed_rainier' : 480,
+   'aspeed_sanmiguel' : 480,
+@@ -58,6 +59,7 @@ tests_arm_system_thorough = [
+   'aspeed_catalina',
+   'aspeed_clemente',
+   'aspeed_gb200nvl_bmc',
++  'aspeed_harma',
+   'aspeed_minerva',
+   'aspeed_rainier',
+   'aspeed_sanmiguel',
+diff --git a/tests/functional/arm/test_aspeed_harma.py b/tests/functional/arm/test_aspeed_harma.py
+new file mode 100644
+index 0000000000..de2e7575e3
+--- /dev/null
++++ b/tests/functional/arm/test_aspeed_harma.py
+@@ -0,0 +1,110 @@
++#!/usr/bin/env python3
++#
++# Functional test that boots the ASPEED machines
++#
++# Copyright (c) 2026 Meta Platforms, Inc. and affiliates.
++#
++# SPDX-License-Identifier: GPL-2.0-or-later
++
++from qemu_test import Asset
++from qemu_test import exec_command_and_wait_for_pattern
++from aspeed import AspeedTest
++
++
++class HarmaMachine(AspeedTest):
++
++    # TODO: the boot image currently lives on a personal fork; move it under
++    # legoater/qemu-aspeed-boot before upstreaming.
++    ASSET_HARMA_FLASH = Asset(
++        'https://github.com/eblot/qemu-aspeed-boot/raw/refs/heads/harma-bmc/images/harma-bmc/openbmc-20260807025052/'
++            'obmc-phosphor-image-harma-20260807025052.static.mtd.xz',
++        'd175785d9652b590d2d3911b3c60a35771575d1c6b17f4ba10d11bfa00625a4a')
++
++    # The first fan control board power sensor is the first slave instantiated
++    # on i2c0, hence child[1] (child[0] is the controller's own slave); it
++    # enumerates in the guest as device 0-0040.
++    INA238_QOM_PATH = "/machine/soc/i2c/bus[0]/aspeed.i2c.bus.0/child[1]"
++    INA238_HWMON = "/sys/bus/i2c/devices/0-0040/hwmon/hwmon*"
++
++    # The MB NIC temperature sensor is the first slave on i2c1, child[1].
++    TMP75_QOM_PATH = "/machine/soc/i2c/bus[1]/aspeed.i2c.bus.1/child[1]"
++    TMP75_HWMON = "/sys/bus/i2c/devices/1-004b/hwmon/hwmon*"
++
++    # A power monitor sits alone on channel 0 of the i2c6 mux, which is itself
++    # child[1] of the bus. The guest numbers that channel bus 22, so the
++    # monitor enumerates as device 22-0045.
++    INA230_QOM_PATH = ("/machine/soc/i2c/bus[6]/aspeed.i2c.bus.6"
++                       "/child[1]/i2c.0/child[0]")
++    INA230_HWMON = "/sys/bus/i2c/devices/22-0045/hwmon/hwmon*"
++
++    # Channel 1 of the i2c13 mux carries the MB FRU eeprom (child[0]) then the
++    # two ADCs; the first of them, at 0x1d, is child[1] and enumerates in the
++    # guest as device 29-001d.
++    ADC_QOM_PATH = ("/machine/soc/i2c/bus[13]/aspeed.i2c.bus.13"
++                    "/child[1]/i2c.1/child[1]")
++    ADC_HWMON = "/sys/bus/i2c/devices/29-001d/hwmon/hwmon*"
++    PROMPT = "root@harma:~#"
++
++    def test_arm_ast2600_harma_openbmc(self):
++        image_path = self.uncompress(self.ASSET_HARMA_FLASH)
++
++        self.do_test_arm_aspeed_openbmc('harma-bmc', image=image_path,
++                                        uboot='2019.04', cpu_id='0xf00',
++                                        soc='AST2600 rev A3')
++
++        exec_command_and_wait_for_pattern(self, 'root', 'Password:')
++        exec_command_and_wait_for_pattern(self, '0penBmc', self.PROMPT)
++
++        self.assertIn(b"ina238", self.read_hwmon(self.INA238_HWMON, "name"))
++
++        # in1_input reports the bus voltage in mV (3.125 mV/LSB) and
++        # temp1_input the die temperature in millidegrees C (125 m-degC/LSB).
++        for bus_uv, temp_mc in ((12000000, 30000), (3300000, 55000)):
++            self.vm.cmd("qom-set", path=self.INA238_QOM_PATH,
++                        property="bus-voltage", value=bus_uv)
++            self.vm.cmd("qom-set", path=self.INA238_QOM_PATH,
++                        property="die-temperature", value=temp_mc)
++            self.wait_hwmon_value(self.INA238_HWMON, "in1_input",
++                                  bus_uv // 1000)
++            self.wait_hwmon_value(self.INA238_HWMON, "temp1_input", temp_mc)
++
++        self.assertIn(b"tmp75", self.read_hwmon(self.TMP75_HWMON, "name"))
++
++        # The sensor reports a single temperature in millidegrees C; the set
++        # points are multiples of the coarsest 0.5 C step, so they read back
++        # unquantised whatever resolution the driver selects.
++        for temp_mc in (30000, 55500):
++            self.vm.cmd("qom-set", path=self.TMP75_QOM_PATH,
++                        property="temperature", value=temp_mc)
++            self.wait_hwmon_value(self.TMP75_HWMON, "temp1_input", temp_mc)
++
++        self.assertIn(b"ina230", self.read_hwmon(self.INA230_HWMON, "name"))
++
++        # in0_input reports the shunt voltage in mV (2.5 uV/LSB), in1_input
++        # the bus voltage in mV (1.25 mV/LSB).
++        for shunt_nv, bus_uv in ((10000000, 12000000), (40000000, 3300000)):
++            self.vm.cmd("qom-set", path=self.INA230_QOM_PATH,
++                        property="shunt-voltage", value=shunt_nv)
++            self.vm.cmd("qom-set", path=self.INA230_QOM_PATH,
++                        property="bus-voltage", value=bus_uv)
++            self.wait_hwmon_value(self.INA230_HWMON, "in0_input",
++                                  shunt_nv // 1000000)
++            self.wait_hwmon_value(self.INA230_HWMON, "in1_input",
++                                  bus_uv // 1000)
++
++        self.assertIn(b"adc128d818", self.read_hwmon(self.ADC_HWMON, "name"))
++
++        # ainN sets analog input channel N in mV; the driver exposes it as the
++        # zero-based inN_input. With the internal 2560 mV reference and 12-bit
++        # resolution, values that are multiples of the LSB read back exactly.
++        for ain0_mv, ain1_mv in ((1000, 2000), (500, 1500)):
++            self.vm.cmd("qom-set", path=self.ADC_QOM_PATH,
++                        property="ain0", value=ain0_mv)
++            self.vm.cmd("qom-set", path=self.ADC_QOM_PATH,
++                        property="ain1", value=ain1_mv)
++            self.wait_hwmon_value(self.ADC_HWMON, "in0_input", ain0_mv)
++            self.wait_hwmon_value(self.ADC_HWMON, "in1_input", ain1_mv)
++
++
++if __name__ == '__main__':
++    AspeedTest.main()
+-- 
+2.54.0
+

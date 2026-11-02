@@ -1,0 +1,93 @@
+From c5c56b248d434af2ab0337aa8f7426156fd07cbb Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 3 Sep 2026 16:03:43 +0200
+Subject: [PATCH 616/682] hw/rtc: ds1338: add a persist-on-reset property
+
+A real RTC keeps counting across a reboot of the machine it sits in,
+and its register file comes back with it. The model instead wiped the
+registers on every reset and resynchronised the clock with the host.
+
+Add a property selecting between the two. It defaults off, leaving
+every board as it was.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ hw/rtc/ds1338.c | 29 +++++++++++++++++++++++++----
+ 1 file changed, 25 insertions(+), 4 deletions(-)
+
+diff --git a/hw/rtc/ds1338.c b/hw/rtc/ds1338.c
+index c5fc74e6ca..21deb94689 100644
+--- a/hw/rtc/ds1338.c
++++ b/hw/rtc/ds1338.c
+@@ -22,6 +22,7 @@
+ #include "qemu/osdep.h"
+ #include "hw/i2c/i2c.h"
+ #include "hw/rtc/ds1338.h"
++#include "hw/core/qdev-properties.h"
+ #include "migration/vmstate.h"
+ #include "qemu/bcd.h"
+ #include "qom/object.h"
+@@ -56,7 +57,8 @@ struct DS1338State {
+     uint8_t nvram[NVRAM_SIZE];
+     int32_t ptr;
+     bool addr_byte;
+-    bool osc_stopped;   /* oscillator halted: time is frozen */
++    bool osc_stopped;      /* oscillator halted: time is frozen */
++    bool persist_on_reset; /* keep the registers across a reset */
+ };
+ 
+ struct DS1338Class {
+@@ -263,9 +265,8 @@ static int ds1338_send(I2CSlave *i2c, uint8_t data)
+     return 0;
+ }
+ 
+-static void ds1338_reset_hold(Object *obj, ResetType type)
++static void ds1338_power_on(DS1338State *s)
+ {
+-    DS1338State *s = DS1338(obj);
+     DS1338Class *k = DS1338_GET_CLASS(s);
+ 
+     /* The clock is running and synchronized with the host */
+@@ -273,11 +274,29 @@ static void ds1338_reset_hold(Object *obj, ResetType type)
+     s->wday_offset = 0;
+     memset(s->nvram, 0, NVRAM_SIZE);
+     s->nvram[k->ctrl_addr] = k->ctrl_reset;
++    s->osc_stopped = false;
++}
++
++static void ds1338_realize(DeviceState *dev, Error **errp)
++{
++    ds1338_power_on(DS1338(dev));
++}
++
++static void ds1338_reset_hold(Object *obj, ResetType type)
++{
++    DS1338State *s = DS1338(obj);
++
++    if (!s->persist_on_reset) {
++        ds1338_power_on(s);
++    }
+     s->ptr = 0;
+     s->addr_byte = false;
+-    s->osc_stopped = false;
+ }
+ 
++static const Property ds1338_properties[] = {
++    DEFINE_PROP_BOOL("persist-on-reset", DS1338State, persist_on_reset, false),
++};
++
+ static void ds1338_class_init(ObjectClass *klass, const void *data)
+ {
+     DeviceClass *dc = DEVICE_CLASS(klass);
+@@ -289,6 +308,8 @@ static void ds1338_class_init(ObjectClass *klass, const void *data)
+     k->recv = ds1338_recv;
+     k->send = ds1338_send;
+     rc->phases.hold = ds1338_reset_hold;
++    dc->realize = ds1338_realize;
++    device_class_set_props(dc, ds1338_properties);
+     dc->desc = "DS1338 I2C RTC with 56-byte NV RAM";
+     dc->vmsd = &vmstate_ds1338;
+ 
+-- 
+2.53.0-Meta
+

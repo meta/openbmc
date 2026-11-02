@@ -1,0 +1,398 @@
+From a28913c450bdef06249e9ca5accb447ee6b38ea9 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 6 Aug 2026 17:24:49 +0200
+Subject: [PATCH 676/682] tests/qtest: pca9539: cover the PCA9539 I/O expander
+
+Exercise the register model through the qgraph i2c interface: reset
+defaults, output-to-input reflection, polarity inversion, port
+independence, command auto-increment and command wrapping.
+
+Drive the hardware /RESET pin through the qtest GPIO interface, and
+check what the registers alone cannot show: the levels the device
+presents to whoever is wired to it once the reset has run, whether it
+drove the pin or an external source did.
+
+The NACK returned while /RESET is held low is not covered; libqos
+offers no bus-agnostic way to observe one.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/qtest/meson.build    |   1 +
+ tests/qtest/pca9539-test.c | 353 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 354 insertions(+)
+ create mode 100644 tests/qtest/pca9539-test.c
+
+diff --git a/tests/qtest/meson.build b/tests/qtest/meson.build
+index 5042ae52b2..b2221757da 100644
+--- a/tests/qtest/meson.build
++++ b/tests/qtest/meson.build
+@@ -343,6 +343,7 @@ qos_test_ss.add(
+   'pca9552-test.c',
+   'pca9554-test.c',
+   'pca9555-test.c',
++  'pca9539-test.c',
+   'pci-test.c',
+   'pcnet-test.c',
+   'rs5c372-test.c',
+diff --git a/tests/qtest/pca9539-test.c b/tests/qtest/pca9539-test.c
+new file mode 100644
+index 0000000000..04834e7ccb
+--- /dev/null
++++ b/tests/qtest/pca9539-test.c
+@@ -0,0 +1,353 @@
++/*
++ * QTest testcase for the PCA9539 16-bit I/O port expander
++ *
++ * Copyright (c) 2026 Meta Platforms, Inc. and affiliates.
++ *
++ * SPDX-License-Identifier: GPL-2.0-or-later
++ */
++
++#include "qemu/osdep.h"
++#include "hw/gpio/pca9552_regs.h"
++#include "libqtest-single.h"
++#include "libqos/i2c.h"
++#include "libqos/qgraph.h"
++#include "qobject/qdict.h"
++
++#define PCA9539_TEST_ID   "pca9539-test"
++#define PCA9539_TEST_ADDR 0x74
++#define PCA9539_TEST_PATH "/machine/peripheral/" PCA9539_TEST_ID
++
++/* /RESET is active low and pulled high when the board leaves it alone. */
++#define RESET_ASSERTED  0
++#define RESET_RELEASED  1
++
++static void pca9539_set_reset(int level)
++{
++    qtest_set_irq_in(global_qtest, PCA9539_TEST_PATH, "reset", 0, level);
++}
++
++/* Verify power-on reset defaults match the PCA9539 datasheet. */
++static void test_reset_defaults(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xFF);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT1), ==, 0xFF);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_OUTPUT0), ==, 0xFF);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_OUTPUT1), ==, 0xFF);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_POLARITY0), ==, 0x00);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_POLARITY1), ==, 0x00);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_CONFIG0), ==, 0xFF);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_CONFIG1), ==, 0xFF);
++}
++
++/* An undriven input pin reads high. */
++static void test_output_drives_input(void *obj, void *data,
++                                     QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set8(dev, PCA9535_CONFIG0, 0xF0);
++    i2c_set8(dev, PCA9535_OUTPUT0, 0xFA);
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xFA);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT1), ==, 0xFF);
++
++    i2c_set8(dev, PCA9535_CONFIG0, 0x00);
++    i2c_set8(dev, PCA9535_OUTPUT0, 0x00);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0x00);
++
++    i2c_set8(dev, PCA9535_OUTPUT0, 0xFF);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xFF);
++}
++
++/* Both ports are independent: port 0 registers never affect port 1. */
++static void test_port_independence(void *obj, void *data,
++                                   QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set8(dev, PCA9535_CONFIG0, 0x00);
++    i2c_set8(dev, PCA9535_OUTPUT0, 0x00);
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0x00);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT1), ==, 0xFF);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_CONFIG1), ==, 0xFF);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_OUTPUT1), ==, 0xFF);
++
++    i2c_set8(dev, PCA9535_CONFIG1, 0x00);
++    i2c_set8(dev, PCA9535_OUTPUT1, 0xAA);
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0x00);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT1), ==, 0xAA);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_OUTPUT0), ==, 0x00);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_OUTPUT1), ==, 0xAA);
++}
++
++/* Polarity inversion applies to the input port, not to the pins. */
++static void test_polarity_inversion(void *obj, void *data,
++                                    QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xFF);
++
++    i2c_set8(dev, PCA9535_POLARITY0, 0xFF);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0x00);
++
++    i2c_set8(dev, PCA9535_POLARITY0, 0x0F);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xF0);
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT1), ==, 0xFF);
++    i2c_set8(dev, PCA9535_POLARITY1, 0xAA);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT1), ==, 0x55);
++}
++
++/* Polarity inversion combined with output-driven pins. */
++static void test_polarity_with_output(void *obj, void *data,
++                                      QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set8(dev, PCA9535_CONFIG0, 0x00);
++    i2c_set8(dev, PCA9535_OUTPUT0, 0xA5);
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xA5);
++
++    i2c_set8(dev, PCA9535_POLARITY0, 0xFF);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0x5A);
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_OUTPUT0), ==, 0xA5);
++}
++
++/* The command pointer auto-increments within a register pair. */
++static void test_auto_increment_read(void *obj, void *data,
++                                     QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++    uint8_t buf[2];
++
++    i2c_set8(dev, PCA9535_CONFIG0, 0x00);
++    i2c_set8(dev, PCA9535_CONFIG1, 0x00);
++    i2c_set8(dev, PCA9535_OUTPUT0, 0xAA);
++    i2c_set8(dev, PCA9535_OUTPUT1, 0x55);
++
++    i2c_read_block(dev, PCA9535_INPUT0, buf, 2);
++    g_assert_cmphex(buf[0], ==, 0xAA);
++    g_assert_cmphex(buf[1], ==, 0x55);
++
++    i2c_read_block(dev, PCA9535_OUTPUT0, buf, 2);
++    g_assert_cmphex(buf[0], ==, 0xAA);
++    g_assert_cmphex(buf[1], ==, 0x55);
++}
++
++/* A write auto-increments the same way. */
++static void test_auto_increment_write(void *obj, void *data,
++                                      QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++    uint8_t buf[2];
++
++    buf[0] = 0x12;
++    buf[1] = 0x34;
++    i2c_write_block(dev, PCA9535_OUTPUT0, buf, 2);
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_OUTPUT0), ==, 0x12);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_OUTPUT1), ==, 0x34);
++
++    buf[0] = 0x0F;
++    buf[1] = 0xF0;
++    i2c_write_block(dev, PCA9535_CONFIG0, buf, 2);
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_CONFIG0), ==, 0x0F);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_CONFIG1), ==, 0xF0);
++}
++
++/* Starting from port 1, the pointer wraps back to port 0 (toggle bit 0). */
++static void test_auto_increment_toggle(void *obj, void *data,
++                                       QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++    uint8_t buf[2];
++
++    i2c_set8(dev, PCA9535_OUTPUT0, 0xAA);
++    i2c_set8(dev, PCA9535_OUTPUT1, 0x55);
++
++    i2c_read_block(dev, PCA9535_OUTPUT1, buf, 2);
++    g_assert_cmphex(buf[0], ==, 0x55);
++    g_assert_cmphex(buf[1], ==, 0xAA);
++}
++
++/* The command byte decodes 3 bits: addresses beyond 7 alias into the map. */
++static void test_command_wrapping(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set8(dev, PCA9535_OUTPUT0, 0x42);
++
++    g_assert_cmphex(i2c_get8(dev, 0x0A), ==, 0x42);
++}
++
++/*
++ * The NACK returned while /RESET is held is not checked: both libqos i2c
++ * adapters assert on the address-phase ACK, so an unacked transfer aborts
++ * the test rather than reporting a failure.
++ */
++static void test_reset_pin(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set8(dev, PCA9535_CONFIG0, 0x00);
++    i2c_set8(dev, PCA9535_OUTPUT0, 0x5A);
++    i2c_set8(dev, PCA9535_POLARITY1, 0xFF);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0x5A);
++
++    pca9539_set_reset(RESET_ASSERTED);
++    pca9539_set_reset(RESET_RELEASED);
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_CONFIG0), ==, 0xFF);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_OUTPUT0), ==, 0xFF);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_POLARITY1), ==, 0x00);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xFF);
++
++    /* Back in service: the pins follow the output register again */
++    i2c_set8(dev, PCA9535_CONFIG1, 0x00);
++    i2c_set8(dev, PCA9535_OUTPUT1, 0x3C);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT1), ==, 0x3C);
++}
++
++/*
++ * /RESET restores the registers, not the pins: an external source still
++ * holding an input low emits no fresh edge, so the level has to survive.
++ */
++static void test_reset_pin_driven_input(void *obj, void *data,
++                                        QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    qtest_set_irq_in(global_qtest, PCA9539_TEST_PATH, NULL, 0, 0);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xFE);
++
++    pca9539_set_reset(RESET_ASSERTED);
++    pca9539_set_reset(RESET_RELEASED);
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xFE);
++
++    /* The pin follows its driver again once released */
++    qtest_set_irq_in(global_qtest, PCA9539_TEST_PATH, NULL, 0, 1);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xFF);
++}
++
++/*
++ * The same holds for a reset coming from elsewhere while /RESET is still held
++ * low: the expander is the only thing being reset, its drivers are not.
++ */
++static void test_reset_pin_system_reset(void *obj, void *data,
++                                        QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    qtest_set_irq_in(global_qtest, PCA9539_TEST_PATH, NULL, 0, 0);
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xFE);
++
++    pca9539_set_reset(RESET_ASSERTED);
++    qobject_unref(qmp("{ 'execute': 'system_reset' }"));
++    qtest_qmp_eventwait(global_qtest, "RESET");
++    pca9539_set_reset(RESET_RELEASED);
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xFE);
++}
++
++/*
++ * A reset restates the level of every pin, not just the ones it changes: a
++ * GPIO line carries no state its consumer can read back, so a consumer wired
++ * up without being told sits on its own default. Pin 1 is left alone here --
++ * the reset does not alter it -- so only the restatement can raise it.
++ *
++ * This has to run before any other test that intercepts the outputs. The qtest
++ * server records a line's level per QEMU process, not per test, and reports it
++ * only when it changes, so once another test has seen pin 1 high there is no
++ * transition left to observe.
++ */
++static void test_reset_publishes_levels(void *obj, void *data,
++                                        QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    qtest_irq_intercept_out(global_qtest, PCA9539_TEST_PATH);
++
++    /* Pin 1 is a pulled-up input, but nothing has told the sink so */
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0) & 0x02, ==, 0x02);
++    g_assert_false(get_irq(1));
++
++    pca9539_set_reset(RESET_ASSERTED);
++    pca9539_set_reset(RESET_RELEASED);
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0) & 0x02, ==, 0x02);
++    g_assert_true(get_irq(1));
++}
++
++/*
++ * A reset that turns an output-low pin back into a pulled-up input changes the
++ * level the device drives, so the outgoing GPIO line has to follow.
++ */
++static void test_reset_pin_output_level(void *obj, void *data,
++                                        QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    qtest_irq_intercept_out(global_qtest, PCA9539_TEST_PATH);
++
++    /* Interception records no level yet: toggle pin 0 to establish one */
++    i2c_set8(dev, PCA9535_CONFIG0, 0xFE);
++    i2c_set8(dev, PCA9535_OUTPUT0, 0xFE);
++    i2c_set8(dev, PCA9535_OUTPUT0, 0xFF);
++    g_assert_true(get_irq(0));
++    i2c_set8(dev, PCA9535_OUTPUT0, 0xFE);
++    g_assert_false(get_irq(0));
++
++    pca9539_set_reset(RESET_ASSERTED);
++    pca9539_set_reset(RESET_RELEASED);
++
++    g_assert_cmphex(i2c_get8(dev, PCA9535_INPUT0), ==, 0xFF);
++    g_assert_true(get_irq(0));
++}
++
++static void pca9539_register_nodes(void)
++{
++    QOSGraphEdgeOptions opts = {
++        .extra_device_opts = "id=" PCA9539_TEST_ID ",address=0x74"
++    };
++    add_qi2c_address(&opts, &(QI2CAddress) { PCA9539_TEST_ADDR });
++
++    qos_node_create_driver("pca9539", i2c_device_create);
++    qos_node_consumes("pca9539", "i2c-bus", &opts);
++
++    qos_add_test("reset-defaults", "pca9539", test_reset_defaults, NULL);
++    qos_add_test("output-drives-input", "pca9539", test_output_drives_input,
++                 NULL);
++    qos_add_test("port-independence", "pca9539", test_port_independence, NULL);
++    qos_add_test("polarity-inversion", "pca9539", test_polarity_inversion,
++                 NULL);
++    qos_add_test("polarity-with-output", "pca9539", test_polarity_with_output,
++                 NULL);
++    qos_add_test("auto-increment-read", "pca9539", test_auto_increment_read,
++                 NULL);
++    qos_add_test("auto-increment-write", "pca9539", test_auto_increment_write,
++                 NULL);
++    qos_add_test("auto-increment-toggle", "pca9539", test_auto_increment_toggle,
++                 NULL);
++    qos_add_test("command-wrapping", "pca9539", test_command_wrapping, NULL);
++    qos_add_test("reset-pin", "pca9539", test_reset_pin, NULL);
++    qos_add_test("reset-pin-driven-input", "pca9539",
++                 test_reset_pin_driven_input, NULL);
++    qos_add_test("reset-pin-system-reset", "pca9539",
++                 test_reset_pin_system_reset, NULL);
++    /* Must precede any other test that intercepts the outputs */
++    qos_add_test("reset-publishes-levels", "pca9539",
++                 test_reset_publishes_levels, NULL);
++    qos_add_test("reset-pin-output-level", "pca9539",
++                 test_reset_pin_output_level, NULL);
++}
++
++libqos_init(pca9539_register_nodes);
+-- 
+2.53.0-Meta
+

@@ -1,0 +1,171 @@
+From b9c98c065301803317b12a9812b08eeb6e92710a Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Wed, 22 Jul 2026 17:33:07 +0200
+Subject: [PATCH 646/682] tests/qtest: ina238: cover conversion-ready and
+ alert-latch semantics
+
+Add coverage for the DIAG_ALRT flag-clearing rules: which of a read and
+a write clears CNVRF and the limit flags in each alert mode, and that a
+conversion only re-evaluates the flags of the channels it converted.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/qtest/ina238-test.c | 127 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 127 insertions(+)
+
+diff --git a/tests/qtest/ina238-test.c b/tests/qtest/ina238-test.c
+index fb7bcc265c..e7dd50a822 100644
+--- a/tests/qtest/ina238-test.c
++++ b/tests/qtest/ina238-test.c
+@@ -494,6 +494,106 @@ static void test_alert_latch(void *obj, void *data, QGuestAllocator *alloc)
+     g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_SHNTOL, ==, 0);
+ }
+ 
++/* In latch mode a read releases the flag even while the fault persists. */
++static void test_alert_latch_persist(void *obj, void *data,
++                                     QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++    i2c_set16(dev, REG_SOVL, 0x1000);
++    i2c_set16(dev, REG_DIAG_ALRT, DIAG_ALATCH);
++
++    qmp_ina238_set("shunt-voltage", 97200000);
++
++    /* First read shows the latched flag and clears it */
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_SHNTOL, ==,
++                    DIAG_SHNTOL);
++
++    /* Fault still present but no new conversion: the flag stays cleared */
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_SHNTOL, ==, 0);
++
++    qmp_ina238_set("shunt-voltage", 97200000);
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_SHNTOL, ==,
++                    DIAG_SHNTOL);
++}
++
++/*
++ * In transparent mode a limit flag follows the live condition: a read leaves
++ * it set while the fault persists.
++ */
++static void test_alert_transparent_persist(void *obj, void *data,
++                                           QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++    i2c_set16(dev, REG_SOVL, 0x1000);
++
++    qmp_ina238_set("shunt-voltage", 97200000);
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_SHNTOL, ==,
++                    DIAG_SHNTOL);
++
++    /* Repeated reads do not clear the flag while the fault is still present. */
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_SHNTOL, ==,
++                    DIAG_SHNTOL);
++
++    /* A conversion with the fault gone clears it. */
++    qmp_ina238_set("shunt-voltage", 5000000);
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_SHNTOL, ==, 0);
++}
++
++/* A DIAG_ALRT write releases a latched limit flag as a read does. */
++static void test_alert_latch_write_clears(void *obj, void *data,
++                                          QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++    i2c_set16(dev, REG_SOVL, 0x1000);
++    i2c_set16(dev, REG_DIAG_ALRT, DIAG_ALATCH);
++
++    qmp_ina238_set("shunt-voltage", 97200000);
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_SHNTOL, ==,
++                    DIAG_SHNTOL);
++
++    /* The read above cleared it; re-latch it with another conversion. */
++    qmp_ina238_set("shunt-voltage", 97200000);
++
++    /* A write (keeping latch mode) clears the flag while the fault persists. */
++    i2c_set16(dev, REG_DIAG_ALRT, DIAG_ALATCH);
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_SHNTOL, ==, 0);
++
++    /* The next conversion re-asserts the still-present fault. */
++    qmp_ina238_set("shunt-voltage", 97200000);
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_SHNTOL, ==,
++                    DIAG_SHNTOL);
++}
++
++/*
++ * A conversion only re-evaluates the flags of the channels it converted: the
++ * shunt register a bus-only conversion left stale must not resurrect one.
++ */
++static void test_alert_channel(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++    i2c_set16(dev, REG_SOVL, 0x1000);
++    i2c_set16(dev, REG_DIAG_ALRT, DIAG_ALATCH);
++
++    qmp_ina238_set("shunt-voltage", 97200000);
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_SHNTOL, ==,
++                    DIAG_SHNTOL);
++
++    /* Continuous bus-only mode */
++    i2c_set16(dev, REG_ADC_CONFIG, 0x9000);
++    qmp_ina238_set("bus-voltage", 12000000);
++
++    g_assert_cmphex(i2c_get16(dev, REG_VSHUNT), ==, 0x4BF0);
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_SHNTOL, ==, 0);
++}
++
+ /* DIAG_ALRT control bits are writable; status bits are read-only */
+ static void test_diag_control(void *obj, void *data, QGuestAllocator *alloc)
+ {
+@@ -529,6 +629,25 @@ static void test_cnvrf(void *obj, void *data, QGuestAllocator *alloc)
+     g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_CNVRF, ==, 0);
+ }
+ 
++/* A DIAG_ALRT write clears CNVRF only in latch mode. */
++static void test_cnvrf_write(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    /* Latch mode: a write clears CNVRF. */
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++    i2c_set16(dev, REG_DIAG_ALRT, DIAG_ALATCH);
++    qmp_ina238_set("shunt-voltage", 20000000);
++    i2c_set16(dev, REG_DIAG_ALRT, DIAG_ALATCH);
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_CNVRF, ==, 0);
++
++    /* Transparent mode: a write does not clear CNVRF. */
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++    qmp_ina238_set("shunt-voltage", 20000000);
++    i2c_set16(dev, REG_DIAG_ALRT, 0x0000);
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_CNVRF, ==, DIAG_CNVRF);
++}
++
+ /* Shunt-voltage injection limits */
+ static void test_shunt_limits(void *obj, void *data, QGuestAllocator *alloc)
+ {
+@@ -625,7 +744,15 @@ static void ina238_register_nodes(void)
+     qos_add_test("alert-power", "ina238", test_alert_power, NULL);
+     qos_add_test("alert-multi", "ina238", test_alert_multi, NULL);
+     qos_add_test("alert-latch", "ina238", test_alert_latch, NULL);
++    qos_add_test("alert-latch-persist", "ina238", test_alert_latch_persist,
++                 NULL);
++    qos_add_test("alert-transparent-persist", "ina238",
++                 test_alert_transparent_persist, NULL);
++    qos_add_test("alert-latch-write-clears", "ina238",
++                 test_alert_latch_write_clears, NULL);
++    qos_add_test("alert-channel", "ina238", test_alert_channel, NULL);
+     qos_add_test("diag-control", "ina238", test_diag_control, NULL);
+     qos_add_test("cnvrf", "ina238", test_cnvrf, NULL);
++    qos_add_test("cnvrf-write", "ina238", test_cnvrf_write, NULL);
+ }
+ libqos_init(ina238_register_nodes);
+-- 
+2.53.0-Meta
+

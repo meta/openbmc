@@ -1,0 +1,101 @@
+From ba96549f242cb190835ef863755f397fa40addbc Mon Sep 17 00:00:00 2001
+From: Zinc Lim <zinclim@meta.com>
+Date: Thu, 1 Oct 2026 18:30:00 -0700
+Subject: [PATCH] hw/i2c/aspeed_i2c: hold the target RX ACK until the ISR acks
+
+Re-arming the target RX pool releases the withheld bus ACK, and the
+target ISR re-arms before it acknowledges:
+
+  writel(TRIGGER | RX_BUFF_EN, I2CS_CMD_STS);   /* releases the ACK */
+  writel(PKT_DONE, I2CS_ISR);                   /* acknowledges */
+
+The initiator is i2c-netdev2 in another QEMU process and is not paced by
+a bus clock, so if the vCPU is descheduled between those writes the
+whole packet and its STOP arrive in the gap. The late-status check from
+"only clear target status the ISR has seen" then declines the ack, but
+that keeps the SLAVE_MATCH the ISR already handled next to the new
+RX_DONE | STOP. The ast2600 buffer mode target ISR has no case for
+SLAVE_MATCH | RX_DONE | STOP without SLAVE_PENDING, takes the default
+branch, and drops the packet without touching a counter:
+
+  read  I2CS_INTR_STS = 0x01010080   SLAVE_MATCH | WAIT_RX_DMA | PKT_DONE
+  write I2CS_CMD      = 0x00070080   re-arm, ACK released
+        12 bytes + I2C_FINISH        vCPU still between the two writes
+  write I2CS_INTR_STS = 0x00010000   late status: nothing cleared
+  read  I2CS_INTR_STS = 0x00010094   SLAVE_MATCH | STOP | RX_DONE, dropped
+
+On the BMC this is a reply that never arrives: mctp-client runs into its
+timeout, or mctpd fails SetupEndpoint with "MCTP Endpoint did not
+respond". This only affects the ast2600 path, as the ast2700 target
+ISR decodes that status.
+
+On hardware the ack always lands first, since one byte at bus speed
+outlasts the rest of the ISR. Model that: a re-arm made while the ISR
+is between sampling and acknowledging I2CS_INTR_STS holds the ACK, and
+the acknowledge releases it. A re-arm outside the ISR still ACKs at
+once. Both the ast2600 and ast2700 target ISRs write I2CS_INTR_STS after
+re-arming, so the held ACK is always released.
+
+Signed-off-by: Zinc Lim <zinclim@meta.com>
+---
+ hw/i2c/aspeed_i2c.c         | 16 +++++++++++++++-
+ include/hw/i2c/aspeed_i2c.h |  2 ++
+ 2 files changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
+index 7ecbc215fd..ffdbe998e6 100644
+--- a/hw/i2c/aspeed_i2c.c
++++ b/hw/i2c/aspeed_i2c.c
+@@ -1002,7 +1002,16 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+             }
+             if (ARRAY_FIELD_EX32(bus->regs, I2CS_INTR_STS, WAIT_RX_DMA)) {
+                 ARRAY_FIELD_DP32(bus->regs, I2CS_INTR_STS, WAIT_RX_DMA, 0);
+-                i2c_ack(bus->bus);
++                /*
++                 * Re-armed from inside the ISR: hold the ACK until the ISR acks,
++                 * or the initiator's bytes and STOP latch onto the status it is
++                 * handling.
++                 */
++                if (bus->slave_intr_sts_seen != UINT32_MAX) {
++                    bus->slave_ack_deferred = true;
++                } else {
++                    i2c_ack(bus->bus);
++                }
+             }
+         }
+         break;
+@@ -1052,6 +1061,10 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+             qemu_irq_lower(aic->bus_get_irq(bus));
+         }
+         aspeed_i2c_bus_raise_interrupt(bus);
++        if (bus->slave_ack_deferred) {
++            bus->slave_ack_deferred = false;
++            i2c_ack(bus->bus);
++        }
+         break;
+     case A_I2CS_DMA_LEN_STS:
+         bus->regs[R_I2CS_DMA_LEN_STS] = 0;
+@@ -1870,6 +1883,7 @@ static void aspeed_i2c_bus_reset_hold(Object *obj, ResetType type)
+     memset(s->regs, 0, sizeof(s->regs));
+     s->pending_intr_sts = 0;
+     s->slave_intr_sts_seen = UINT32_MAX;
++    s->slave_ack_deferred = false;
+     i2c_end_transfer(s->bus);
+     /*
+      * I2CC_VERSION_CTRL resets to all-ones. FUNC_CFG_DMA_EN is therefore set,
+diff --git a/include/hw/i2c/aspeed_i2c.h b/include/hw/i2c/aspeed_i2c.h
+index 1a35579423..2a8b2d87dd 100644
+--- a/include/hw/i2c/aspeed_i2c.h
++++ b/include/hw/i2c/aspeed_i2c.h
+@@ -277,6 +277,8 @@ struct AspeedI2CBus {
+      * ack-everything behaviour.
+      */
+     uint32_t slave_intr_sts_seen;
++    /* Target RX ACK released by a re-arm, held until the ISR acks. */
++    bool slave_ack_deferred;
+ };
+ 
+ struct AspeedI2CState {
+-- 
+2.53.0-Meta
+

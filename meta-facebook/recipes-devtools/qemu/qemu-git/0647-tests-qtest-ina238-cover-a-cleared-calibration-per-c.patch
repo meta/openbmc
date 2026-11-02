@@ -1,0 +1,97 @@
+From 5a266b544c47123734bdaea9b4c0adf385f8566e Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Mon, 7 Sep 2026 10:53:59 +0200
+Subject: [PATCH 647/682] tests/qtest: ina238: cover a cleared calibration per
+ channel
+
+Verify that without a calibration value the current and power
+registers read zero, whichever channels the mode converts.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/qtest/ina238-test.c | 48 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+
+diff --git a/tests/qtest/ina238-test.c b/tests/qtest/ina238-test.c
+index e7dd50a822..4e4146461c 100644
+--- a/tests/qtest/ina238-test.c
++++ b/tests/qtest/ina238-test.c
+@@ -282,6 +282,30 @@ static void test_zero_cal(void *obj, void *data, QGuestAllocator *alloc)
+     g_assert_cmpuint(i2c_get24(dev, REG_POWER), ==, 0);
+ }
+ 
++/* Clearing SHUNT_CAL zeroes both derived registers in any mode */
++static void test_zero_cal_channels(void *obj, void *data,
++                                   QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++    static const uint16_t modes[] = { 0x9000, 0xA000, 0xF000 };
++    size_t idx;
++
++    for (idx = 0; idx < ARRAY_SIZE(modes); idx++) {
++        i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++        i2c_set16(dev, REG_SHUNT_CAL, 0x0FD2);
++        qmp_ina238_set("shunt-voltage", 97200000);
++        qmp_ina238_set("bus-voltage", 48000000);
++        g_assert_cmphex(i2c_get16(dev, REG_CURRENT), !=, 0x0000);
++        g_assert_cmpuint(i2c_get24(dev, REG_POWER), !=, 0);
++
++        i2c_set16(dev, REG_ADC_CONFIG, modes[idx]);
++        i2c_set16(dev, REG_SHUNT_CAL, 0x0000);
++
++        g_assert_cmphex(i2c_get16(dev, REG_CURRENT), ==, 0x0000);
++        g_assert_cmpuint(i2c_get24(dev, REG_POWER), ==, 0);
++    }
++}
++
+ /* ADCRANGE changes the shunt LSB, not the current divisor. */
+ static void test_adcrange(void *obj, void *data, QGuestAllocator *alloc)
+ {
+@@ -458,6 +482,27 @@ static void test_alert_power(void *obj, void *data, QGuestAllocator *alloc)
+     g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_POL, ==, 0);
+ }
+ 
++/* Clearing SHUNT_CAL drops the power alert with the power reading */
++static void test_alert_power_zero_cal(void *obj, void *data,
++                                      QGuestAllocator *alloc)
++{
++    QI2CDevice *dev = (QI2CDevice *)obj;
++
++    i2c_set16(dev, REG_CONFIG, CONFIG_RST);
++    qmp_ina238_set("shunt-voltage", 97200000);
++    qmp_ina238_set("bus-voltage", 48000000);
++    i2c_set16(dev, REG_SHUNT_CAL, 0x0FD2);
++    i2c_set16(dev, REG_PWR_LIMIT, 0x0100);
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_POL, ==, DIAG_POL);
++
++    /* Continuous shunt-only: the power register is not reconverted. */
++    i2c_set16(dev, REG_ADC_CONFIG, 0xA000);
++    i2c_set16(dev, REG_SHUNT_CAL, 0x0000);
++
++    g_assert_cmpuint(i2c_get24(dev, REG_POWER), ==, 0);
++    g_assert_cmphex(i2c_get16(dev, REG_DIAG_ALRT) & DIAG_POL, ==, 0);
++}
++
+ /* Two thresholds crossed at once are reported simultaneously (multi-alert) */
+ static void test_alert_multi(void *obj, void *data, QGuestAllocator *alloc)
+ {
+@@ -733,6 +778,7 @@ static void ina238_register_nodes(void)
+                  NULL);
+     qos_add_test("power", "ina238", test_power, NULL);
+     qos_add_test("zero-cal", "ina238", test_zero_cal, NULL);
++    qos_add_test("zero-cal-channels", "ina238", test_zero_cal_channels, NULL);
+     qos_add_test("adcrange", "ina238", test_adcrange, NULL);
+     qos_add_test("mode-shutdown", "ina238", test_mode_shutdown, NULL);
+     qos_add_test("mode-triggered", "ina238", test_mode_triggered, NULL);
+@@ -742,6 +788,8 @@ static void ina238_register_nodes(void)
+     qos_add_test("alert-bus", "ina238", test_alert_bus, NULL);
+     qos_add_test("alert-temp", "ina238", test_alert_temp, NULL);
+     qos_add_test("alert-power", "ina238", test_alert_power, NULL);
++    qos_add_test("alert-power-zero-cal", "ina238", test_alert_power_zero_cal,
++                 NULL);
+     qos_add_test("alert-multi", "ina238", test_alert_multi, NULL);
+     qos_add_test("alert-latch", "ina238", test_alert_latch, NULL);
+     qos_add_test("alert-latch-persist", "ina238", test_alert_latch_persist,
+-- 
+2.53.0-Meta
+

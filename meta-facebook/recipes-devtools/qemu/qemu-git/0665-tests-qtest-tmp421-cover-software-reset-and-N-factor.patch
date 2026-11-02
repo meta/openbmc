@@ -1,0 +1,80 @@
+From 406eafb1b4a10713272927c60c72610ce3495da9 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Wed, 5 Aug 2026 18:08:39 +0200
+Subject: [PATCH 665/682] tests/qtest: tmp421: cover software reset and
+ N-factor registers
+
+Check that the software-reset register restores the configuration and
+conversion-rate defaults, and that the N-factor correction registers
+are writable only on the remote channels each variant provides.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ tests/qtest/tmp421-test.c | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/tests/qtest/tmp421-test.c b/tests/qtest/tmp421-test.c
+index 04f9252188..6c5332211b 100644
+--- a/tests/qtest/tmp421-test.c
++++ b/tests/qtest/tmp421-test.c
+@@ -25,6 +25,7 @@
+ #define    TMP421_CONFIG_REN              (1 << 4)
+ #define TMP421_CONVERSION_RATE_REG      0x0B
+ #define TMP421_TEMP_LSB0                0x10
++#define TMP421_N_CORRECT                0x21
+ #define TMP421_RESET                    0xFC
+ #define TMP421_MANUFACTURER_ID_REG      0xFE
+ #define TMP421_DEVICE_ID_REG            0xFF
+@@ -191,6 +192,38 @@ static void test_channels(void *obj, void *data, QGuestAllocator *alloc)
+     g_assert_cmphex(i2c_get16(i2cdev, TMP421_TEMP_MSB0 + 1), ==, 0x1900);
+ }
+ 
++static void test_soft_reset(void *obj, void *data, QGuestAllocator *alloc)
++{
++    const TMP421Variant *var = data;
++    QI2CDevice *i2cdev = obj;
++
++    i2c_set8(i2cdev, TMP421_CONFIG_REG_1, TMP421_CONFIG_RANGE);
++    i2c_set8(i2cdev, TMP421_CONFIG_REG_2, 0);
++    i2c_set8(i2cdev, TMP421_CONVERSION_RATE_REG, 0);
++
++    i2c_set8(i2cdev, TMP421_RESET, 0);
++
++    g_assert_cmphex(i2c_get8(i2cdev, TMP421_CONFIG_REG_1), ==, 0);
++    g_assert_cmphex(i2c_get8(i2cdev, TMP421_CONFIG_REG_2), ==,
++                    var->config2_reset);
++    g_assert_cmphex(i2c_get8(i2cdev, TMP421_CONVERSION_RATE_REG), ==, 0x07);
++}
++
++static void test_n_correct(void *obj, void *data, QGuestAllocator *alloc)
++{
++    const TMP421Variant *var = data;
++    QI2CDevice *i2cdev = obj;
++
++    for (unsigned remote = 0; remote < 3; remote++) {
++        uint8_t reg = TMP421_N_CORRECT + remote;
++
++        i2c_set8(i2cdev, reg, 0x7f);
++        /* Registers exist only for the variant's remote channels. */
++        g_assert_cmphex(i2c_get8(i2cdev, reg), ==,
++                        remote + 1 < var->nchannels ? 0x7f : 0);
++    }
++}
++
+ static void tmp421_register_node(const TMP421Variant *var, const char *type,
+                                  uint8_t addr)
+ {
+@@ -207,6 +240,10 @@ static void tmp421_register_node(const TMP421Variant *var, const char *type,
+                  &(QOSGraphTestOptions) { .arg = (void *)var });
+     qos_add_test("channels", type, test_channels,
+                  &(QOSGraphTestOptions) { .arg = (void *)var });
++    qos_add_test("soft-reset", type, test_soft_reset,
++                 &(QOSGraphTestOptions) { .arg = (void *)var });
++    qos_add_test("n-correct", type, test_n_correct,
++                 &(QOSGraphTestOptions) { .arg = (void *)var });
+ }
+ 
+ static void tmp421_register_nodes(void)
+-- 
+2.53.0-Meta
+

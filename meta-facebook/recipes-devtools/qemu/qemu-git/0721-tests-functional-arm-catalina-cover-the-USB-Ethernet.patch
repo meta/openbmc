@@ -1,0 +1,273 @@
+From 06231b523a24eca2beab76eefb88ac937f5f4ab5 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 8 Oct 2026 18:03:17 +0200
+Subject: [PATCH] tests/functional/arm: catalina: cover the USB Ethernet device
+
+Add two tests for the USB Ethernet device the board now provides. Both
+boot the Catalina image QEMU_TEST_CATALINA_IMAGE names, and are skipped
+when it is unset: the pinned public image never aggregates the peer.
+
+The first attaches a user-mode backend to the usb-net and checks that
+the BMC brings usb0 up at the static address its image configures.
+
+The second checks Redfish aggregation end to end: a Redfish service
+answers on the far side of the link, and a reading it serves must be
+returned by the BMC's own Redfish service, queried from the host. It
+also needs that service, found on PATH, and is skipped without it.
+Readings are compared exactly unless QEMU_TEST_SATELLITE_DRIFT asks the
+service to make them oscillate.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Signed-off-by: Emmanuel BLOT <eblot@meta.com>
+---
+ tests/functional/arm/test_aspeed_catalina.py | 216 +++++++++++++++++++
+ 1 file changed, 216 insertions(+)
+
+diff --git a/tests/functional/arm/test_aspeed_catalina.py b/tests/functional/arm/test_aspeed_catalina.py
+index f9ee62260b..7651770ae8 100755
+--- a/tests/functional/arm/test_aspeed_catalina.py
++++ b/tests/functional/arm/test_aspeed_catalina.py
+@@ -6,10 +6,17 @@
+ #
+ # SPDX-License-Identifier: GPL-2.0-or-later
+ 
++import json
++import os
++import socket
++import subprocess
+ import sys
++import time
++from pathlib import Path
+ 
+ from qemu_test import Asset
+ from qemu_test import exec_command_and_wait_for_pattern
++from qemu_test import skipIfMissingCommands
+ from aspeed import AspeedTest
+ 
+ # DeviceLocator's type hints require Python 3.10+; import it only when
+@@ -18,6 +25,53 @@
+ if sys.version_info >= (3, 10):
+     from qemu_test.locator import DeviceLocator
+ 
++CATALINA_IMAGE = os.getenv('QEMU_TEST_CATALINA_IMAGE')
++"""Catalina flash image the USB Ethernet tests boot, any complete build.
++
++The asset this file pins is the public Catalina build, which never
++polls the peer, so aggregation cannot be observed on it.
++"""
++
++SATELLITE_IP = '172.31.13.251'
++"""Address the image expects its USB Ethernet peer at."""
++
++SATELLITE_POWER = 1234.5
++"""Total GPU power the satellite reports, in watts."""
++
++SATELLITE_DRIFT = float(os.getenv('QEMU_TEST_SATELLITE_DRIFT', '0'))
++"""Fraction the satellite makes readings oscillate by; 0 keeps them exact."""
++
++SATELLITE_STOP_TIMEOUT = 10
++"""Seconds the satellite gets to exit on SIGTERM before it is killed."""
++
++SATELLITE_RESOURCES = (
++    '--sensor', 'HGX_Chassis_0/HGX_Chassis_0_TotalGPU_Power_0='
++                f'{SATELLITE_POWER}:W',
++    '--sensor', 'HGX_GPU_0/HGX_GPU_0_Voltage_0=0.85:V',
++    '--sensor', 'HGX_GPU_1/HGX_GPU_1_Voltage_0=0.86:V',
++    '--sensor', 'HGX_ProcessorModule_0/'
++                'HGX_ProcessorModule_0_AltitudePressure_0=101.3:%',
++    '--sensor', 'HGX_ProcessorModule_1/'
++                'HGX_ProcessorModule_1_AltitudePressure_0=101.3:%',
++    '--sensor', 'HGX_CPU_0/ProcessorModule_0_CPU_0_CoreUtil_#0-71=12.5:%',
++    '--sensor', 'HGX_CPU_1/ProcessorModule_1_CPU_0_CoreUtil_#0-71=12.5:%',
++    '--manager', 'HGX_BMC_0',
++    '--system', 'HGX_Baseboard_0',
++    '--metric-report', 'HGX_CpuProcessorMetrics_0',
++    '--firmware', 'HGX_FW_BMC_0=1.7.0',
++)
++"""Every resource the image's Redfish client polls the satellite for.
++
++Only the total GPU power is asserted on; the rest keep the client from
++retrying resources that are missing.
++"""
++
++
++def free_port(kind):
++    with socket.socket(socket.AF_INET, kind) as sock:
++        sock.bind(('127.0.0.1', 0))
++        return sock.getsockname()[1]
++
+ 
+ class CatalinaMachine(AspeedTest):
+ 
+@@ -125,6 +179,168 @@ def assert_gpio_line(self, chip, pin, expected):
+             f"echo LINE{pin}=$(gpioget {chip} {pin})")
+         self.assertIn(f"LINE{pin}={expected}".encode(), out)
+ 
++    def catalina_image(self):
++        """The image QEMU_TEST_CATALINA_IMAGE names; skip if it is unset."""
++        if not CATALINA_IMAGE:
++            self.skipTest('QEMU_TEST_CATALINA_IMAGE is not set')
++        if not os.path.isfile(CATALINA_IMAGE):
++            self.fail(f'QEMU_TEST_CATALINA_IMAGE: no file {CATALINA_IMAGE}')
++        return CATALINA_IMAGE
++
++    def test_arm_ast2600_catalina_usb_ethernet(self):
++        self.require_netdev('user')
++        self.require_device('usb-net')
++        image_path = self.catalina_image()
++
++        # The machine has to be chosen before anything touches self.vm:
++        # the property applies it only when it first builds the VM.
++        self.set_machine('catalina-bmc')
++        self.vm.add_args('-nic', 'user,model=usb-net')
++        self.do_test_arm_aspeed_openbmc('catalina-bmc', image=image_path,
++                                        uboot='2019.04', cpu_id='0xf00',
++                                        soc='AST2600 rev A3')
++
++        exec_command_and_wait_for_pattern(self, 'root', 'Password:')
++        exec_command_and_wait_for_pattern(self, '0penBmc', '~#')
++        exec_command_and_wait_for_pattern(self, 'ip -br addr show usb0',
++                                          '172.31.13.241')
++
++    def start_satellite(self, local_port, remote_port):
++        """Run a Redfish service on the far end of the USB link.
++
++        It is not part of QEMU, so it is found on PATH like any other
++        external peer program.
++        """
++        logpath = self.log_file('satellite.log')
++        log = open(logpath, 'w')
++        self.addCleanup(log.close)
++        # Its first run may prepare its own environment, longer than the
++        # wait below allows; --help does that, then exits.
++        subprocess.run(['redfish-endpoint', '--help'], check=True,
++                       stdout=subprocess.DEVNULL, stderr=log)
++        proc = subprocess.Popen(
++            ['redfish-endpoint',
++             '--ip', f'{SATELLITE_IP}/24', '--http-port', '80',
++             '--local-port', str(local_port),
++             '--remote-port', str(remote_port),
++             # Its default control socket is a fixed path, which a
++             # concurrent run would share.
++             '--ipc-socket', os.path.join(self.socket_dir().name,
++                                          'peer.sock'),
++             '--drift', str(SATELLITE_DRIFT),
++             *SATELLITE_RESOURCES],
++            stdout=log, stderr=subprocess.STDOUT)
++        self.addCleanup(self.stop_satellite, proc)
++
++        # It spends some seconds probing for an address conflict before it
++        # answers anything; booting into that window loses the first polls.
++        for _ in range(60):
++            if 'serving on' in Path(logpath).read_text():
++                return proc
++            if proc.poll() is not None:
++                self.fail(f'satellite exited: {Path(logpath).read_text()}')
++            time.sleep(1)
++        self.fail(f'satellite never served: {Path(logpath).read_text()}')
++
++    @staticmethod
++    def stop_satellite(proc):
++        """Stop the satellite, killing it if it does not exit in time."""
++        proc.terminate()
++        try:
++            proc.wait(timeout=SATELLITE_STOP_TIMEOUT)
++        except subprocess.TimeoutExpired:
++            proc.kill()
++            proc.wait()
++
++    def redfish_get(self, port, path, tries=30):
++        """GET a Redfish resource from the BMC, from outside the guest.
++
++        Until the BMC's Redfish service is up, an answer can be an HTTP error,
++        possibly an HTML page rather than JSON, or a Redfish error document.
++        All of these are retried; the last one is reported if none succeeds.
++        """
++        url = f'https://127.0.0.1:{port}{path}'
++        problem = 'no attempt made'
++        for _ in range(tries):
++            done = subprocess.run(
++                ['curl', '-sk', '--fail-with-body', '-m', '15',
++                 '-u', 'root:0penBmc', url],
++                capture_output=True, text=True)
++            if done.returncode != 0:
++                problem = (f'curl exited {done.returncode}: '
++                           f'{(done.stdout or done.stderr).strip()[:200]}')
++            else:
++                try:
++                    body = json.loads(done.stdout)
++                except ValueError as exc:
++                    problem = f'not JSON ({exc}): {done.stdout.strip()[:200]}'
++                else:
++                    if 'error' not in body:
++                        return body
++                    problem = f'Redfish error: {json.dumps(body)[:200]}'
++            time.sleep(10)
++        self.fail(f'no usable answer from {url} in {tries} tries; '
++                  f'last: {problem}')
++
++    @skipIfMissingCommands('redfish-endpoint', 'curl')
++    def test_arm_ast2600_catalina_redfish_aggregation(self):
++        """The BMC must republish a sensor it can only have read over USB."""
++        self.require_netdev('user')
++        self.require_device('usb-net')
++        image_path = self.catalina_image()
++
++        local_port, remote_port = free_port(socket.SOCK_DGRAM), \
++            free_port(socket.SOCK_DGRAM)
++        redfish_port = free_port(socket.SOCK_STREAM)
++        self.start_satellite(local_port, remote_port)
++
++        self.set_machine('catalina-bmc')
++        self.vm.add_args(
++            # The board builds the usb-net itself and takes its backend
++            # from the legacy NIC list, which only -net nic fills; the
++            # hubport is what joins that NIC to a dgram netdev, which -net
++            # cannot express.
++            '-netdev', f'dgram,id=usbnet0,local.type=inet,'
++                       f'local.host=127.0.0.1,local.port={local_port},'
++                       f'remote.type=inet,remote.host=127.0.0.1,'
++                       f'remote.port={remote_port}',
++            '-netdev', 'hubport,id=hp0,hubid=0,netdev=usbnet0',
++            '-net', 'nic,model=usb-net',
++            # The BMC's ordinary network, so its Redfish service can be
++            # queried from here rather than from the guest console.
++            '-nic', f'user,model=ftgmac100,'
++                    f'hostfwd=tcp::{redfish_port}-:443')
++        self.do_test_arm_aspeed_openbmc('catalina-bmc', image=image_path,
++                                        uboot='2019.04', cpu_id='0xf00',
++                                        soc='AST2600 rev A3')
++
++        # Establish the link before blaming aggregation for its absence.
++        exec_command_and_wait_for_pattern(self, 'root', 'Password:')
++        exec_command_and_wait_for_pattern(self, '0penBmc', '~#')
++        exec_command_and_wait_for_pattern(self, 'ip -br addr show usb0',
++                                          '172.31.13.241')
++        exec_command_and_wait_for_pattern(
++            self, f'ping -c 3 -W 2 {SATELLITE_IP}', '0% packet loss')
++        exec_command_and_wait_for_pattern(
++            self, f'curl -s -m 10 http://{SATELLITE_IP}/redfish/v1',
++            'ServiceRoot')
++
++        sensor = self.redfish_get(
++            redfish_port,
++            '/redfish/v1/Chassis/NVIDIA_HMC/Sensors/power_HGX_TOTALGPU_PWR_W')
++
++        self.assertEqual(sensor['Status']['Health'], 'OK')
++        self.assertEqual(sensor['ReadingUnits'], 'W')
++        # Only the satellite knows this value, so seeing it here means the
++        # BMC fetched it over the USB link.
++        if SATELLITE_DRIFT:
++            # The satellite rounds to three decimals after scaling.
++            self.assertAlmostEqual(
++                sensor['Reading'], SATELLITE_POWER,
++                delta=SATELLITE_POWER * SATELLITE_DRIFT + 0.0005)
++        else:
++            self.assertEqual(sensor['Reading'], SATELLITE_POWER)
++
+ 
+ if __name__ == '__main__':
+     AspeedTest.main()
+-- 
+2.53.0-Meta
+

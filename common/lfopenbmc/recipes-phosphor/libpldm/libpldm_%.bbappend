@@ -10,3 +10,5 @@ EXTRA_OEMESON:append:openbmc-fb-lf = " -Dabi=deprecated,stable,testing"
 SRC_URI:append:openbmc-fb-lf = " \
     file://0001-dsp-platform-Add-tagged-numeric-sensor-decode-API.patch \
 "
+
+SRC_URI:append = "${@' file://0002-bindings-cpp-bypass-vendor-defined-initial-descripto.patch' if d.getVar('MACHINE') in ['catalina', 'clemente', 'harma', 'minerva', 'ventura'] else ''}"

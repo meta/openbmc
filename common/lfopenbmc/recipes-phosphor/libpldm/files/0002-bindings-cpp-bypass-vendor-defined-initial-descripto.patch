@@ -1,0 +1,39 @@
+From 9c97ebe0d1533dd26b55b52cef6aca4be8cfe8b1 Mon Sep 17 00:00:00 2001
+From: Leo Yang <Leo-Yang@quantatw.com>
+Date: Mon, 2 Nov 2026 09:11:13 +0800
+Subject: [PATCH] bindings: cpp: bypass vendor defined initial descriptor
+ restriction check
+
+This is a temporary workaround for prod platforms.
+
+Signed-off-by: Leo Yang <Leo-Yang@quantatw.com>
+---
+ bindings/cpp/firmware_update.cpp | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/bindings/cpp/firmware_update.cpp b/bindings/cpp/firmware_update.cpp
+index e0ca669..893c145 100644
+--- a/bindings/cpp/firmware_update.cpp
++++ b/bindings/cpp/firmware_update.cpp
+@@ -12,6 +12,7 @@
+ #include <span>
+ #include <string>
+ #include <utility>
++#include <cstdio>
+ 
+ using namespace std;
+ 
+@@ -127,7 +128,9 @@ checkVendorDefinedInitialDescriptor(uint16_t initialType, bool vendorDefined,
+ 	msg += downstreamDevice ? "downstream" : "firmware";
+ 	msg += " device id record with a vendor defined descriptor";
+ 
+-	return std::unexpected(msg);
++	//Temporary workaround to avoid impacting production platforms.
++	std::fprintf(stderr, "libpldm: warning: %s\n", msg.c_str());
++	return {};
+ }
+ 
+ pldm::fw_update::PackageParserError::PackageParserError(std::string s)
+-- 
+2.47.3
+

@@ -1,0 +1,105 @@
+From 89e8f630f9dedc1da29143cc9eb0d3c0a1f8abca Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Fri, 25 Sep 2026 19:09:18 +0200
+Subject: [PATCH] hw/usb: usb-net: derive CDC framing from the endpoint packet
+ size
+
+The CDC Ethernet path decided both whether a terminating short packet
+was owed and whether an OUT frame was complete by testing the transfer
+length against a hardcoded 64 bytes.  That only holds at full speed: a
+512 byte bulk endpoint ends a frame on any packet shorter than 512, and
+a 128 byte final packet would be mistaken for a full one and never
+flushed to the network.
+
+Take the size from the endpoint instead.  An endpoint the guest has not
+configured yet reports zero, and nothing on the packet path rejects a
+bulk token sent before SET_CONFIGURATION, so fall back to the full speed
+size rather than divide by it.
+
+RNDIS is unaffected: it carries its own length.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Signed-off-by: Emmanuel BLOT <eblot@meta.com>
+---
+ hw/usb/dev-network.c | 24 ++++++++++++++++++------
+ 1 file changed, 18 insertions(+), 6 deletions(-)
+
+diff --git a/hw/usb/dev-network.c b/hw/usb/dev-network.c
+index 568a6ff24c..b30b3f06f1 100644
+--- a/hw/usb/dev-network.c
++++ b/hw/usb/dev-network.c
+@@ -96,6 +96,8 @@ enum usbstring_idx {
+ #define LOG2_STATUS_INTERVAL_MSEC       5    /* 1 << 5 == 32 msec */
+ #define STATUS_BYTECOUNT                16   /* 8 byte header + data */
+ 
++#define BULK_PACKET_SIZE_FULL           0x40
++
+ #define ETH_FRAME_LEN                   1514 /* Max. octets in frame sans FCS */
+ 
+ static const USBDescStrings usb_net_stringtable = {
+@@ -176,11 +178,11 @@ static const USBDescIface desc_iface_rndis[] = {
+             {
+                 .bEndpointAddress      = USB_DIR_IN | 0x02,
+                 .bmAttributes          = USB_ENDPOINT_XFER_BULK,
+-                .wMaxPacketSize        = 0x40,
++                .wMaxPacketSize        = BULK_PACKET_SIZE_FULL,
+             },{
+                 .bEndpointAddress      = USB_DIR_OUT | 0x02,
+                 .bmAttributes          = USB_ENDPOINT_XFER_BULK,
+-                .wMaxPacketSize        = 0x40,
++                .wMaxPacketSize        = BULK_PACKET_SIZE_FULL,
+             }
+         }
+     }
+@@ -254,11 +256,11 @@ static const USBDescIface desc_iface_cdc[] = {
+             {
+                 .bEndpointAddress      = USB_DIR_IN | 0x02,
+                 .bmAttributes          = USB_ENDPOINT_XFER_BULK,
+-                .wMaxPacketSize        = 0x40,
++                .wMaxPacketSize        = BULK_PACKET_SIZE_FULL,
+             },{
+                 .bEndpointAddress      = USB_DIR_OUT | 0x02,
+                 .bmAttributes          = USB_ENDPOINT_XFER_BULK,
+-                .wMaxPacketSize        = 0x40,
++                .wMaxPacketSize        = BULK_PACKET_SIZE_FULL,
+             }
+         }
+     }
+@@ -1167,6 +1169,15 @@ static void usb_net_handle_statusin(USBNetState *s, USBPacket *p)
+ #endif
+ }
+ 
++/*
++ * An endpoint of a device the guest has not configured yet reports no size,
++ * so fall back to the full speed one rather than divide by zero.
++ */
++static unsigned int usb_net_max_packet_size(const USBPacket *p)
++{
++    return p->ep->max_packet_size ?: BULK_PACKET_SIZE_FULL;
++}
++
+ static void usb_net_handle_datain(USBNetState *s, USBPacket *p)
+ {
+     int len;
+@@ -1187,7 +1198,8 @@ static void usb_net_handle_datain(USBNetState *s, USBPacket *p)
+     usb_packet_copy(p, &s->in_buf[s->in_ptr], len);
+     s->in_ptr += len;
+     if (s->in_ptr >= s->in_len &&
+-                    (is_rndis(s) || (s->in_len & (64 - 1)) || !len)) {
++                    (is_rndis(s) || (s->in_len % usb_net_max_packet_size(p)) ||
++                     !len)) {
+         /* no short packet necessary */
+         usb_net_reset_in_buf(s);
+     }
+@@ -1217,7 +1229,7 @@ static void usb_net_handle_dataout(USBNetState *s, USBPacket *p)
+     s->out_ptr += sz;
+ 
+     if (!is_rndis(s)) {
+-        if (p->iov.size % 64 || p->iov.size == 0) {
++        if (p->iov.size % usb_net_max_packet_size(p) || p->iov.size == 0) {
+             qemu_send_packet(qemu_get_queue(s->nic), s->out_buf, s->out_ptr);
+             s->out_ptr = 0;
+         }
+-- 
+2.53.0-Meta
+

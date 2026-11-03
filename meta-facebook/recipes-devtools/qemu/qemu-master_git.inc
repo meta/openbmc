@@ -208,6 +208,8 @@ SRC_URI:append = " \
            file://0714-hw-i2c-aspeed_i2c-hold-the-target-RX-ACK-until-the-I.patch \
            file://0715-tests-functional-arm-bletchley-expect-the-FRU-MAC-of-.patch \
            file://0716-tests-functional-arm-device_locator-drop-the-SanMigu.patch \
+           file://0717-hw-usb-usb-net-derive-CDC-framing-from-the-endpoint-.patch \
+           file://0718-hw-usb-usb-net-add-high-speed-descriptors.patch \
            "
 
 # slirp is a subproject: its patches need a patchdir, or they hit QEMU's tree.

@@ -1,0 +1,44 @@
+From c860cce09cefba32f8a589596479e1cc56a03e98 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Mon, 28 Sep 2026 17:24:16 +0200
+Subject: [PATCH] hw/arm/aspeed: add a machine hook for USB devices
+
+Add a USB counterpart to the I2C hook, run once the SoC is realized.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Signed-off-by: Emmanuel BLOT <eblot@meta.com>
+---
+ hw/arm/aspeed.c         | 4 ++++
+ include/hw/arm/aspeed.h | 1 +
+ 2 files changed, 5 insertions(+)
+
+diff --git a/hw/arm/aspeed.c b/hw/arm/aspeed.c
+index a7cfbd6c5e..6dfed4f7a6 100644
+--- a/hw/arm/aspeed.c
++++ b/hw/arm/aspeed.c
+@@ -214,6 +214,10 @@ static void aspeed_machine_init(MachineState *machine)
+         amc->i2c_init(bmc);
+     }
+ 
++    if (amc->usb_init) {
++        amc->usb_init(bmc);
++    }
++
+     for (i = 0; i < bmc->soc->sdhci.num_slots && defaults_enabled(); i++) {
+         sdhci_attach_drive(&bmc->soc->sdhci.slots[i],
+                            drive_get(IF_SD, 0, i), false, false);
+diff --git a/include/hw/arm/aspeed.h b/include/hw/arm/aspeed.h
+index 2a7ed5166d..4d78a6dbc6 100644
+--- a/include/hw/arm/aspeed.h
++++ b/include/hw/arm/aspeed.h
+@@ -54,6 +54,7 @@ struct AspeedMachineClass {
+     uint32_t num_cs2;
+     uint32_t macs_mask;
+     void (*i2c_init)(AspeedMachineState *bmc);
++    void (*usb_init)(AspeedMachineState *bmc);
+     uint32_t uart_default;
+     bool sdhci_wp_inverted;
+     bool vbootrom;
+-- 
+2.53.0-Meta
+

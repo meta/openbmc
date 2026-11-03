@@ -210,6 +210,8 @@ SRC_URI:append = " \
            file://0716-tests-functional-arm-device_locator-drop-the-SanMigu.patch \
            file://0717-hw-usb-usb-net-derive-CDC-framing-from-the-endpoint-.patch \
            file://0718-hw-usb-usb-net-add-high-speed-descriptors.patch \
+           file://0719-hw-arm-aspeed-add-a-machine-hook-for-USB-devices.patch \
+           file://0720-hw-arm-catalina-attach-a-USB-Ethernet-device.patch \
            "
 
 # slirp is a subproject: its patches need a patchdir, or they hit QEMU's tree.

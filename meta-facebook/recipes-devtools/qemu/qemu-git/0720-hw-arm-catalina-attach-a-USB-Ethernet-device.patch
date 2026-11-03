@@ -1,0 +1,61 @@
+From 2478e1af79cccd9c1231f6c49818171beca46913 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Mon, 28 Sep 2026 17:24:16 +0200
+Subject: [PATCH] hw/arm: catalina: attach a USB Ethernet device
+
+The device tree enables a single EHCI host and no USB device controller,
+so the BMC can only be the host side of a USB link. Attach a usb-net to
+the first EHCI controller so the guest has a USB Ethernet interface.
+
+The device is plugged in only when a NIC is configured for it with
+model=usb-net, e.g. -nic user,model=usb-net; a NIC given without a
+model is left to the board's MAC, and a bare -netdev does not bind to
+it.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Signed-off-by: Emmanuel BLOT <eblot@meta.com>
+---
+ hw/arm/aspeed_ast2600_catalina.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/hw/arm/aspeed_ast2600_catalina.c b/hw/arm/aspeed_ast2600_catalina.c
+index 5421b3edff..2450c1ffd7 100644
+--- a/hw/arm/aspeed_ast2600_catalina.c
++++ b/hw/arm/aspeed_ast2600_catalina.c
+@@ -17,6 +17,8 @@
+ #include "hw/rtc/ds1338.h"
+ #include "hw/sensor/tmp105.h"
+ #include "hw/sensor/tmp421.h"
++#include "hw/usb/usb.h"
++#include "net/net.h"
+ 
+ /* Catalina hardware value */
+ #define CATALINA_BMC_HW_STRAP1 0x00002002
+@@ -654,6 +656,16 @@ static void catalina_bmc_i2c_init(AspeedMachineState *bmc)
+     at24c_eeprom_init_rom(i2c[15], 0x52, 8 * KiB, nic_eeprom, nic_eeprom_len);
+ }
+ 
++static void catalina_bmc_usb_init(AspeedMachineState *bmc)
++{
++    DeviceState *dev = qemu_create_nic_device("usb-net", false, NULL);
++
++    if (dev) {
++        usb_realize_and_unref(USB_DEVICE(dev), &bmc->soc->ehci[0].ehci.bus,
++                              &error_fatal);
++    }
++}
++
+ static void aspeed_machine_catalina_class_init(ObjectClass *oc,
+                                                const void *data)
+ {
+@@ -669,6 +681,7 @@ static void aspeed_machine_catalina_class_init(ObjectClass *oc,
+     amc->num_cs    = 2;
+     amc->macs_mask = ASPEED_MAC2_ON;
+     amc->i2c_init  = catalina_bmc_i2c_init;
++    amc->usb_init  = catalina_bmc_usb_init;
+     mc->default_ram_size = CATALINA_BMC_RAM_SIZE;
+     aspeed_machine_class_init_cpus_defaults(mc);
+     aspeed_machine_ast2600_class_emmc_init(oc);
+-- 
+2.53.0-Meta
+

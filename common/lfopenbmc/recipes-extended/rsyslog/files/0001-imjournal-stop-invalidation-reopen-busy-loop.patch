@@ -1,0 +1,58 @@
+From 383f80f21f16c3c94e7d7a57b0a5af12cdac9d75 Mon Sep 17 00:00:00 2001
+From: Rainer Gerhards <rgerhards@adiscon.com>
+Date: Wed, 15 Jul 2026 16:23:56 +0200
+Subject: [PATCH] imjournal: stop invalidation reopen busy-loop
+
+Why:
+Journal invalidation recovery introduced in 8.2606.0 can consume a
+full CPU core while repeatedly reopening an otherwise idle journal.
+
+Impact:
+imjournal blocks normally after journal rotation or invalidation instead
+of spinning and flooding the internal log.
+
+Before/After:
+Before, each reopened handle immediately triggered another invalidation;
+after, the handle initializes its notification state before resuming.
+
+Technical Overview:
+Prime each reopened sd-journal handle with a zero-timeout wait.
+This installs and consumes the fresh handle notification state.
+Treat negative wait results as recovery errors.
+Restore the saved cursor only after notification initialization.
+Preserve the reopen that protects invalidated mappings from reuse.
+Document the operator-visible fix in the 8.2608 ChangeLog.
+
+Closes https://github.com/rsyslog/rsyslog/issues/7342
+
+With the help of AI-Agents: Codex
+
+Upstream-Status: Backport [https://github.com/rsyslog/rsyslog/commit/383f80f21f16c3c94e7d7a57b0a5af12cdac9d75]
+---
+--- a/plugins/imjournal/imjournal.c
++++ b/plugins/imjournal/imjournal.c
+@@ -853,10 +853,24 @@
+ 
+ static rsRetVal reopenJournal(struct journalContext_s *journalContext) {
+     DEFiRet;
++    int waitRet;
+ 
+     closeJournal(journalContext);
+     CHKiRet(openJournal(journalContext));
+ 
++    /* The first sd_journal_wait() on a newly opened handle intentionally
++     * returns immediately after installing its watches. Consume that initial
++     * state here; otherwise an INVALIDATE-triggered reopen causes every fresh
++     * handle to report another INVALIDATE and imjournal busy-loops forever.
++     * Cursor restoration follows this call, so sequential delivery still
++     * resumes from the last processed entry. */
++    waitRet = sd_journal_wait(journalContext->j, 0);
++    if (waitRet < 0) {
++        LogError(-waitRet, RS_RET_ERR, "imjournal: sd_journal_wait() failed while initializing reopened journal");
++        closeJournal(journalContext);
++        ABORT_FINALIZE(RS_RET_ERR);
++    }
++
+ finalize_it:
+     RETiRet;
+ }

@@ -22,26 +22,60 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
 BRANCH = "main"
-SRC_URI = "gitsm://github.com/chipsalliance/caliptra-mcu-sw;protocol=https;branch=${BRANCH};"
+SRC_URI = "gitsm://github.com/chipsalliance/caliptra-mcu-sw;protocol=https;branch=${BRANCH}"
 
 SRCREV = "2b7837402328ab611968d40243075082469df7ae"
 
-inherit cargo perlnative
+inherit cargo cargo-update-recipe-crates perlnative
 
-# Using cargo to download packages
-CARGO_DISABLE_BITBAKE_VENDORING = "1"
+require caliptra-mcu-sw_1x-crates.inc
+require caliptra-mcu-sw_1x-git-crates.inc
 
-# Enable network for the compile task allowing cargo to download dependencies
-do_compile[network] = "1"
+# crates.io may reject the API download endpoint used by BitBake's crate
+# fetcher; prefer the static crate tarball location first.
+PREMIRRORS:prepend = " \
+    https://crates.io/api/v1/crates/([^/]*)/[^/]*/download https://static.crates.io/crates/\1/ \n \
+"
+
+# After cargo_common_do_patch_paths strips git sources from Cargo.lock,
+# remove stale git qualifiers and package entries made identical by that change.
+python caliptra_mcu_fixup_lockfile() {
+    import re
+
+    lockfile = d.getVar("CARGO_LOCK_PATH")
+    with open(lockfile, "r") as f:
+        content = f.read()
+
+    content = re.sub(r' \(git\+[^)]*\)"', '"', content)
+
+    header, *packages = content.split("[[package]]\n")
+    seen = set()
+    unique = []
+    for pkg in packages:
+        if pkg not in seen:
+            seen.add(pkg)
+            unique.append(pkg)
+
+    with open(lockfile, "w") as f:
+        f.write("[[package]]\n".join([header] + unique))
+}
+do_configure[postfuncs] += "caliptra_mcu_fixup_lockfile"
 
 do_compile() {
     cd ${S}
 
+    export PERL=perl
+
+    # openssl-sys needs the vendored OpenSSL 3.x,
+    # but oe_cargo_fix_env forces OPENSSL_NO_VENDOR=1
+    unset OPENSSL_NO_VENDOR
+
+    # Cargo does not cap lints for vendored path crates; prevent new rustc
+    # warnings from failing ufmt-macros, which uses #![deny(warnings)].
+    export RUSTFLAGS="--cap-lints=warn"
+
     # Build xtask
-    # The pinned Rust OpenSSL fork requires the OpenSSL 3.5 source already
-    # vendored in Cargo.lock; cargo_common otherwise forces system OpenSSL 4.
-    # Keep OpenSSL's generated Makefile using Yocto's Perl wrapper.
-    PERL=perl OPENSSL_NO_VENDOR=0 cargo build -p xtask --release
+    cargo build --offline -p xtask --release
 }
 
 do_install() {

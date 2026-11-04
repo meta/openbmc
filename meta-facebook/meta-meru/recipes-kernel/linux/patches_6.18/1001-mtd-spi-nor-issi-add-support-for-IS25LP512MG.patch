@@ -18,7 +18,7 @@ index 18d9a00aa22e..cc35cfde88e5 100644
 +	}, {
 +		.id = SNOR_ID(0x9d, 0x60, 0x20),
 +		.name = "is25lp512mg",
-+		.size = SZ_4M,
++		.size = SZ_64M,
 +		.flags = SPI_NOR_QUAD_PP,
 +		.no_sfdp_flags = SECT_4K | SPI_NOR_DUAL_READ | SPI_NOR_QUAD_READ,
  	}, {

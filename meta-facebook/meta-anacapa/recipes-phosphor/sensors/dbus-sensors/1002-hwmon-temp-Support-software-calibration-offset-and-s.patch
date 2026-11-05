@@ -1,0 +1,118 @@
+From cc1d1ed2869e70c8eb7c59be7201a1f4934e99c2 Mon Sep 17 00:00:00 2001
+From: Peter Shen <peter.shen@amd.com>
+Date: Tue, 3 Nov 2026 11:01:46 +0800
+Subject: [PATCH] hwmon-temp: Support software calibration offset and scale
+
+Add support for parsing "OffsetValue" and "ScaleValue" from the
+configuration base map. This allows platforms to apply
+software-side calibration directly within dbus-sensors for
+devices that do not natively expose hardware calibration
+registers through sysfs.
+
+To maintain consistency with the hwmon sysfs interface, the
+configured OffsetValue is scaled by 1000 for standard
+temperature sensors to match the milli-degree units read from
+the sysfs files. For IIO raw devices (ending with "_raw"),
+the offset is applied as-is without scaling.
+
+This change is fully backward compatible. If these properties
+are missing from the configuration, the sensor parameters
+default to 0.0 for offset and 1.0 for scale, preserving the
+original behavior.
+
+Tested:
+- Defined OffsetValue and ScaleValue in the sensor config.
+- Verified via busctl that the D-Bus sensor Value correctly
+  reflects the adjusted reading based on offset and scale.
+  $ busctl get-property xyz.openbmc_project.HwmonTempSensor \
+      /xyz/openbmc_project/sensors/temperature/MB_INLET_TEMP_C \
+      xyz.openbmc_project.Sensor.Value Value
+- Verified sensors without these properties function normally.
+
+Gerrit: https://gerrit.openbmc.org/c/openbmc/dbus-sensors/+/91561
+
+Signed-off-by: Peter Shen <peter.shen@amd.com>
+---
+ src/hwmon-temp/HwmonTempMain.cpp | 52 ++++++++++++++++++++++++++++++--
+ 1 file changed, 50 insertions(+), 2 deletions(-)
+
+diff --git a/src/hwmon-temp/HwmonTempMain.cpp b/src/hwmon-temp/HwmonTempMain.cpp
+index b575db6..c6a5b93 100644
+--- a/src/hwmon-temp/HwmonTempMain.cpp
++++ b/src/hwmon-temp/HwmonTempMain.cpp
+@@ -262,6 +262,51 @@ static SensorConfigMap buildSensorConfigMap(
+     return configMap;
+ }
+ 
++static void getCalibration(const SensorBaseConfigMap& baseConfigMap,
++                           const std::string& pathStr, SensorParams& params)
++{
++    auto findOffset = baseConfigMap.find("OffsetValue");
++    if (findOffset != baseConfigMap.end())
++    {
++        double rawOffset = std::visit(
++            [](const auto& val) -> double {
++                if constexpr (std::is_convertible_v<decltype(val), double>)
++                {
++                    return static_cast<double>(val);
++                }
++                return 0.0;
++            },
++            findOffset->second);
++
++        if (!pathStr.ends_with("_raw") && params.typeName == "temperature")
++        {
++            params.offsetValue += rawOffset * 1000.0;
++        }
++        else
++        {
++            params.offsetValue += rawOffset;
++        }
++    }
++
++    auto findScale = baseConfigMap.find("ScaleValue");
++    if (findScale != baseConfigMap.end())
++    {
++        double rawScale = std::visit(
++            [](const auto& val) -> double {
++                if constexpr (std::is_convertible_v<decltype(val), double>)
++                {
++                    return static_cast<double>(val);
++                }
++                lg2::warning("Invalid non-numeric ScaleValue, "
++                             "falling back to 1.0");
++                return 1.0;
++            },
++            findScale->second);
++
++        params.scaleValue *= rawScale;
++    }
++}
++
+ void createSensors(
+     boost::asio::io_context& io, sdbusplus::asio::object_server& objectServer,
+     boost::container::flat_map<std::string, std::shared_ptr<HwmonTempSensor>>&
+@@ -348,6 +393,11 @@ void createSensors(
+                     continue;
+                 }
+ 
++                const SensorBaseConfigMap& baseConfigMap =
++                    findSensorCfg->second.config;
++
++                getCalibration(baseConfigMap, pathStr, thisSensorParameters);
++
+                 const std::string& interfacePath =
+                     findSensorCfg->second.sensorPath;
+                 auto findI2CDev = devices.find(interfacePath);
+@@ -372,8 +422,6 @@ void createSensors(
+                 {
+                     sensorType = sensorType.substr(pos + 1);
+                 }
+-                const SensorBaseConfigMap& baseConfigMap =
+-                    findSensorCfg->second.config;
+                 std::vector<std::string>& hwmonName =
+                     findSensorCfg->second.name;
+ 
+-- 
+2.34.1
+

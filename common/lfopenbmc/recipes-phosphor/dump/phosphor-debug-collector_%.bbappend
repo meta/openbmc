@@ -1,5 +1,9 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
+# Fail the build if any patch applied to this recipe lacks a valid Upstream-Status
+inherit fb-patch-status
+
+# ALL PATCHES SHOULD HAVE AN UPSTREAM STATUS
 SRC_URI:append = " \
     file://0001-dump-Add-system-dump-entry-class.patch \
     file://0002-dump-Add-system-dump-Manager.patch \

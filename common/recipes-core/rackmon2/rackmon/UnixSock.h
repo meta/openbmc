@@ -4,6 +4,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <atomic>
+#include <cstdint>
 #include <cstring>
 #include <list>
 #include <memory>

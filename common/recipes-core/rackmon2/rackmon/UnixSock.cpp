@@ -126,12 +126,13 @@ void UnixSock::recvRaw(char* buf, size_t len) {
 }
 
 void UnixSock::send(const char* buf, size_t len) {
-  sendRaw((const char*)&len, sizeof(len));
+  uint32_t sendLen = len;
+  sendRaw((const char*)&sendLen, sizeof(sendLen));
   sendRaw(buf, len);
 }
 
 void UnixSock::recv(std::vector<char>& resp) {
-  size_t recvLen = 0;
+  uint32_t recvLen = 0;
   recvRaw((char*)&recvLen, sizeof(recvLen));
   if (recvLen == 0) {
     throw std::runtime_error("Zero sized packet received");

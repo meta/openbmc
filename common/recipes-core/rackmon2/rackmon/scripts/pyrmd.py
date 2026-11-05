@@ -220,7 +220,7 @@ class RackmonInterface:
         client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         client.settimeout(30)
         client.connect("/var/run/rackmond.sock")
-        req_header = struct.pack("@L", len(request))
+        req_header = struct.pack("@I", len(request))
         client.sendall(req_header + request)
         response = bytes()
 
@@ -239,7 +239,7 @@ class RackmonInterface:
                 data += chunk
             return data
 
-        (data_len,) = struct.unpack("@L", recvExact(4))
+        (data_len,) = struct.unpack("@I", recvExact(4))
         response = recvExact(data_len)
         client.close()
         if decodeJson:

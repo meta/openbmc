@@ -1,0 +1,32 @@
+From c5332a34f113f29602ce6b046e6f7c876872ac60 Mon Sep 17 00:00:00 2001
+From: Carl Lee <carl.lee@amd.com>
+Date: Thu, 29 Oct 2026 14:06:10 +0800
+Subject: [PATCH] hwmontempsensor: add support for KB9002
+
+Add sensor type KB9002[1] for thermal sensor monitoring.
+
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=694329073a3a964278a80a3ce1202b770f311b4d
+
+gerrit: https://gerrit.openbmc.org/c/openbmc/dbus-sensors/+/96490
+
+Change-Id: Ifbbab41a722d28842c16be8bec77da526318b500
+Signed-off-by: Carl Lee <carl.lee@amd.com>
+---
+ src/hwmon-temp/HwmonTempMain.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/hwmon-temp/HwmonTempMain.cpp b/src/hwmon-temp/HwmonTempMain.cpp
+index 87f1b38..01f4158 100644
+--- a/src/hwmon-temp/HwmonTempMain.cpp
++++ b/src/hwmon-temp/HwmonTempMain.cpp
+@@ -75,6 +75,7 @@ static constexpr auto sensorTypes =
+         {"G751", I2CDeviceType{"g751", true}},
+         {"HDC1080", I2CDeviceType{"hdc1080", false}},
+         {"JC42", I2CDeviceType{"jc42", true}},
++        {"KB9002", I2CDeviceType{"kb9002", true}},
+         {"LM75A", I2CDeviceType{"lm75a", true}},
+         {"LM95234", I2CDeviceType{"lm95234", true}},
+         {"MAX31725", I2CDeviceType{"max31725", true}},
+-- 
+2.34.1
+

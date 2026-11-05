@@ -29,6 +29,7 @@ SRC_URI:append = " \
     file://0026-hwmontempsensor-add-support-for-adt7461-temp-sensors.patch \
     file://0027-PSUSensor-add-MP9941-VR-sensor-support.patch \
     file://0028-dbus-sensors-preserve-state-on-external-sensor-thres.patch \
+    file://0029-hwmontempsensor-add-support-for-KB9002.patch \
 "
 
 SRC_URI:append:mf-fb-liquid-cooled = " \

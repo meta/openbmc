@@ -1,0 +1,1 @@
+SERIAL_CONSOLES = "9600;ttyS0"

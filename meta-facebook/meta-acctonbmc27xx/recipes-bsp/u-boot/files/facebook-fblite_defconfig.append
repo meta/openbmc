@@ -1,0 +1,14 @@
+# FBOSS common override
+CONFIG_BAUDRATE=9600
+CONFIG_BOOTARGS="console=ttyS0,9600n8 root=/dev/ram rw vmalloc=640M"
+CONFIG_DM_MMC=y
+CONFIG_MMC_SDHCI=y
+CONFIG_MMC_SDHCI_ASPEED=y
+CONFIG_CMD_OTP=y
+CONFIG_ASPEED_ENABLE_DUAL_BOOT_WATCHDOG=y
+CONFIG_PHY_FIXED=y
+
+# Platform specific override
+CONFIG_DEFAULT_DEVICE_TREE="aspeed-bmc-facebook-fblite"
+CONFIG_SYS_CONFIG_NAME="facebook_fblite"
+CONFIG_SYS_PROMPT="acctonbmc27xx-boot=> "

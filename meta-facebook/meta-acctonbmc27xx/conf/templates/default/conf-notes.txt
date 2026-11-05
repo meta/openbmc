@@ -1,0 +1,2 @@
+Common targets are:
+    acctonbmc27xx-image

@@ -34,9 +34,11 @@ BB_DISKMON_DIRS ??= "\
     ${@yocto_halt_taskname(d)},${SSTATE_DIR},100M,1K \
     ${@yocto_halt_taskname(d)},/tmp,10M,1K"
 
-# We have a lot of patches that don't have an Upstream-Status, so diable this
-# QA rather than modifying all the patch files.
-ERROR_QA:remove = "patch-status"
+# We have a lot of patches that don't have an Upstream-Status, so disable this
+# QA rather than modifying all the patch files. A recipe can opt back in with
+# FB_ERROR_QA_REMOVE:remove = "patch-status".
+FB_ERROR_QA_REMOVE ?= "patch-status"
+ERROR_QA:remove = "${FB_ERROR_QA_REMOVE}"
 
 # Pick up defaults for sstate hashing from poky.conf
 BB_SIGNATURE_HANDLER ?= "OEEquivHash"

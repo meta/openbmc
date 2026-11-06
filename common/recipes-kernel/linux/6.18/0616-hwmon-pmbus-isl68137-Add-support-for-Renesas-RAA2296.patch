@@ -1,0 +1,53 @@
+From d47709f64f4cb5806698f2b60ed0eacb85528e13 Mon Sep 17 00:00:00 2001
+From: Colin Huang <u8813345@gmail.com>
+Date: Mon, 15 Jun 2026 17:05:33 +0800
+Subject: [PATCH 2001/2003] hwmon: (pmbus/isl68137): Add support for Renesas
+ RAA229639 and RAA229640
+
+Add support for the Renesas RAA229639 and RAA229640 PMBus
+voltage regulator devices.
+
+Both devices are compatible with the existing raa_dmpvr2_2rail
+variant, so no functional changes are required beyond adding
+the corresponding device IDs and OF match entries.
+
+Lore:
+  https://lore.kernel.org/all/20260921-add-raa229639-and-raa229640-v3-0-b104ee8a70b2@gmail.com/
+  https://lore.kernel.org/openbmc/20260929-openbmc-add-raa229639-and-raa229640-v1-0-de693c0a6ecb@gmail.com/
+
+Signed-off-by: Colin Huang <u8813345@gmail.com>
+---
+ drivers/hwmon/pmbus/isl68137.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/hwmon/pmbus/isl68137.c b/drivers/hwmon/pmbus/isl68137.c
+index ab54184b4..c72122639 100644
+--- a/drivers/hwmon/pmbus/isl68137.c
++++ b/drivers/hwmon/pmbus/isl68137.c
+@@ -66,6 +66,8 @@ enum chips {
+ 	raa229001,
+ 	raa229004,
+ 	raa229621,
++	raa229639,
++	raa229640,
+ };
+ 
+ enum variants {
+@@ -488,6 +490,8 @@ static const struct i2c_device_id raa_dmpvr_id[] = {
+ 	{"raa229001", raa_dmpvr2_2rail},
+ 	{"raa229004", raa_dmpvr2_2rail},
+ 	{"raa229621", raa_dmpvr2_2rail},
++	{"raa229639", raa_dmpvr2_2rail},
++	{"raa229640", raa_dmpvr2_2rail},
+ 	{}
+ };
+ 
+@@ -538,6 +542,8 @@ static const struct of_device_id isl68137_of_match[] = {
+ 	{ .compatible = "renesas,raa229001", .data = (void *)raa_dmpvr2_2rail },
+ 	{ .compatible = "renesas,raa229004", .data = (void *)raa_dmpvr2_2rail },
+ 	{ .compatible = "renesas,raa229621", .data = (void *)raa_dmpvr2_2rail },
++	{ .compatible = "renesas,raa229639", .data = (void *)raa_dmpvr2_2rail },
++	{ .compatible = "renesas,raa229640", .data = (void *)raa_dmpvr2_2rail },
+ 	{ },
+ };
+ 

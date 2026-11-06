@@ -108,6 +108,8 @@ SRC_URI:append = " \
     file://0612-hwmon-kb9002-Add-driver-for-Kandou-KB9002-retimer.patch \
     file://0613-hwmon-pmbus-Add-MPQ82D00-support.patch \
     file://0614-hwmon-pmbus-ltc4286-Add-writable-shunt_resistor-sysf.patch \
+    file://0615-dt-bindings-hwmon-pmbus-isl68137-Add-RAA229639-and-R.patch \
+    file://0616-hwmon-pmbus-isl68137-Add-support-for-Renesas-RAA2296.patch \
 "
 
 #

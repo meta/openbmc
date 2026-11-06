@@ -106,7 +106,12 @@ debug_card_pwr_rst_btn_hndlr(gpiopoll_pin_t *gp, gpio_value_t last, gpio_value_t
         is_dbg_rst_btn_pressed = false;
         press_time = now_timespec.tv_sec - press_dbg_rst_btn_time.tv_sec;
         
+#ifdef CONFIG_GRANDCANYON2
+        // UIC FPGA already debounces the button (10 ms), so no minimum press time is needed here
+        if (press_time < STUCK_BUTTON_TIME) {
+#else
         if ((press_time >= SHORT_PRESS_BUTTON_TIME) && (press_time < STUCK_BUTTON_TIME)) {
+#endif
 #ifdef CONFIG_GRANDCANYON2
           if (!filtered) {
             syslog(LOG_CRIT, "Debug card reset button pressed %d seconds: BMC RESET\n", press_time);

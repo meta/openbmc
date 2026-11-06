@@ -132,7 +132,9 @@ def get_older_fboss_sensor_details_filtered(
     return sensor_details_list
 
 
-def get_older_fboss_sensor_details(fru_name: str) -> t.List[SensorDetails]:
+def get_older_fboss_sensor_details(  # noqa: C901
+    fru_name: str,
+) -> t.List[SensorDetails]:
     sensor_details_list = []
     import rest_sensors
     import sensors
@@ -141,9 +143,13 @@ def get_older_fboss_sensor_details(fru_name: str) -> t.List[SensorDetails]:
     for chip in sensors.ChipIterator():
         for sensor in sensors.FeatureIterator(chip):
             chip_name = sensors.chip_snprintf_name(chip)
-            adapter_name = rest_sensors.legacy_adapter_name(
-                sensors.get_adapter_name(chip.bus)
-            )
+            adapter_name = sensors.get_adapter_name(chip.bus)
+            try:
+                adapter_name = rest_sensors.legacy_adapter_name(adapter_name)
+            except AttributeError:
+                # Platforms that ship their own rest_sensors.py (e.g. yamp)
+                # don't define legacy_adapter_name(); keep the name unchanged.
+                pass
             sensor_tag = sensor.name.decode("utf-8")
             reading_key = sensor_tag + "_input"
             ucr_key = sensor_tag + "_max"

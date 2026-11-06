@@ -1,7 +1,9 @@
 import asyncio
-
+import sys
+import types
 import typing as t
 import unittest
+import unittest.mock
 
 import aiohttp.web
 import pal
@@ -487,3 +489,45 @@ class TestRedfishSensors(AioHTTPTestCase):
             redfish_sensors.get_redfish_sensor_handler,
         )
         return webapp
+
+
+class TestOlderFbossSensorDetails(unittest.TestCase):
+    def _sensor_names(self, rest_sensors_module) -> t.List[str]:
+        chip = unittest.mock.Mock(bus=1)
+        feature = unittest.mock.Mock(type=redfish_chassis_helper.LIB_SENSOR_TEMPERATURE)
+        feature.name = b"temp1"
+        subfeature = unittest.mock.Mock(number=0)
+        subfeature.name = b"temp1_input"
+        fake_sensors = types.SimpleNamespace(
+            init=unittest.mock.Mock(),
+            cleanup=unittest.mock.Mock(),
+            ChipIterator=lambda: [chip],
+            FeatureIterator=lambda chip: [feature],
+            SubFeatureIterator=lambda chip, feature: [subfeature],
+            chip_snprintf_name=lambda chip: "tmp75-i2c-1-48",
+            get_adapter_name=lambda bus: "1e78a100.i2c",
+            get_label=lambda chip, feature: "TEMP",
+            get_value=lambda chip, number: 42.0,
+            ErrorAccessRead=Exception,
+        )
+        with unittest.mock.patch.dict(
+            sys.modules, {"rest_sensors": rest_sensors_module, "sensors": fake_sensors}
+        ), unittest.mock.patch.object(sdr, "ThreshSensor", sensor_thresh, create=True):
+            details = redfish_chassis_helper.get_older_fboss_sensor_details("BMC")
+        return [d.sensor_name for d in details]
+
+    def test_platform_rest_sensors_without_legacy_adapter_name(self):
+        # yamp ships its own rest_sensors.py without legacy_adapter_name()
+        self.assertEqual(
+            self._sensor_names(types.SimpleNamespace()),
+            ["tmp75-i2c-1-48/1e78a100.i2c/TEMP"],
+        )
+
+    def test_rest_sensors_legacy_adapter_name_is_applied(self):
+        rest_sensors = types.SimpleNamespace(
+            legacy_adapter_name=lambda name: "1e78a100.i2c-bus"
+        )
+        self.assertEqual(
+            self._sensor_names(rest_sensors),
+            ["tmp75-i2c-1-48/1e78a100.i2c-bus/TEMP"],
+        )

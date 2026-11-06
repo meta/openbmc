@@ -35,12 +35,25 @@
 extern char *optarg;
 static int debug=0;
 //distinguish chip
+#define SCU0_BASE_ADDR                          0x12C02000
+#define SCU1_BASE_ADDR                          0x14C02000
 #define SCU_BASE_ADDR                           0x1E6E2000
 #define SILICON_REVISION_ID_OFFSET_AST_G5       0x7C // AST_G5
 #define SILICON_REVISION_ID_0_OFFSET_AST_G6     0x04 // AST_G6
 #define SILICON_REVISION_ID_1_OFFSET_AST_G6     0x14 // AST_G6
+#define SILICON_REVISION_ID_OFFSET_AST_G7       0x00 // AST_G7
 #define AST_G5_REV_ID                           0x04000000
 #define AST_G6_REV_ID                           0x05000000
+#define AST_G7_REV_ID                           0x06000000
+
+//AST_G7
+#define AST_G7_MDIO_MAX_BUS            3
+#define AST_G7_IO_BASE             0x14040000
+#define AST_G7_PHYCR_READ_BIT      BIT(27)
+#define AST_G7_PHYCR_WRITE_BIT     BIT(26)
+#define AST_G7_PHYCR_BUSY_BIT      BIT(31)
+static char ast_g7_phycr_offset[] = {0x0, 0x8, 0x10};
+static char ast_g7_phydata_offset[]={0x4, 0xc, 0x14};
 
 //AST_G6
 #define AST_G6_MDIO_MAX_BUS            4
@@ -70,6 +83,7 @@ enum chip {
     INVALID_CHIP,
     AST_G5,
     AST_G6,
+    AST_G7,
 };
 
 static int run_devmem(uint32_t reg_addr, uint32_t *value, int operation)
@@ -117,6 +131,9 @@ static int wait_complete_operation(uint32_t chip, uint32_t mdio_bus) {
   } else if (chip == AST_G6) {
     mdio_addr = AST_G6_IO_BASE + ast_g6_phycr_offset[mdio_bus - 1];
     status_bit_mask = AST_G6_PHYCR_BUSY_BIT;
+  } else if (chip == AST_G7) {
+    mdio_addr = AST_G7_IO_BASE + ast_g7_phycr_offset[mdio_bus - 1];
+    status_bit_mask = AST_G7_PHYCR_BUSY_BIT;
   } else {
     return -1;
   }
@@ -233,6 +250,54 @@ static int write_mdio_ast_g6(uint32_t mdio_bus, uint32_t phy,
     return 0;
 }
 
+//ast_g7
+static int read_mdio_ast_g7(uint32_t mdio_bus, uint32_t phy, uint32_t phy_reg)
+{
+    uint32_t mdio_addr = 0;
+    uint32_t ctrl = 0;
+    mdio_addr = AST_G7_IO_BASE + ast_g7_phycr_offset[mdio_bus - 1];
+    if(run_devmem(mdio_addr, &ctrl, READ_OP) == -1)
+        return -1;
+    ctrl |= 0x90000000;
+    ctrl &= 0x90000000;
+    ctrl |= ((phy & 0x1F) << 21);
+    ctrl |= ((phy_reg & 0x1F) << 16);
+    ctrl |= AST_G7_PHYCR_READ_BIT;
+    if(run_devmem(mdio_addr, &ctrl, WRITE_OP) == -1)
+        return -1;
+
+    if(wait_complete_operation(AST_G7, mdio_bus) == -1)
+        return -1;
+
+    mdio_addr = AST_G7_IO_BASE + ast_g7_phydata_offset[mdio_bus - 1];
+    if(run_devmem(mdio_addr, &ctrl, READ_OP) == -1)
+        return -1;
+    ctrl &= 0x0000ffff;
+    printf("Read from PHY 0x%x.0x%x, value is 0x%x\n", phy, phy_reg, ctrl);
+    return 0;
+}
+
+static int write_mdio_ast_g7(uint32_t mdio_bus, uint32_t phy,
+                                    uint32_t phy_reg, uint32_t value)
+{
+    uint32_t mdio_addr = 0;
+    uint32_t ctrl = 0;
+    uint32_t temp_value = value;
+    mdio_addr = AST_G7_IO_BASE + ast_g7_phycr_offset[mdio_bus - 1];
+    if(run_devmem(mdio_addr, &ctrl, READ_OP) == -1)
+        return -1;
+    ctrl |= 0x90000000;
+    ctrl &= 0x90000000;
+    ctrl |= ((phy & 0x1F) << 21);
+    ctrl |= ((phy_reg & 0x1F) << 16);
+    ctrl |= AST_G7_PHYCR_WRITE_BIT;
+    temp_value |= ctrl;
+    if(run_devmem(mdio_addr, &temp_value, WRITE_OP) == -1)
+        return -1;
+
+    return 0;
+}
+
 static int read_mdio_op(uint32_t chip, uint32_t mdio_bus, uint32_t phy,
                         uint32_t phy_reg) {
   int ret = 0 ;
@@ -242,6 +307,9 @@ static int read_mdio_op(uint32_t chip, uint32_t mdio_bus, uint32_t phy,
       break;
     case AST_G6:
       ret = read_mdio_ast_g6(mdio_bus, phy, phy_reg);
+      break;
+    case AST_G7:
+      ret = read_mdio_ast_g7(mdio_bus, phy, phy_reg);
       break;
     default:
       return -1;
@@ -259,6 +327,9 @@ static int write_mdio_op(uint32_t chip, uint32_t mdio_bus, uint32_t phy,
       break;
     case AST_G6:
       ret = write_mdio_ast_g6(mdio_bus, phy, phy_reg, value);
+      break;
+    case AST_G7:
+      ret = write_mdio_ast_g7(mdio_bus, phy, phy_reg, value);
       break;
     default:
       return -1;
@@ -296,6 +367,7 @@ void print_usage()
 /*
  * ASPEED G5 Silicon Revision ID: SCU[7C]
  * ASPEED G6 Silicon Revision ID: SCU[04]/SCU[14]
+ * ASPEED G7 Silicon Revision ID: SCU0[00]/SCU1[00]
  * AST G5 SCU[04] 
  */
 static int check_chip()
@@ -305,6 +377,16 @@ static int check_chip()
     uint32_t chip = INVALID_CHIP;
     if(debug)
         printf("Debug: detecting chip ...\n");
+    run_devmem(SCU0_BASE_ADDR + SILICON_REVISION_ID_OFFSET_AST_G7,
+               &cpu_silicon_rev_id_0, READ_OP);
+    run_devmem(SCU1_BASE_ADDR + SILICON_REVISION_ID_OFFSET_AST_G7,
+               &cpu_silicon_rev_id_1, READ_OP);
+    if(cpu_silicon_rev_id_0 == cpu_silicon_rev_id_1 &&
+      (cpu_silicon_rev_id_0 & AST_G7_REV_ID) == AST_G7_REV_ID) {
+        chip = AST_G7; //AST_G7
+        goto exit;
+    }
+
     run_devmem(SCU_BASE_ADDR + SILICON_REVISION_ID_0_OFFSET_AST_G6,
                &cpu_silicon_rev_id_0, READ_OP);
     run_devmem(SCU_BASE_ADDR + SILICON_REVISION_ID_1_OFFSET_AST_G6,
@@ -326,6 +408,9 @@ static int check_chip()
 exit:
     if(debug) {
         switch(chip) {
+        case AST_G7:
+            printf("Debug: detected chip AST_G7\n");
+        break;
         case AST_G6:
             printf("Debug: detected chip AST_G6\n");
         break;
@@ -350,6 +435,7 @@ int main(int argc, char **argv)
     uint32_t mdio_bus = 0;
     uint32_t phy = MAX_PHY_ADDR + 1;
     uint32_t phy_reg = 0;
+    uint32_t max_bus;
     int data = -1;
 
     if(argc <= 1) {
@@ -398,9 +484,20 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    if(mdio_bus > (chip == AST_G6 ? AST_G6_MDIO_MAX_BUS : AST_G5_MDIO_MAX_BUS)) {
-        printf("-m can only be less than %d\n", 
-               AST_G6 ? AST_G6_MDIO_MAX_BUS : AST_G5_MDIO_MAX_BUS);
+    switch (chip) {
+    case AST_G7:
+        max_bus = AST_G7_MDIO_MAX_BUS;
+        break;
+    case AST_G6:
+        max_bus = AST_G6_MDIO_MAX_BUS;
+        break;
+    default:
+        max_bus = AST_G5_MDIO_MAX_BUS;
+        break;
+    }
+
+    if (mdio_bus > max_bus) {
+        printf("-m can only be less than %d\n", max_bus);
         return -1;
     }
 

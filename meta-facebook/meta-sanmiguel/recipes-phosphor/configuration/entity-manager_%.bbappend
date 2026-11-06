@@ -10,4 +10,5 @@ SRC_URI:append = " \
     file://0007-configurations-nvidia-p3809-hmc-Add-NvidiaMctpVdm-co.patch \
     file://0008-configurations-nvidia-cx9_mezzanine_module-add-data-.patch \
     file://0009-configurations-nvidia-cable_cartridge-change-cable-c.patch \
+    file://0010-configurations-nvidia-add-CX9-4P-support.patch \
 "

@@ -1,0 +1,43 @@
+From ca2893f9c93aa26077f9c36b0f0dfa6dccaec17a Mon Sep 17 00:00:00 2001
+From: Charles Boyer <Charles.Boyer@fii-usa.com>
+Date: Mon, 21 Nov 2022 09:37:20 -0600
+Subject: [PATCH 5/6] i2c-npcm7xx.c: Enable slave in eob interrupt
+
+Nuvoton slave enable was in user space API call master_xfer, so it is
+subject to delays from the OS scheduler. If the BMC is not enabled for
+slave mode in time for master to send response, then it will NAK the
+address match. Then the PLDM request timeout occurs.
+
+If the slave enable is moved to the EOB interrupt service routine, then
+the BMC can be ready in slave mode by the time it needs to receive a
+response.
+
+This change was pushed upstream and under reviewing:
+https://lore.kernel.org/all/20240913101532.16571-1-kfting@nuvoton.com/
+
+Signed-off-by: Charles Boyer <Charles.Boyer@fii-usa.com>
+Signed-off-by: Vivekanand Veeracholan <vveerach@google.com>
+---
+ drivers/i2c/busses/i2c-npcm7xx.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/i2c/busses/i2c-npcm7xx.c b/drivers/i2c/busses/i2c-npcm7xx.c
+index 3f7a3a00e28e..c39d1717c132 100644
+--- a/drivers/i2c/busses/i2c-npcm7xx.c
++++ b/drivers/i2c/busses/i2c-npcm7xx.c
+@@ -1786,6 +1786,12 @@ static int npcm_i2c_int_master_handler(struct npcm_i2c *bus)
+ 	    (FIELD_GET(NPCM_I2CCST3_EO_BUSY,
+ 		       ioread8(bus->reg + NPCM_I2CCST3)))) {
+ 		npcm_i2c_irq_handle_eob(bus);
++#if IS_ENABLED(CONFIG_I2C_SLAVE)
++		/* reenable slave if it was enabled */
++		if (bus->slave)
++			iowrite8((bus->slave->addr & 0x7F) | NPCM_I2CADDR_SAEN,
++				bus->reg + NPCM_I2CADDR1);
++#endif
+ 		return 0;
+ 	}
+ 
+-- 
+2.34.1
+

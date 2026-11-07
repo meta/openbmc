@@ -1,0 +1,67 @@
+From 9801cc7080a51985f763ced673a46c00a0132717 Mon Sep 17 00:00:00 2001
+From: Tomer Maimon <tmaimon77@gmail.com>
+Date: Thu, 9 May 2024 12:43:06 +0300
+Subject: [PATCH] spi: npcm-fiu: add dual and quad write support
+
+Add dual and quad write support by writing the command write in the UMA
+register first and then write the data in chunks of 16 bytes.
+
+This change was pushed upstream and under reviewing:
+https://lore.kernel.org/all/20240709184813.1946724-1-tmaimon77@gmail.com/
+
+Signed-off-by: Stanley Chu <yschu@nuvoton.com>
+Signed-off-by: Tomer Maimon <tmaimon77@gmail.com>
+---
+ drivers/spi/spi-npcm-fiu.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/spi/spi-npcm-fiu.c b/drivers/spi/spi-npcm-fiu.c
+index bb9e784d8058..ac4b5fe5a1ac 100644
+--- a/drivers/spi/spi-npcm-fiu.c
++++ b/drivers/spi/spi-npcm-fiu.c
+@@ -393,7 +393,7 @@ static int npcm_fiu_uma_write(struct spi_mem *mem,
+ {
+ 	struct npcm_fiu_spi *fiu =
+ 		spi_controller_get_devdata(mem->spi->controller);
+-	u32 uma_cfg = BIT(10);
++	u32 uma_cfg = cmd ? BIT(10) : 0;
+ 	u32 data_reg[4] = {0};
+ 	u32 val;
+ 	u32 i;
+@@ -403,8 +403,11 @@ static int npcm_fiu_uma_write(struct spi_mem *mem,
+ 			   (spi_get_chipselect(mem->spi, 0) <<
+ 			    NPCM_FIU_UMA_CTS_DEV_NUM_SHIFT));
+ 
+-	regmap_update_bits(fiu->regmap, NPCM_FIU_UMA_CMD,
+-			   NPCM_FIU_UMA_CMD_CMD, cmd);
++	if (cmd)
++		regmap_update_bits(fiu->regmap, NPCM_FIU_UMA_CMD,
++				   NPCM_FIU_UMA_CMD_CMD, cmd);
++	else
++		uma_cfg |= ilog2(op->data.buswidth) << NPCM_FIU_UMA_CFG_WDBPCK_SHIFT;
+ 
+ 	if (data_size) {
+ 		memcpy(data_reg, data, data_size);
+@@ -464,8 +467,7 @@ static int npcm_fiu_manualwrite(struct spi_mem *mem,
+ 
+ 	/* Starting the data writing loop in multiples of 8 */
+ 	for (idx = 0; idx < num_data_chunks; ++idx) {
+-		ret = npcm_fiu_uma_write(mem, op, data[0], false,
+-					 &data[1], CHUNK_SIZE - 1);
++		ret = npcm_fiu_uma_write(mem, op, 0, false, &data[0], CHUNK_SIZE);
+ 		if (ret)
+ 			return ret;
+ 
+@@ -474,8 +476,7 @@ static int npcm_fiu_manualwrite(struct spi_mem *mem,
+ 
+ 	/* Handling chunk remains */
+ 	if (remain_data > 0) {
+-		ret = npcm_fiu_uma_write(mem, op, data[0], false,
+-					 &data[1], remain_data - 1);
++		ret = npcm_fiu_uma_write(mem, op, 0, false, &data[0], remain_data);
+ 		if (ret)
+ 			return ret;
+ 	}
+-- 
+2.34.1
+

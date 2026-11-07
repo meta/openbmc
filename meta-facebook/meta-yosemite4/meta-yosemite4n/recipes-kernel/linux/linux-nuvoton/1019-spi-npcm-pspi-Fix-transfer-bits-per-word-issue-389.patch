@@ -1,0 +1,66 @@
+From 5a7bc5fdd1034b6ed07a6c3e43d887e88a8b010a Mon Sep 17 00:00:00 2001
+From: jc849 <122246431+jc849@users.noreply.github.com>
+Date: Wed, 20 Mar 2024 20:01:44 +0800
+Subject: [PATCH] spi: npcm-pspi: Fix transfer bits per word issue
+
+This patch fix transfer bits per word issue by avoid polluting SPI
+transfer data, as it may be reused and alter the transfer length and
+tx/rx buffer (e.g., tpm-spi).
+
+By default, use an 8-bit data interface mode.
+However, change to a 16-bit mode when the transfer length is even.
+
+This change was pushed upstream and under reviewing:
+https://lore.kernel.org/all/20240709160242.1921541-3-tmaimon77@gmail.com/
+
+Signed-off-by: cpchiang <cpchiang1@nuvoton.com>
+Signed-off-by: Tomer Maimon <tmaimon77@gmail.com>
+---
+ drivers/spi/spi-npcm-pspi.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/spi/spi-npcm-pspi.c b/drivers/spi/spi-npcm-pspi.c
+index 7961b5442082..726e6dc01c7d 100644
+--- a/drivers/spi/spi-npcm-pspi.c
++++ b/drivers/spi/spi-npcm-pspi.c
+@@ -160,6 +160,7 @@ static void npcm_pspi_setup_transfer(struct spi_device *spi,
+ 				     struct spi_transfer *t)
+ {
+ 	struct npcm_pspi *priv = spi_master_get_devdata(spi->master);
++	u8 bits_per_word = 8;
+ 
+ 	priv->tx_buf = t->tx_buf;
+ 	priv->rx_buf = t->rx_buf;
+@@ -172,15 +173,14 @@ static void npcm_pspi_setup_transfer(struct spi_device *spi,
+ 	}
+ 
+ 	/*
+-	 * If transfer is even length, and 8 bits per word transfer,
+-	 * then implement 16 bits-per-word transfer.
++	 * If transfer is even length, change to use 16 bits-per-word transfer.
+ 	 */
+-	if (priv->bits_per_word == 8 && !(t->len & 0x1))
+-		t->bits_per_word = 16;
++	if (!(t->len & 0x1))
++		bits_per_word = 16;
+ 
+-	if (!priv->is_save_param || priv->bits_per_word != t->bits_per_word) {
+-		npcm_pspi_set_transfer_size(priv, t->bits_per_word);
+-		priv->bits_per_word = t->bits_per_word;
++	if (!priv->is_save_param || priv->bits_per_word != bits_per_word) {
++		npcm_pspi_set_transfer_size(priv, bits_per_word);
++		priv->bits_per_word = bits_per_word;
+ 	}
+ 
+ 	if (!priv->is_save_param || priv->speed_hz != t->speed_hz) {
+@@ -339,6 +339,7 @@ static int npcm_pspi_probe(struct platform_device *pdev)
+ 	priv = spi_master_get_devdata(master);
+ 	priv->master = master;
+ 	priv->is_save_param = false;
++	priv->bits_per_word = 8;
+ 
+ 	priv->base = devm_platform_ioremap_resource(pdev, 0);
+ 	if (IS_ERR(priv->base)) {
+-- 
+2.34.1
+

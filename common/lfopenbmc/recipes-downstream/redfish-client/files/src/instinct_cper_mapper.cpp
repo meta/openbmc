@@ -69,35 +69,152 @@ std::string getSectionType(auto& maybeCPER)
     return maybeCPER.value().getSectionType().value();
 }
 
-std::pair<std::string, std::string> getOemVendorAndData(auto& maybeCPER)
+nlohmann::json getCperOemVendorJson(auto& maybeCPER)
 {
     if (!maybeCPER.hasValue())
     {
-        return {};
+        return nullptr;
     }
 
     if (!maybeCPER.value().getOem().hasValue())
     {
-        return {};
+        return nullptr;
     }
 
-    const nlohmann::json oemJson =
-        nlohmann::json(maybeCPER.value().getOem().value());
+    nlohmann::json cperOem = nlohmann::json(maybeCPER.value().getOem().value());
 
-    if (!oemJson.is_object() || oemJson.empty())
+    if (!cperOem.is_object() || cperOem.empty())
+    {
+        return nullptr;
+    }
+
+    return cperOem;
+}
+
+// Returns true if the CPER.Oem vendor object already contains
+// AMDFieldIdentifiers, which is the signal for old-format payloads where
+// AFID data was embedded directly in CPER.Oem rather than the top-level Oem.
+bool cperOemHasAfidData(const nlohmann::json& cperOemJson)
+{
+    if (!cperOemJson.is_object() || cperOemJson.empty())
+    {
+        return false;
+    }
+
+    const auto& vendorObj = cperOemJson.begin().value();
+
+    if (!vendorObj.is_object())
+    {
+        return false;
+    }
+
+    return vendorObj.contains("AMDFieldIdentifiers");
+}
+
+// Merges top-level Oem into CPER.Oem for new-format payloads where AFID data
+// lives at the top-level Oem and decoded CPER data lives in CPER.Oem.
+//
+// Merge rules:
+//   - Top-level Oem values take priority on key conflicts.
+//   - @odata.type is taken from top-level Oem.
+//   - If vendor keys differ, a warning is emitted and the top-level Oem
+//     values are merged into the CPER.Oem vendor regardless, since both
+//     are always AMD on this platform.
+//
+// Returns {vendor, mergedJsonString} or empty pair if merge is not possible.
+std::pair<std::string, std::string> mergeTopLevelOemIntoCperOem(
+    const nlohmann::json& cperOemJson, auto& entry)
+{
+    auto& maybeTopOem = entry.getOem();
+    if (!maybeTopOem.hasValue())
     {
         return {};
     }
 
-    // Iterate the named local directly. `oemJson.items()` returns a proxy by
-    // value, so an iterator taken from it dangles once the full expression
-    // ends.
-    const auto vendorEntry = oemJson.begin();
+    const nlohmann::json topOemJson = nlohmann::json(maybeTopOem.value());
 
-    const std::string vendor = vendorEntry.key();
-    const std::string data = vendorEntry.value().dump();
+    if (!topOemJson.is_object() || topOemJson.empty())
+    {
+        return {};
+    }
 
-    return {vendor, data};
+    const auto cperVendorEntry = cperOemJson.begin();
+    const auto topVendorEntry = topOemJson.begin();
+
+    const std::string cperVendor = cperVendorEntry.key();
+    const std::string topVendor = topVendorEntry.key();
+
+    if (cperVendor != topVendor)
+    {
+        lg2::warning(
+            "Top-level Oem vendor '{TOP_VENDOR}' differs from CPER.Oem "
+            "vendor '{CPER_VENDOR}'. Merging top-level values into "
+            "CPER.Oem vendor '{CPER_VENDOR}' anyway.",
+            "TOP_VENDOR", topVendor.c_str(),
+            "CPER_VENDOR", cperVendor.c_str());
+    }
+
+    nlohmann::json merged = topVendorEntry.value();
+
+    if (!merged.is_object())
+    {
+        merged = nlohmann::json::object();
+    }
+
+    const nlohmann::json& cperVendorObj = cperVendorEntry.value();
+    if (cperVendorObj.is_object())
+    {
+        for (const auto& [key, val] : cperVendorObj.items())
+        {
+            if (!merged.contains(key))
+            {
+                merged[key] = val;
+            }
+        }
+    }
+
+    return {cperVendor, merged.dump()};
+}
+
+// Entry point for OEM data extraction. Handles both old and new AMC formats
+// and returns a {vendor, jsonString} pair ready for the commit phase.
+//
+// Old format: CPER.Oem.AMD contains both AMDFieldIdentifiers and DecodedCPER.
+//             Use CPER.Oem as-is; top-level Oem is redundant.
+//
+// New format: CPER.Oem.AMD contains only DecodedCPER; AMDFieldIdentifiers
+//             lives in top-level Oem.AMD. Merge top-level into CPER.Oem.
+std::pair<std::string, std::string> getOemVendorAndData(
+    auto& maybeCPER, auto& entry)
+{
+    const nlohmann::json cperOemJson = getCperOemVendorJson(maybeCPER);
+
+    if (cperOemJson.is_null())
+    {
+        return {};
+    }
+
+    // Old format: AFID already embedded in CPER.Oem — use as-is.
+    if (cperOemHasAfidData(cperOemJson))
+    {
+        const auto vendorEntry = cperOemJson.begin();
+        return {vendorEntry.key(), vendorEntry.value().dump()};
+    }
+
+    // New format: merge top-level Oem (AFID) into CPER.Oem (DecodedCPER).
+    auto merged = mergeTopLevelOemIntoCperOem(cperOemJson, entry);
+    if (!merged.first.empty())
+    {
+        return merged;
+    }
+
+    // Top-level Oem absent or empty in new format — use CPER.Oem as-is
+    // so we do not silently drop DecodedCPER data.
+    lg2::warning(
+        "New-format CPER entry has no top-level Oem to merge. "
+        "Falling back to CPER.Oem only.");
+    const auto vendorEntry = cperOemJson.begin();
+    return {vendorEntry.key(), vendorEntry.value().dump()};
 }
 
 } // anonymous namespace
@@ -144,7 +261,7 @@ void InstinctCperMapper::map(redfish_binding::LogEntry::LogEntry& entry)
     // Both are optional. `extractOemData` returns nullopt when the LogEntry
     // has no `Oem`, and dereferencing it unconditionally aborted the whole
     // daemon on any CPER entry that did not carry one.
-    if (auto [vendor, oemJson] = getOemVendorAndData(maybeCPER);
+    if (auto [vendor, oemJson] = getOemVendorAndData(maybeCPER, entry);
         !vendor.empty())
     {
         data.vendor = std::move(vendor);

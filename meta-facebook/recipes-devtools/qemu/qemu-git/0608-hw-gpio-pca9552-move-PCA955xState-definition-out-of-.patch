@@ -1,0 +1,143 @@
+From 14dccb72e3a07064dacf4aed5ff21eead0504f11 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 9 Jul 2026 17:23:40 +0200
+Subject: [PATCH 608/631] hw/gpio: pca9552: move PCA955xState definition out of
+ the header
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Nothing outside pca9552.c uses the PCA955xState structure, its instance
+checker, or the PCA955X_NR_REGS/PCA955X_PIN_COUNT_MAX defines: the board
+files and qtests only rely on the TYPE_* name macros (and the register
+macros in pca9552_regs.h).
+
+Move the state structure and the size defines into pca9552.c, leaving
+pca9552.h with just the type-name macros. While at it, replace the
+separate DECLARE_INSTANCE_CHECKER and DECLARE_CLASS_CHECKERS declarations
+with a single OBJECT_DECLARE_TYPE().
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
+Link: https://lore.kernel.org/qemu-devel/20260709-catalina-upgrade-v1-2-814575bc076b@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ hw/gpio/pca9552.c         | 29 ++++++++++++++++++++++++-----
+ include/hw/gpio/pca9552.h | 30 ++++--------------------------
+ 2 files changed, 28 insertions(+), 31 deletions(-)
+
+diff --git a/hw/gpio/pca9552.c b/hw/gpio/pca9552.c
+index 50e868a6e9a..36bc4f86edb 100644
+--- a/hw/gpio/pca9552.c
++++ b/hw/gpio/pca9552.c
+@@ -1,7 +1,10 @@
+ /*
+- * PCA9552 I2C LED blinker
++ * PCA955X I2C LED blinker and I/O expanders
+  *
+  *     https://www.nxp.com/docs/en/application-note/AN264.pdf
++ *     https://www.nxp.com/docs/en/data-sheet/PCA9552.pdf
++ *     https://www.nxp.com/docs/en/data-sheet/PCA9555.pdf
++ *     https://www.nxp.com/docs/en/data-sheet/PCA9535_PCA9535C.pdf
+  *
+  * Copyright (c) 2017-2018, IBM Corporation.
+  * Copyright (c) 2020 Philippe Mathieu-Daudé
+@@ -12,9 +15,9 @@
+ 
+ #include "qemu/osdep.h"
+ #include "qemu/log.h"
+-#include "qemu/module.h"
+ #include "qemu/bitops.h"
+ #include "hw/core/qdev-properties.h"
++#include "hw/i2c/i2c.h"
+ #include "hw/gpio/pca9552.h"
+ #include "hw/gpio/pca9552_regs.h"
+ #include "hw/core/irq.h"
+@@ -24,6 +27,25 @@
+ #include "trace.h"
+ #include "qom/object.h"
+ 
++#define PCA955X_NR_REGS 10
++#define PCA955X_PIN_COUNT_MAX 16
++
++OBJECT_DECLARE_TYPE(PCA955xState, PCA955xClass, PCA955X)
++
++struct PCA955xState {
++    /*< private >*/
++    I2CSlave i2c;
++    /*< public >*/
++
++    uint8_t len;
++    uint8_t pointer;
++
++    uint8_t regs[PCA955X_NR_REGS];
++    qemu_irq gpio_out[PCA955X_PIN_COUNT_MAX];
++    uint8_t ext_state[PCA955X_PIN_COUNT_MAX];
++    char *description; /* For debugging purpose only */
++};
++
+ struct PCA955xClass {
+     /*< private >*/
+     I2CSlaveClass parent_class;
+@@ -33,10 +55,7 @@ struct PCA955xClass {
+     uint8_t max_reg;
+     bool has_led_support;
+ };
+-typedef struct PCA955xClass PCA955xClass;
+ 
+-DECLARE_CLASS_CHECKERS(PCA955xClass, PCA955X,
+-                       TYPE_PCA955X)
+ /*
+  * Note:  The LED_ON and LED_OFF configuration values for the PCA955X
+  *        chips are the reverse of the PCA953X family of chips.
+diff --git a/include/hw/gpio/pca9552.h b/include/hw/gpio/pca9552.h
+index 43b175235d2..71479ea0006 100644
+--- a/include/hw/gpio/pca9552.h
++++ b/include/hw/gpio/pca9552.h
+@@ -1,39 +1,17 @@
+ /*
+- * PCA9552 I2C LED blinker
++ * PCA955X I2C LED blinker and I/O expanders
+  *
+  * Copyright (c) 2017-2018, IBM Corporation.
+  *
+  * This work is licensed under the terms of the GNU GPL, version 2 or
+  * later. See the COPYING file in the top-level directory.
+  */
+-#ifndef PCA9552_H
+-#define PCA9552_H
+ 
+-#include "hw/i2c/i2c.h"
+-#include "qom/object.h"
++#ifndef HW_GPIO_PCA9552_H
++#define HW_GPIO_PCA9552_H
+ 
+-#define TYPE_PCA9552 "pca9552"
+ #define TYPE_PCA955X "pca955x"
++#define TYPE_PCA9552 "pca9552"
+ #define TYPE_PCA9535 "pca9535"
+-typedef struct PCA955xState PCA955xState;
+-DECLARE_INSTANCE_CHECKER(PCA955xState, PCA955X,
+-                         TYPE_PCA955X)
+-
+-#define PCA955X_NR_REGS 10
+-#define PCA955X_PIN_COUNT_MAX 16
+-
+-struct PCA955xState {
+-    /*< private >*/
+-    I2CSlave i2c;
+-    /*< public >*/
+-
+-    uint8_t len;
+-    uint8_t pointer;
+-
+-    uint8_t regs[PCA955X_NR_REGS];
+-    qemu_irq gpio_out[PCA955X_PIN_COUNT_MAX];
+-    uint8_t ext_state[PCA955X_PIN_COUNT_MAX];
+-    char *description; /* For debugging purpose only */
+-};
+ 
+ #endif
+-- 
+2.50.1
+

@@ -1,0 +1,38 @@
+From 75f02fa098c0a38c48751a28aa6a7eddc6dc1cbc Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 9 Jul 2026 17:23:42 +0200
+Subject: [PATCH 610/631] hw/gpio: pca9552: default description to the
+ instantiated type name
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+When no description is supplied, fall back to the actual QOM type name
+(pca9552 / pca9535 / pca9555) via object_get_typename() instead of the
+opaque "pca-unspecified" placeholder, matching the PCA9554 model and
+giving meaningful device labels in traces.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
+Link: https://lore.kernel.org/qemu-devel/20260709-catalina-upgrade-v1-4-814575bc076b@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ hw/gpio/pca9552.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/hw/gpio/pca9552.c b/hw/gpio/pca9552.c
+index da21e56aabd..ffeb438d2ab 100644
+--- a/hw/gpio/pca9552.c
++++ b/hw/gpio/pca9552.c
+@@ -488,7 +488,7 @@ static void pca955x_realize(DeviceState *dev, Error **errp)
+     PCA955xState *s = PCA955X(dev);
+ 
+     if (!s->description) {
+-        s->description = g_strdup("pca-unspecified");
++        s->description = g_strdup(object_get_typename(OBJECT(dev)));
+     }
+ 
+     qdev_init_gpio_out(dev, s->gpio_out, k->pin_count);
+-- 
+2.50.1
+

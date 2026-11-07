@@ -1,0 +1,63 @@
+From c21d280a986e76209f9bf52e2d044c448bf866bf Mon Sep 17 00:00:00 2001
+From: Peter Shen <peter.shen@amd.com>
+Date: Thu, 5 Nov 2026 13:15:53 +0800
+Subject: [PATCH] meta: anacapa: add temperature offset for MB_INLET_TEMP_C
+
+Add an offset of -3 degrees Celsius to MB_INLET_TEMP_C across
+Anacapa MB configurations to calibrate the sensor reading
+with actual ambient inlet thermal measurements.
+
+TESTED:
+- Verified dbus-sensors applies the offset and reports the
+  calibrated temperature value on D-Bus:
+  $ busctl get-property xyz.openbmc_project.HwmonTempSensor \
+    /xyz/openbmc_project/sensors/temperature/MB_INLET_TEMP_C \
+    xyz.openbmc_project.Sensor.Value Value
+
+Change-Id: Ic232ba48fd009a6912df9d7b7201cab64d459eba
+Signed-off-by: Peter Shen <peter.shen@amd.com>
+---
+ configurations/meta/anacapa/anacapa_mb.json      | 1 +
+ configurations/meta/anacapa/anacapa_mb_evt1.json | 1 +
+ configurations/meta/anacapa/anacapa_mb_evt2.json | 1 +
+ 3 files changed, 3 insertions(+)
+
+diff --git a/configurations/meta/anacapa/anacapa_mb.json b/configurations/meta/anacapa/anacapa_mb.json
+index b22512c..0ec6888 100644
+--- a/configurations/meta/anacapa/anacapa_mb.json
++++ b/configurations/meta/anacapa/anacapa_mb.json
+@@ -3495,6 +3495,7 @@
+             "Address": "0x48",
+             "Bus": 52,
+             "Name": "MB_INLET_TEMP_C",
++            "OffsetValue": -3,
+             "Thresholds": [
+                 {
+                     "Direction": "less than",
+diff --git a/configurations/meta/anacapa/anacapa_mb_evt1.json b/configurations/meta/anacapa/anacapa_mb_evt1.json
+index d7acd8b..1fb61fb 100644
+--- a/configurations/meta/anacapa/anacapa_mb_evt1.json
++++ b/configurations/meta/anacapa/anacapa_mb_evt1.json
+@@ -2149,6 +2149,7 @@
+             "Address": "0x48",
+             "Bus": 52,
+             "Name": "MB_INLET_TEMP_C",
++            "OffsetValue": -3,
+             "Thresholds": [
+                 {
+                     "Direction": "less than",
+diff --git a/configurations/meta/anacapa/anacapa_mb_evt2.json b/configurations/meta/anacapa/anacapa_mb_evt2.json
+index 4358470..2ae57ba 100644
+--- a/configurations/meta/anacapa/anacapa_mb_evt2.json
++++ b/configurations/meta/anacapa/anacapa_mb_evt2.json
+@@ -3495,6 +3495,7 @@
+             "Address": "0x48",
+             "Bus": 52,
+             "Name": "MB_INLET_TEMP_C",
++            "OffsetValue": -3,
+             "Thresholds": [
+                 {
+                     "Direction": "less than",
+-- 
+2.34.1
+

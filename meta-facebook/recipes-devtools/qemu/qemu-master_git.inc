@@ -14,7 +14,7 @@ a variety of guest operating systems. This recipe builds from git master."
 HOMEPAGE = "http://qemu.org"
 LICENSE = "GPL-2.0-only AND LGPL-2.1-only"
 
-DEPENDS += "bison-native libusb1 meson-native ninja-native"
+DEPENDS += "bison-native meson-native ninja-native"
 
 require ${COREBASE}/meta/recipes-devtools/qemu/qemu-targets.inc
 

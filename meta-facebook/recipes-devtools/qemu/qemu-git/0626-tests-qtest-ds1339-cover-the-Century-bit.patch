@@ -1,7 +1,7 @@
-From c47e2014c8fb0e19e79255d35f3ea02da7e47489 Mon Sep 17 00:00:00 2001
+From fb1cf1e8d66282a9f7db821312414385768e244e Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 17:15:30 +0200
-Subject: [PATCH 626/682] tests/qtest: ds1339: cover the Century bit
+Subject: [PATCH 14/70] tests/qtest: ds1339: cover the Century bit
 
 The Century bit had no coverage: neither its guest read/write
 behaviour, nor the rule that only an elapsed rollover toggles it.

@@ -1,7 +1,7 @@
-From 14173de92a4e7dc4ea7d94d83a98d43d1951cb1e Mon Sep 17 00:00:00 2001
+From 9313d128f989e0ceec82646897a170a16849c971 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 17:56:43 +0200
-Subject: [PATCH 653/682] hw/sensor: tmp421: implement Resettable reset
+Subject: [PATCH 41/70] hw/sensor: tmp421: implement Resettable reset
 
 Wire the reset through the Resettable hold phase instead of only
 calling it from realize, so bus and system resets re-initialise the
@@ -15,10 +15,10 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  1 file changed, 13 insertions(+), 13 deletions(-)
 
 diff --git a/hw/sensor/tmp421.c b/hw/sensor/tmp421.c
-index e7927699ce..a9d15601cb 100644
+index 55e261a090..4b93d42b14 100644
 --- a/hw/sensor/tmp421.c
 +++ b/hw/sensor/tmp421.c
-@@ -224,7 +224,7 @@ static void tmp421_read(TMP421State *s)
+@@ -225,7 +225,7 @@ static void tmp421_read(TMP421State *s)
      }
  }
  
@@ -27,7 +27,7 @@ index e7927699ce..a9d15601cb 100644
  
  static void tmp421_write(TMP421State *s)
  {
-@@ -239,7 +239,7 @@ static void tmp421_write(TMP421State *s)
+@@ -240,7 +240,7 @@ static void tmp421_write(TMP421State *s)
          s->config[1] = s->buf[0];
          break;
      case TMP421_RESET:
@@ -36,7 +36,7 @@ index e7927699ce..a9d15601cb 100644
          break;
      }
  }
-@@ -303,17 +303,18 @@ static const VMStateDescription vmstate_tmp421 = {
+@@ -304,17 +304,18 @@ static const VMStateDescription vmstate_tmp421 = {
      }
  };
  
@@ -61,7 +61,7 @@ index e7927699ce..a9d15601cb 100644
      switch (sc->dev->model) {
      case TMP421_DEVICE_ID:
          s->config[1] = 0x1c;
-@@ -330,23 +331,22 @@ static void tmp421_reset(I2CSlave *i2c)
+@@ -331,23 +332,22 @@ static void tmp421_reset(I2CSlave *i2c)
      s->status = 0;
  }
  

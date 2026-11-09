@@ -1,7 +1,7 @@
-From fe3544be620a7c6466a60cd7672104df762e29f7 Mon Sep 17 00:00:00 2001
+From a13a6506b095dd1566a22551fffeb978da9a5ee7 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 14:16:41 +0200
-Subject: [PATCH 613/682] hw/rtc: ds1338: program the clock from the time
+Subject: [PATCH 01/70] hw/rtc: ds1338: program the clock from the time
  registers
 
 A write to a time register rebuilt a struct tm from the current date,

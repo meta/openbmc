@@ -1,7 +1,7 @@
-From c5c56b248d434af2ab0337aa8f7426156fd07cbb Mon Sep 17 00:00:00 2001
+From b5243cde05a9f98168c84808cb8a2619148e7f1a Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 16:03:43 +0200
-Subject: [PATCH 616/682] hw/rtc: ds1338: add a persist-on-reset property
+Subject: [PATCH 04/70] hw/rtc: ds1338: add a persist-on-reset property
 
 A real RTC keeps counting across a reboot of the machine it sits in,
 and its register file comes back with it. The model instead wiped the

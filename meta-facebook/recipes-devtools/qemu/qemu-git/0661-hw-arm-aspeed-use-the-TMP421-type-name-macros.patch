@@ -1,12 +1,13 @@
-From 2bfcd8d0a6db2ca943d2ae31aa0e7322188eab60 Mon Sep 17 00:00:00 2001
+From c9d62fb33962886fa8b5ed2679fb2a07e9d253b7 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 18:04:47 +0200
-Subject: [PATCH] hw/arm/aspeed: use the TMP421 type-name macros
+Subject: [PATCH 49/70] hw/arm/aspeed: use the TMP421 type-name macros
 
 Include the new tmp421.h and refer to the sensor variants through
 TYPE_TMP421/TYPE_TMP422/TYPE_TMP423 instead of open-coded string
 literals and per-board local defines.
 
+Reviewed-by: Jamin Lin <jaminlin1207@gmail.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  hw/arm/aspeed_ast2400_palmetto.c          |  3 ++-

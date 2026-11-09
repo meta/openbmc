@@ -1,7 +1,7 @@
-From c788c1a6ce84eb6992d0560b9aa08f7e56a40628 Mon Sep 17 00:00:00 2001
+From 717f810f5bf9846a15d60c6c0ab5bb37b0363c06 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 20 Jul 2026 10:43:47 +0200
-Subject: [PATCH 648/682] hw/arm: minerva: add Facebook BMC machine
+Subject: [PATCH 36/70] hw/arm: minerva: add Facebook BMC machine
 
 Add a machine for the Facebook Minerva Chassis Management Module (BMC),
 an AST2600-based board modelled from its device tree
@@ -15,6 +15,7 @@ Every device the Minerva device tree describes and QEMU already models
 is instantiated. The remaining ones (LTC4287, XDP710, MAX31790, PCF8563
 and IPMB) have no QEMU model and are left documented as comments.
 
+Reviewed-by: Jamin Lin <jaminlin1207@gmail.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  docs/system/arm/aspeed.rst      |   1 +
@@ -24,7 +25,7 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  create mode 100644 hw/arm/aspeed_ast2600_minerva.c
 
 diff --git a/docs/system/arm/aspeed.rst b/docs/system/arm/aspeed.rst
-index f38f33cbe1..bbd3d9cdf4 100644
+index 2e23123cc6..c915a430af 100644
 --- a/docs/system/arm/aspeed.rst
 +++ b/docs/system/arm/aspeed.rst
 @@ -36,6 +36,7 @@ AST2600 SoC based machines :
@@ -222,7 +223,7 @@ index 0000000000..93abc64770
 +
 +DEFINE_TYPES(aspeed_ast2600_minerva_types)
 diff --git a/hw/arm/meson.build b/hw/arm/meson.build
-index bcc068de04..a9e8270b85 100644
+index f3c1b0e00f..bdc7295efd 100644
 --- a/hw/arm/meson.build
 +++ b/hw/arm/meson.build
 @@ -63,6 +63,7 @@ arm_common_ss.add(when: 'CONFIG_ASPEED_SOC', if_true: files(

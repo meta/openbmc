@@ -1,7 +1,7 @@
-From f008794dd73d85f0c6d3d012f4b378f6147e2019 Mon Sep 17 00:00:00 2001
+From 82928f416916b8f84fb4968e78bc35dfeff1f55d Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 17:59:51 +0200
-Subject: [PATCH 655/682] hw/sensor: tmp421: honor per-variant channels and
+Subject: [PATCH 43/70] hw/sensor: tmp421: honor per-variant channels and
  channel enablement
 
 Each part exposes a different number of temperature channels; register
@@ -16,10 +16,10 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  1 file changed, 58 insertions(+), 42 deletions(-)
 
 diff --git a/hw/sensor/tmp421.c b/hw/sensor/tmp421.c
-index 7f0e3b3214..8bacd7d05e 100644
+index ef738b821e..5bb5043839 100644
 --- a/hw/sensor/tmp421.c
 +++ b/hw/sensor/tmp421.c
-@@ -59,6 +59,7 @@ struct TMP421Class {
+@@ -60,6 +60,7 @@ struct TMP421Class {
      I2CSlaveClass parent_class;
  
      uint8_t device_id;
@@ -27,7 +27,7 @@ index 7f0e3b3214..8bacd7d05e 100644
      uint8_t config2_reset;
  };
  
-@@ -159,12 +160,50 @@ static void tmp421_set_temperature(Object *obj, Visitor *v, const char *name,
+@@ -160,12 +161,50 @@ static void tmp421_set_temperature(Object *obj, Visitor *v, const char *name,
      s->temperature[tempid] = (int16_t) ((temp * 256 - 128) / 1000) + offset;
  }
  
@@ -78,7 +78,7 @@ index 7f0e3b3214..8bacd7d05e 100644
      switch (s->pointer) {
      case TMP421_MANUFACTURER_ID_REG:
          s->buf[s->len++] = TMP421_MANUFACTURER_ID;
-@@ -184,35 +223,8 @@ static void tmp421_read(TMP421State *s)
+@@ -185,35 +224,8 @@ static void tmp421_read(TMP421State *s)
      case TMP421_STATUS_REG:
          s->buf[s->len++] = s->status;
          break;
@@ -116,7 +116,7 @@ index 7f0e3b3214..8bacd7d05e 100644
          break;
      }
  }
-@@ -316,6 +328,19 @@ static void tmp421_reset_hold(Object *obj, ResetType type)
+@@ -317,6 +329,19 @@ static void tmp421_reset_hold(Object *obj, ResetType type)
      tmp421_reset(TMP421(obj));
  }
  
@@ -127,7 +127,7 @@ index 7f0e3b3214..8bacd7d05e 100644
 +    for (unsigned channel = 0; channel < sc->nchannels; channel++) {
 +        g_autofree char *name = g_strdup_printf("temperature%u", channel);
 +
-+        object_property_add(obj, name, "int",
++        object_property_add(obj, name, "int", &int_type_info,
 +                            tmp421_get_temperature,
 +                            tmp421_set_temperature, NULL, NULL);
 +    }
@@ -136,28 +136,28 @@ index 7f0e3b3214..8bacd7d05e 100644
  static void tmp421_class_init(ObjectClass *klass, const void *data)
  {
      DeviceClass *dc = DEVICE_CLASS(klass);
-@@ -331,19 +356,7 @@ static void tmp421_class_init(ObjectClass *klass, const void *data)
+@@ -332,19 +357,7 @@ static void tmp421_class_init(ObjectClass *klass, const void *data)
  
      sc->device_id = TMP421_DEVICE_ID;
      sc->config2_reset = 0x1c;
 -
--    object_class_property_add(klass, "temperature0", "int",
+-    object_class_property_add(klass, "temperature0", "int", &int_type_info,
 -                              tmp421_get_temperature,
 -                              tmp421_set_temperature, NULL, NULL);
--    object_class_property_add(klass, "temperature1", "int",
+-    object_class_property_add(klass, "temperature1", "int", &int_type_info,
 -                              tmp421_get_temperature,
 -                              tmp421_set_temperature, NULL, NULL);
--    object_class_property_add(klass, "temperature2", "int",
+-    object_class_property_add(klass, "temperature2", "int", &int_type_info,
 -                              tmp421_get_temperature,
 -                              tmp421_set_temperature, NULL, NULL);
--    object_class_property_add(klass, "temperature3", "int",
+-    object_class_property_add(klass, "temperature3", "int", &int_type_info,
 -                              tmp421_get_temperature,
 -                              tmp421_set_temperature, NULL, NULL);
 +    sc->nchannels = 2;
  }
  
  static void tmp422_class_init(ObjectClass *klass, const void *data)
-@@ -352,6 +365,7 @@ static void tmp422_class_init(ObjectClass *klass, const void *data)
+@@ -353,6 +366,7 @@ static void tmp422_class_init(ObjectClass *klass, const void *data)
  
      sc->device_id = TMP422_DEVICE_ID;
      sc->config2_reset = 0x3c;
@@ -165,7 +165,7 @@ index 7f0e3b3214..8bacd7d05e 100644
  }
  
  static void tmp423_class_init(ObjectClass *klass, const void *data)
-@@ -360,6 +374,7 @@ static void tmp423_class_init(ObjectClass *klass, const void *data)
+@@ -361,6 +375,7 @@ static void tmp423_class_init(ObjectClass *klass, const void *data)
  
      sc->device_id = TMP423_DEVICE_ID;
      sc->config2_reset = 0x7c;
@@ -173,7 +173,7 @@ index 7f0e3b3214..8bacd7d05e 100644
  }
  
  static const TypeInfo tmp421_types[] = {
-@@ -367,6 +382,7 @@ static const TypeInfo tmp421_types[] = {
+@@ -368,6 +383,7 @@ static const TypeInfo tmp421_types[] = {
          .name          = TYPE_TMP421,
          .parent        = TYPE_I2C_SLAVE,
          .instance_size = sizeof(TMP421State),

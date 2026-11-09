@@ -1,7 +1,7 @@
-From c10a870119c5281b7d10de6f401628159185e0d8 Mon Sep 17 00:00:00 2001
+From a8f755bcfe6771e18c392b6960bbe43fa1e741f2 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 22 Jul 2026 17:27:57 +0200
-Subject: [PATCH 637/682] tests/qtest: ina230: cover operating modes and
+Subject: [PATCH 25/70] tests/qtest: ina230: cover operating modes and
  triggered conversions
 
 Add coverage for the MODE field: power-down retains the last results,
@@ -9,13 +9,14 @@ the shunt/bus channel-enable bits gate which registers track new inputs,
 triggered modes convert once per Config write, and bus-only mode still
 derives power from the retained current.
 
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  tests/qtest/ina230-test.c | 95 ++++++++++++++++++++++++++++++++++++++-
  1 file changed, 94 insertions(+), 1 deletion(-)
 
 diff --git a/tests/qtest/ina230-test.c b/tests/qtest/ina230-test.c
-index 36c899efee..f8b982686a 100644
+index 36c899efee..4d601c74b5 100644
 --- a/tests/qtest/ina230-test.c
 +++ b/tests/qtest/ina230-test.c
 @@ -142,7 +142,97 @@ static void test_config_wmask(void *obj, void *data, QGuestAllocator *alloc)
@@ -87,7 +88,7 @@ index 36c899efee..f8b982686a 100644
 +    g_assert_cmphex(i2c_get16(dev, REG_BUS), ==, 0x12C0);
 +
 +    i2c_set16(dev, REG_CONFIG, 0x07);
-+    qmp_ina230_set("shunt-voltage", 20000000); /* A */
++    qmp_ina230_set("shunt-voltage", 20000000);
 +    g_assert_cmphex(i2c_get16(dev, REG_SHUNT), ==, 0x1F40);
 +}
 +

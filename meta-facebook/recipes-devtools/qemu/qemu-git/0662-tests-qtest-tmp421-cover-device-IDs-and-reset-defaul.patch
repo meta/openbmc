@@ -1,7 +1,7 @@
-From 87110e2096449074d2454091e191c675b5f8aad1 Mon Sep 17 00:00:00 2001
+From aada516d53e410105654ef0d0314a3a43b9b6295 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 18:06:08 +0200
-Subject: [PATCH 662/682] tests/qtest: tmp421: cover device IDs and reset
+Subject: [PATCH 50/70] tests/qtest: tmp421: cover device IDs and reset
  defaults
 
 Add a qgraph test that instantiates each variant and checks the
@@ -16,10 +16,10 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  create mode 100644 tests/qtest/tmp421-test.c
 
 diff --git a/tests/qtest/meson.build b/tests/qtest/meson.build
-index 7005509d4d..5042ae52b2 100644
+index 4ddf47ebda..8f0622b052 100644
 --- a/tests/qtest/meson.build
 +++ b/tests/qtest/meson.build
-@@ -349,6 +349,7 @@ qos_test_ss.add(
+@@ -358,6 +358,7 @@ qos_test_ss.add(
    'sdhci-test.c',
    'spapr-phb-test.c',
    'tmp105-test.c',

@@ -1,7 +1,7 @@
-From a10c9cc3890c629b03d9ff2fdb077b90442f6740 Mon Sep 17 00:00:00 2001
+From 7736ec8a64b7af5c240a10e49d31c701708f81bb Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 16:40:36 +0200
-Subject: [PATCH 671/682] hw/arm: clemente: add Facebook Clemente BMC machine
+Subject: [PATCH 59/70] hw/arm: clemente: add Facebook Clemente BMC machine
 
 Add the 'clemente-bmc' machine type, an AST2600-based BMC, modelled
 from its device tree (aspeed-bmc-facebook-clemente.dts).
@@ -16,6 +16,7 @@ fan controllers, MAX1363 ADCs, RAA228004 voltage regulators, the
 SLB9670 SPI TPM, SSIF-BMC and MCTP) have no QEMU model and are left
 documented as comments.
 
+Reviewed-by: Jamin Lin <jaminlin1207@gmail.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  docs/system/arm/aspeed.rst       |   1 +
@@ -25,7 +26,7 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  create mode 100644 hw/arm/aspeed_ast2600_clemente.c
 
 diff --git a/docs/system/arm/aspeed.rst b/docs/system/arm/aspeed.rst
-index bbd3d9cdf4..db0035189b 100644
+index c915a430af..ca924461ac 100644
 --- a/docs/system/arm/aspeed.rst
 +++ b/docs/system/arm/aspeed.rst
 @@ -34,6 +34,7 @@ AST2600 SoC based machines :
@@ -275,7 +276,7 @@ index 0000000000..bf5a13bc49
 +
 +DEFINE_TYPES(aspeed_ast2600_clemente_types)
 diff --git a/hw/arm/meson.build b/hw/arm/meson.build
-index a9e8270b85..4189de2aaa 100644
+index bdc7295efd..f4a03f72a8 100644
 --- a/hw/arm/meson.build
 +++ b/hw/arm/meson.build
 @@ -59,6 +59,7 @@ arm_common_ss.add(when: 'CONFIG_ASPEED_SOC', if_true: files(

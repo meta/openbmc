@@ -1,7 +1,7 @@
-From 4b5322e535aff40a3c96620ca310b2b892dcc8ba Mon Sep 17 00:00:00 2001
+From 65f395e300c67d645944c7c01b20da8ae577c1bc Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 17:15:31 +0200
-Subject: [PATCH 629/682] tests/qtest: ds1339: cover the day-of-week counter
+Subject: [PATCH 17/70] tests/qtest: ds1339: cover the day-of-week counter
 
 The day-of-week register and the offset behind it had no coverage at
 all.

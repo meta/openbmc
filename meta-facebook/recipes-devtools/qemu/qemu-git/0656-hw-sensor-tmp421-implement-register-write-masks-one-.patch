@@ -1,7 +1,7 @@
-From 3a35c25bdcc42eb2047ff284bb53808dfd7fc539 Mon Sep 17 00:00:00 2001
+From f50a7e3654a443086c3c6405b90517451149b91b Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 18:01:09 +0200
-Subject: [PATCH 656/682] hw/sensor: tmp421: implement register write masks,
+Subject: [PATCH 44/70] hw/sensor: tmp421: implement register write masks,
  one-shot and N-factor
 
 Mask out reserved and absent-channel bits on writes to the two
@@ -16,7 +16,7 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  1 file changed, 60 insertions(+), 5 deletions(-)
 
 diff --git a/hw/sensor/tmp421.c b/hw/sensor/tmp421.c
-index 8bacd7d05e..9e1249afb8 100644
+index 5bb5043839..8c789a2a09 100644
 --- a/hw/sensor/tmp421.c
 +++ b/hw/sensor/tmp421.c
 @@ -22,6 +22,16 @@
@@ -36,7 +36,7 @@ index 8bacd7d05e..9e1249afb8 100644
   */
  
  #include "qemu/osdep.h"
-@@ -44,6 +54,7 @@ struct TMP421State {
+@@ -45,6 +55,7 @@ struct TMP421State {
      /*< public >*/
  
      int16_t temperature[4];
@@ -44,7 +44,7 @@ index 8bacd7d05e..9e1249afb8 100644
  
      uint8_t status;
      uint8_t config[2];
-@@ -85,6 +96,8 @@ OBJECT_DECLARE_TYPE(TMP421State, TMP421Class, TMP421)
+@@ -86,6 +97,8 @@ OBJECT_DECLARE_TYPE(TMP421State, TMP421Class, TMP421)
  #define TMP421_CONVERSION_RATE_REG      0x0B
  #define TMP421_ONE_SHOT                 0x0F
  
@@ -53,7 +53,7 @@ index 8bacd7d05e..9e1249afb8 100644
  #define TMP421_RESET                    0xFC
  #define TMP421_MANUFACTURER_ID_REG      0xFE
  #define TMP421_DEVICE_ID_REG            0xFF
-@@ -203,6 +216,11 @@ static void tmp421_read(TMP421State *s)
+@@ -204,6 +217,11 @@ static void tmp421_read(TMP421State *s)
          s->buf[s->len++] = tmp421_temp_low(s, s->pointer - TMP421_TEMP_LSB0);
          return;
      }
@@ -65,7 +65,7 @@ index 8bacd7d05e..9e1249afb8 100644
  
      switch (s->pointer) {
      case TMP421_MANUFACTURER_ID_REG:
-@@ -233,15 +251,29 @@ static void tmp421_reset(TMP421State *s);
+@@ -234,15 +252,29 @@ static void tmp421_reset(TMP421State *s);
  
  static void tmp421_write(TMP421State *s)
  {
@@ -100,7 +100,7 @@ index 8bacd7d05e..9e1249afb8 100644
          break;
      case TMP421_RESET:
          tmp421_reset(s);
-@@ -291,6 +323,24 @@ static int tmp421_event(I2CSlave *i2c, enum i2c_event event)
+@@ -292,6 +324,24 @@ static int tmp421_event(I2CSlave *i2c, enum i2c_event event)
      return 0;
  }
  
@@ -125,7 +125,7 @@ index 8bacd7d05e..9e1249afb8 100644
  static const VMStateDescription vmstate_tmp421 = {
      .name = "TMP421",
      .version_id = 0,
-@@ -305,6 +355,10 @@ static const VMStateDescription vmstate_tmp421 = {
+@@ -306,6 +356,10 @@ static const VMStateDescription vmstate_tmp421 = {
          VMSTATE_INT16_ARRAY(temperature, TMP421State, 4),
          VMSTATE_I2C_SLAVE(parent_obj, TMP421State),
          VMSTATE_END_OF_LIST()
@@ -136,7 +136,7 @@ index 8bacd7d05e..9e1249afb8 100644
      }
  };
  
-@@ -316,6 +370,7 @@ static void tmp421_reset(TMP421State *s)
+@@ -317,6 +371,7 @@ static void tmp421_reset(TMP421State *s)
       * The measured temperatures are not cleared: they model the physical
       * input the ADC re-samples after reset, and boards may preset them.
       */

@@ -1,14 +1,15 @@
-From 0c833ff128ea4573f9315fe03d29bb1489399706 Mon Sep 17 00:00:00 2001
+From 4da80f1e27620828a466260dd6c8850d6ad582a5 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 20 Jul 2026 14:54:20 +0200
-Subject: [PATCH 633/682] tests/qtest: ina230: add current/voltage/power
- monitor test
+Subject: [PATCH 21/70] tests/qtest: ina230: add current/voltage/power monitor
+ test
 
 Introduce the INA230 qtest: the qgraph node and the register map. Cover
 the power-on-reset defaults and Die ID, the software reset, and the
 Configuration register write mask. The QMP voltage-injection helpers
 arrive with the following commit that exercises them.
 
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  tests/qtest/ina230-test.c | 115 ++++++++++++++++++++++++++++++++++++++
@@ -138,10 +139,10 @@ index 0000000000..f7aefd2d97
 +}
 +libqos_init(ina230_register_nodes);
 diff --git a/tests/qtest/meson.build b/tests/qtest/meson.build
-index e23eb9bbca..e413a0cc75 100644
+index f700442607..b367da9b99 100644
 --- a/tests/qtest/meson.build
 +++ b/tests/qtest/meson.build
-@@ -330,6 +330,7 @@ qos_test_ss.add(
+@@ -339,6 +339,7 @@ qos_test_ss.add(
    'e1000-test.c',
    'eepro100-test.c',
    'es1370-test.c',

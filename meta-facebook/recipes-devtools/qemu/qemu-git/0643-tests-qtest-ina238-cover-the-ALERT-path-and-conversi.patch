@@ -1,13 +1,14 @@
-From 5f46edf0c505e0fd9f561d5f3140eb4ae1c2cd90 Mon Sep 17 00:00:00 2001
+From 4ecd13e1eb04f66373c57768d1759272077319c2 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 23 Jul 2026 16:49:34 +0200
-Subject: [PATCH 643/682] tests/qtest: ina238: cover the ALERT path and
+Subject: [PATCH 31/70] tests/qtest: ina238: cover the ALERT path and
  conversion-ready flag
 
 Cover the shunt/bus/temperature/power alert thresholds, the multi-alert
 OR behaviour, the alert latch, the DIAG_ALRT control bits and the
 conversion-ready (CNVRF) flag.
 
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  tests/qtest/ina238-test.c | 146 +++++++++++++++++++++++++++++++++++++-

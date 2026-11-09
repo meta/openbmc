@@ -1,7 +1,7 @@
-From e07ea6fa4f881b769e89bf081b21ff5c1220ca69 Mon Sep 17 00:00:00 2001
+From 3a605711e82db56be868cf8b6ca993b827008a2b Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 17:15:30 +0200
-Subject: [PATCH 628/682] tests/qtest: ds1339: cover the 12-hour format
+Subject: [PATCH 16/70] tests/qtest: ds1339: cover the 12-hour format
 
 Both directions of the 12-hour conversion carry a fixup for midnight
 and noon, and neither had been exercised.

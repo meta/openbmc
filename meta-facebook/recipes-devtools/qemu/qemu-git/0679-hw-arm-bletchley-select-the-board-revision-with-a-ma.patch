@@ -1,7 +1,7 @@
-From 2c1dc51cbb969ee01d381dbaf45d76376ce6d1d9 Mon Sep 17 00:00:00 2001
+From 5e17f151f0a9741bda5cea93124d4717742430bd Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Fri, 7 Aug 2026 17:23:08 +0200
-Subject: [PATCH 679/682] hw/arm: bletchley: select the board revision with a
+Subject: [PATCH 67/70] hw/arm: bletchley: select the board revision with a
  machine property
 
 Two Bletchley revisions are in the field, differing in FRU layout and
@@ -24,7 +24,7 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  2 files changed, 63 insertions(+), 1 deletion(-)
 
 diff --git a/docs/system/arm/aspeed.rst b/docs/system/arm/aspeed.rst
-index db0035189b..bf3a09aae8 100644
+index ca924461ac..55f80e43d2 100644
 --- a/docs/system/arm/aspeed.rst
 +++ b/docs/system/arm/aspeed.rst
 @@ -244,6 +244,20 @@ under Linux), use :

@@ -1,8 +1,8 @@
-From cf118ed81b6cc9fa0c5920b3e378b65dcd5f68b9 Mon Sep 17 00:00:00 2001
+From a6130c46624efd211d2e03d5806a6492e0db9f3f Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Fri, 14 Aug 2026 17:19:15 +0200
-Subject: [PATCH 658/682] hw/sensor: tmp421: keep the measurement across a
- range change
+Subject: [PATCH 46/70] hw/sensor: tmp421: keep the measurement across a range
+ change
 
 The model stored temperatures in their register form, which carries
 the extended-range offset. Leaving that range therefore reinterpreted
@@ -26,10 +26,10 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  1 file changed, 81 insertions(+), 15 deletions(-)
 
 diff --git a/hw/sensor/tmp421.c b/hw/sensor/tmp421.c
-index ec3a9a9760..1e061045cb 100644
+index 87cbd9dd4b..943295240d 100644
 --- a/hw/sensor/tmp421.c
 +++ b/hw/sensor/tmp421.c
-@@ -53,9 +53,13 @@ struct TMP421State {
+@@ -54,9 +54,13 @@ struct TMP421State {
      I2CSlave parent_obj;
      /*< public >*/
  
@@ -44,7 +44,7 @@ index ec3a9a9760..1e061045cb 100644
      uint8_t status;
      uint8_t config[2];
      uint8_t rate;
-@@ -114,12 +118,51 @@ OBJECT_DECLARE_TYPE(TMP421State, TMP421Class, TMP421)
+@@ -115,12 +119,51 @@ OBJECT_DECLARE_TYPE(TMP421State, TMP421Class, TMP421)
  static const int32_t mins[2] = { -40000, -55000 };
  static const int32_t maxs[2] = { 127000, 150000 };
  
@@ -98,7 +98,7 @@ index ec3a9a9760..1e061045cb 100644
      int64_t value;
      int tempid;
  
-@@ -133,21 +176,18 @@ static void tmp421_get_temperature(Object *obj, Visitor *v, const char *name,
+@@ -134,21 +177,18 @@ static void tmp421_get_temperature(Object *obj, Visitor *v, const char *name,
          return;
      }
  
@@ -122,7 +122,7 @@ index ec3a9a9760..1e061045cb 100644
      int tempid;
  
      if (!visit_type_int(v, name, &temp, errp)) {
-@@ -170,7 +210,7 @@ static void tmp421_set_temperature(Object *obj, Visitor *v, const char *name,
+@@ -171,7 +211,7 @@ static void tmp421_set_temperature(Object *obj, Visitor *v, const char *name,
          return;
      }
  
@@ -131,7 +131,7 @@ index ec3a9a9760..1e061045cb 100644
  }
  
  static bool tmp421_channel_enabled(TMP421State *s, unsigned channel)
-@@ -187,16 +227,14 @@ static bool tmp421_channel_enabled(TMP421State *s, unsigned channel)
+@@ -188,16 +228,14 @@ static bool tmp421_channel_enabled(TMP421State *s, unsigned channel)
   */
  static uint8_t tmp421_temp_high(TMP421State *s, unsigned channel)
  {
@@ -152,7 +152,7 @@ index ec3a9a9760..1e061045cb 100644
  }
  
  static void tmp421_read(TMP421State *s)
-@@ -341,10 +379,38 @@ static const VMStateDescription vmstate_tmp421_n_correct = {
+@@ -342,10 +380,38 @@ static const VMStateDescription vmstate_tmp421_n_correct = {
      }
  };
  

@@ -1,7 +1,7 @@
-From c3cbc53b1d6c41dad85d00211e276010329e8bd3 Mon Sep 17 00:00:00 2001
+From a7c66893e6190a78fd70f1897dbf5334fea24678 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 16:02:39 +0200
-Subject: [PATCH 614/682] hw/rtc: ds1338: implement the DS1338 clock-halt bit
+Subject: [PATCH 02/70] hw/rtc: ds1338: implement the DS1338 clock-halt bit
 
 Bit 7 of the seconds register disables the oscillator, and the guest is
 expected to clear it before trusting the time. The bit was masked away

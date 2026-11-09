@@ -1,20 +1,21 @@
-From 9e2e465d37a2e9f6f0e80678e0fb52e9e2cdd8e9 Mon Sep 17 00:00:00 2001
+From 4d470402d6e27d5ff49e608de28d0b6aa57ff92e Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 22 Jul 2026 17:28:16 +0200
-Subject: [PATCH 638/682] tests/qtest: ina230: cover ALERT latch persistence
+Subject: [PATCH 26/70] tests/qtest: ina230: cover ALERT latch persistence
 
 Verify what releases a latched alert and what can bring it back: a
 Mask/Enable read and a Configuration write both clear it, and only a
 conversion that re-samples the fault on a channel it converted asserts
 it again.
 
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  tests/qtest/ina230-test.c | 89 +++++++++++++++++++++++++++++++++++++++
  1 file changed, 89 insertions(+)
 
 diff --git a/tests/qtest/ina230-test.c b/tests/qtest/ina230-test.c
-index f8b982686a..591927e551 100644
+index 4d601c74b5..cda52bb815 100644
 --- a/tests/qtest/ina230-test.c
 +++ b/tests/qtest/ina230-test.c
 @@ -364,6 +364,88 @@ static void test_alert_latch(void *obj, void *data, QGuestAllocator *alloc)

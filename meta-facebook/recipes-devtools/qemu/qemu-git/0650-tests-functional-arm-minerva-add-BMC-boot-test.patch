@@ -1,7 +1,7 @@
-From 93747a1c54e3548191a76a9b3f4fe0ec8f011d3d Mon Sep 17 00:00:00 2001
+From 151ea370c494e8913bd580c5b242f257ef52366d Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 20 Jul 2026 10:45:21 +0200
-Subject: [PATCH 650/682] tests/functional/arm: minerva: add BMC boot test
+Subject: [PATCH 38/70] tests/functional/arm: minerva: add BMC boot test
 
 Add a functional test booting the Facebook Minerva BMC machine.
 
@@ -9,6 +9,7 @@ Note: The boot image currently lives on a personal fork; a TODO in the
 test notes it should be relocated under legoater/qemu-aspeed-boot before
 upstreaming.
 
+Reviewed-by: Jamin Lin <jaminlin1207@gmail.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  tests/functional/arm/meson.build            |  2 ++
@@ -17,7 +18,7 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  create mode 100644 tests/functional/arm/test_aspeed_minerva.py
 
 diff --git a/tests/functional/arm/meson.build b/tests/functional/arm/meson.build
-index 61b00932db..dd1ddf7f6f 100644
+index 72c7afc84a..8fda2d8054 100644
 --- a/tests/functional/arm/meson.build
 +++ b/tests/functional/arm/meson.build
 @@ -16,6 +16,7 @@ test_arm_timeouts = {
@@ -28,7 +29,7 @@ index 61b00932db..dd1ddf7f6f 100644
    'aspeed_rainier' : 480,
    'bpim2u' : 500,
    'collie' : 180,
-@@ -51,6 +52,7 @@ tests_arm_system_thorough = [
+@@ -54,6 +55,7 @@ tests_arm_system_thorough = [
    'aspeed_bletchley',
    'aspeed_catalina',
    'aspeed_gb200nvl_bmc',

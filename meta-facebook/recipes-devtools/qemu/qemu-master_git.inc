@@ -28,7 +28,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=a3b50d8b88dcc0eb3d7d39b760b9e821 \
 #   git ls-remote https://github.com/qemu/qemu.git refs/heads/master | cut -f1
 # This is normally updated by the daily yocto sync job when
 # --refresh-patches is enabled
-QEMU_REF ?= "3a202dab30470b3ee61a694350370513e916b4f3"
+QEMU_REF ?= "f71afb409a87c4ecd0f9d63a5963eb645dfab780"
 
 # Use git protocol (required by BitBake QA)
 SRC_URI = "git://github.com/qemu/qemu.git;protocol=https;branch=master;lfs=0 \
@@ -92,18 +92,6 @@ SRC_URI:append = " \
            "
 
 SRC_URI:append = " \
-           file://0601-docs-system-arm-aspeed-add-the-catalina-bmc-machine.patch \
-           file://0602-docs-system-arm-aspeed-add-the-sanmiguel-bmc-machine.patch \
-           file://0603-hw-arm-sanmiguel-remove-the-second-SPI-flash-control.patch \
-           file://0604-hw-i2c-pca954x-drop-unused-header-inclusions.patch \
-           file://0605-hw-i2c-pca954x-add-PCA9545-4-channel-mux-model.patch \
-           file://0606-hw-i2c-pca954x-migrate-mux-state.patch \
-           file://0607-tests-qtest-pca9545-add-mux-test.patch \
-           file://0608-hw-rtc-ds1338-move-TYPE_DS1338-to-a-public-header.patch \
-           file://0609-hw-ds1338-use-the-TYPE_DS1338-constant-instead-of-th.patch \
-           file://0610-hw-rtc-ds1338-implement-Resettable-reset.patch \
-           file://0611-hw-rtc-ds1338-prefix-the-file-local-helpers-with-ds1.patch \
-           file://0612-hw-rtc-ds1338-parameterise-the-register-map-via-a-de.patch \
            file://0613-hw-rtc-ds1338-program-the-clock-from-the-time-regist.patch \
            file://0614-hw-rtc-ds1338-implement-the-DS1338-clock-halt-bit.patch \
            file://0615-hw-rtc-ds1338-refresh-the-user-registers-on-a-read-r.patch \

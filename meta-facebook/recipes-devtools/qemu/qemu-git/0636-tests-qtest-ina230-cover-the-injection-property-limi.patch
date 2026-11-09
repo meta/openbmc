@@ -1,13 +1,14 @@
-From 9f22c4a31aae3af80e2f37b8faf4fbe7616b837e Mon Sep 17 00:00:00 2001
+From 9336d23913030ac31308d749644e1b637e41d135 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Tue, 21 Jul 2026 15:29:01 +0200
-Subject: [PATCH 636/682] tests/qtest: ina230: cover the injection-property
+Subject: [PATCH 24/70] tests/qtest: ina230: cover the injection-property
  limits
 
 Verify that the extremes of the shunt- and bus-voltage injection ranges
 round-trip through the QOM property without truncation or wraparound,
 and that values just outside are rejected rather than silently wrapped.
 
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  tests/qtest/ina230-test.c | 59 +++++++++++++++++++++++++++++++++++++++

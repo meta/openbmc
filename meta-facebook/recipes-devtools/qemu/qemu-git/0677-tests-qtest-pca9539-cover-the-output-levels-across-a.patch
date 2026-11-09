@@ -1,8 +1,8 @@
-From 06aafcc6e89441bc5b15ce2f77362efce31eb452 Mon Sep 17 00:00:00 2001
+From da53483bb92b0edd544475effe96a0157f3b87b1 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 7 Sep 2026 11:03:14 +0200
-Subject: [PATCH 677/682] tests/qtest: pca9539: cover the output levels across
- a migration
+Subject: [PATCH 65/70] tests/qtest: pca9539: cover the output levels across a
+ migration
 
 Check the destination restates what it restored: a pin the source
 drove high has to reach the consumer wired to it, not just the input

@@ -1,7 +1,7 @@
-From 50e9900ca5f86d5151a42bf8bb536bb91960d6a0 Mon Sep 17 00:00:00 2001
+From 75b027d26fc865d5a7ad7b1509b67ef86352cab6 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 16:04:18 +0200
-Subject: [PATCH 622/682] hw/rtc: ds1338: add DS1339 variant
+Subject: [PATCH 10/70] hw/rtc: ds1338: add DS1339 variant
 
 The Dallas/Maxim DS1339 register map is only partially compatible with
 the DS1338: it shares the clock/calendar time registers but differs

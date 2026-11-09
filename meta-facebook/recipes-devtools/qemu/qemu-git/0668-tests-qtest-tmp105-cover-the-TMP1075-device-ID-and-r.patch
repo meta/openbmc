@@ -1,7 +1,7 @@
-From 3decedbe7ecf30b996b471ab2cd6cacb554f9c31 Mon Sep 17 00:00:00 2001
+From 84038c55febf4ef2c0846b688de645976b6ab01c Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 6 Aug 2026 16:21:21 +0200
-Subject: [PATCH 668/682] tests/qtest: tmp105: cover the TMP1075 device ID and
+Subject: [PATCH 56/70] tests/qtest: tmp105: cover the TMP1075 device ID and
  reset defaults
 
 Add a TMP1075 node and check its power-on Config, limit and Device ID

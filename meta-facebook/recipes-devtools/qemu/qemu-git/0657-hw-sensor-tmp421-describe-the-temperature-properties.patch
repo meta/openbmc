@@ -1,8 +1,7 @@
-From afc4b6e270991003fc9d8399e34510847c9efa49 Mon Sep 17 00:00:00 2001
+From a5c5f4380d95c7cc7293a3a4ff439e16fed2ab72 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Fri, 14 Aug 2026 17:19:14 +0200
-Subject: [PATCH 657/682] hw/sensor: tmp421: describe the temperature
- properties
+Subject: [PATCH 45/70] hw/sensor: tmp421: describe the temperature properties
 
 Attach a description to each temperature property so it shows up in
 qom-list-properties.
@@ -13,11 +12,11 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  1 file changed, 2 insertions(+)
 
 diff --git a/hw/sensor/tmp421.c b/hw/sensor/tmp421.c
-index 9e1249afb8..ec3a9a9760 100644
+index 8c789a2a09..87cbd9dd4b 100644
 --- a/hw/sensor/tmp421.c
 +++ b/hw/sensor/tmp421.c
-@@ -393,6 +393,8 @@ static void tmp421_initfn(Object *obj)
-         object_property_add(obj, name, "int",
+@@ -394,6 +394,8 @@ static void tmp421_initfn(Object *obj)
+         object_property_add(obj, name, "int", &int_type_info,
                              tmp421_get_temperature,
                              tmp421_set_temperature, NULL, NULL);
 +        object_property_set_description(obj, name,

@@ -1,7 +1,7 @@
-From bf879fbe937c832d8fe9684aac0ed180d0a82c31 Mon Sep 17 00:00:00 2001
+From 070a635d7de758a5c15014fe30625353a1623773 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Fri, 14 Aug 2026 18:13:54 +0200
-Subject: [PATCH 659/682] hw/sensor: tmp421: migrate the exact measurement
+Subject: [PATCH 47/70] hw/sensor: tmp421: migrate the exact measurement
 
 The register form the stream carries only resolves a sixteenth of a
 degree, so a temperature set through the property does not survive a
@@ -18,10 +18,10 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  1 file changed, 58 insertions(+), 2 deletions(-)
 
 diff --git a/hw/sensor/tmp421.c b/hw/sensor/tmp421.c
-index 1e061045cb..e391bb20e1 100644
+index 943295240d..1966301d7a 100644
 --- a/hw/sensor/tmp421.c
 +++ b/hw/sensor/tmp421.c
-@@ -59,6 +59,7 @@ struct TMP421State {
+@@ -60,6 +60,7 @@ struct TMP421State {
  
      /* migration only: the register form the stream carries */
      int16_t temperature[4];
@@ -29,7 +29,7 @@ index 1e061045cb..e391bb20e1 100644
  
      uint8_t status;
      uint8_t config[2];
-@@ -379,6 +380,56 @@ static const VMStateDescription vmstate_tmp421_n_correct = {
+@@ -380,6 +381,56 @@ static const VMStateDescription vmstate_tmp421_n_correct = {
      }
  };
  
@@ -86,7 +86,7 @@ index 1e061045cb..e391bb20e1 100644
  /*
   * The stream carries the register form of the measurement: that is what a
   * QEMU predating the millidegree state writes, and what it expects back.
-@@ -398,9 +449,13 @@ static int tmp421_post_load(void *opaque, int version_id)
+@@ -399,9 +450,13 @@ static int tmp421_post_load(void *opaque, int version_id)
  {
      TMP421State *s = opaque;
  
@@ -102,7 +102,7 @@ index 1e061045cb..e391bb20e1 100644
  
      return 0;
  }
-@@ -423,6 +478,7 @@ static const VMStateDescription vmstate_tmp421 = {
+@@ -424,6 +479,7 @@ static const VMStateDescription vmstate_tmp421 = {
          VMSTATE_END_OF_LIST()
      },
      .subsections = (const VMStateDescription * const []) {

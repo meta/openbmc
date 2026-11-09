@@ -1,14 +1,15 @@
-From f16e293fc3f7d679eec800b718815cc5ab79f6ac Mon Sep 17 00:00:00 2001
+From 380c2c0f2fb347ed4d9a9a4aff7fccce17519383 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 23 Jul 2026 16:49:27 +0200
-Subject: [PATCH 634/682] tests/qtest: ina230: cover voltage injection and
- power derivation
+Subject: [PATCH 22/70] tests/qtest: ina230: cover voltage injection and power
+ derivation
 
 Cover the shunt- and bus-voltage injection properties and the current
 and power values the device derives from them through the Calibration
 register, including the zero-calibration case and the clamp/overflow
 edges.
 
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  tests/qtest/ina230-test.c | 124 ++++++++++++++++++++++++++++++++++++++

@@ -1,7 +1,7 @@
-From 3f305957a1de60e3c8ad8765b4fe67cc00def8e3 Mon Sep 17 00:00:00 2001
+From 2883df58953e22a38b1ce330bc562616942330b4 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 3 Aug 2026 15:24:04 +0200
-Subject: [PATCH 649/682] hw/arm: minerva: populate EEPROM data
+Subject: [PATCH 37/70] hw/arm: minerva: populate EEPROM data
 
 The board carries 31 FRU EEPROMs: three on the management module
 itself, one per fan controller board, and the rest on the compute and
@@ -11,6 +11,7 @@ Populate them from a sanitized dump read from hardware, so guest
 firmware can identify the chassis inventory instead of finding blank
 parts.
 
+Reviewed-by: Jamin Lin <jaminlin1207@gmail.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  hw/arm/aspeed_ast2600_minerva.c | 714 +++++++++++++++++++++++++++++++-

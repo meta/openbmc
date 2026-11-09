@@ -86,10 +86,10 @@ index 08d809b2fd..9b8e771ca0 100644
  
      i2c_slave_create_simple(i2c[17], TYPE_LM75B, 0x4c);
 diff --git a/hw/i2c/i2c_mux_pca954x.c b/hw/i2c/i2c_mux_pca954x.c
-index c603446028..2905e51b07 100644
+index 597e57d99a..6f6bfe8211 100644
 --- a/hw/i2c/i2c_mux_pca954x.c
 +++ b/hw/i2c/i2c_mux_pca954x.c
-@@ -172,6 +172,16 @@ I2CBus *pca954x_i2c_get_bus(I2CSlave *mux, uint8_t channel)
+@@ -217,6 +217,16 @@ I2CBus *pca954x_i2c_get_bus(I2CSlave *mux, uint8_t channel)
      return pca954x->bus[channel];
  }
  
@@ -103,14 +103,14 @@ index c603446028..2905e51b07 100644
 +    memcpy(channels, pca954x->bus, pc->nchans * sizeof(channels[0]));
 +}
 +
- static void pca9546_class_init(ObjectClass *klass, const void *data)
+ static void pca9545_class_init(ObjectClass *klass, const void *data)
  {
      Pca954xClass *s = PCA954X_CLASS(klass);
 diff --git a/include/hw/i2c/i2c_mux_pca954x.h b/include/hw/i2c/i2c_mux_pca954x.h
-index 3dd25ec983..3a676a30a9 100644
+index 19a1050505..be7c3e6e19 100644
 --- a/include/hw/i2c/i2c_mux_pca954x.h
 +++ b/include/hw/i2c/i2c_mux_pca954x.h
-@@ -16,4 +16,17 @@
+@@ -17,4 +17,17 @@
   */
  I2CBus *pca954x_i2c_get_bus(I2CSlave *mux, uint8_t channel);
  

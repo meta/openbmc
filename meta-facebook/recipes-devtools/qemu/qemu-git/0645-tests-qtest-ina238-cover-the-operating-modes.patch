@@ -1,13 +1,14 @@
-From b16893dbd4fdd59bc7a4bdfe8f2ff899ded70b13 Mon Sep 17 00:00:00 2001
+From a09e3858bdec513b51a920556913c3c676b40968 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 22 Jul 2026 17:31:44 +0200
-Subject: [PATCH 645/682] tests/qtest: ina238: cover the operating modes
+Subject: [PATCH 33/70] tests/qtest: ina238: cover the operating modes
 
 Add coverage for the ADC_CONFIG MODE field: shutdown modes perform no
 conversion and leave the measurement registers and CNVRF untouched,
 triggered modes convert once per ADC_CONFIG write, and continuous
 channel-select modes refresh only the enabled measurement registers.
 
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  tests/qtest/ina238-test.c | 70 +++++++++++++++++++++++++++++++++++++++

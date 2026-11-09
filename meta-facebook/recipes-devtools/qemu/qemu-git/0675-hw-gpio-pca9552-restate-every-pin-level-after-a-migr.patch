@@ -1,7 +1,7 @@
-From 518542baa773904d590ddb281135efca34a22eca Mon Sep 17 00:00:00 2001
+From 4278c62af25d7a606ddb8a63f77c68fbae6f85e9 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 7 Sep 2026 11:00:42 +0200
-Subject: [PATCH 675/682] hw/gpio: pca9552: restate every pin level after a
+Subject: [PATCH 63/70] hw/gpio: pca9552: restate every pin level after a
  migration
 
 The registers and the external pin state survive a migration, but the
@@ -16,7 +16,7 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  1 file changed, 7 insertions(+)
 
 diff --git a/hw/gpio/pca9552.c b/hw/gpio/pca9552.c
-index 067bbd0a4e..81f507c5f8 100644
+index b70e8bef61..3a5dac879b 100644
 --- a/hw/gpio/pca9552.c
 +++ b/hw/gpio/pca9552.c
 @@ -541,10 +541,17 @@ static const VMStateDescription vmstate_pca955x_reset_pin = {

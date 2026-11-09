@@ -1,13 +1,14 @@
-From b9c98c065301803317b12a9812b08eeb6e92710a Mon Sep 17 00:00:00 2001
+From 7dd7abdaa3cd39232dc13a329d679db6d6b13aee Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 22 Jul 2026 17:33:07 +0200
-Subject: [PATCH 646/682] tests/qtest: ina238: cover conversion-ready and
+Subject: [PATCH 34/70] tests/qtest: ina238: cover conversion-ready and
  alert-latch semantics
 
 Add coverage for the DIAG_ALRT flag-clearing rules: which of a read and
 a write clears CNVRF and the limit flags in each alert mode, and that a
 conversion only re-evaluates the flags of the channels it converted.
 
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  tests/qtest/ina238-test.c | 127 ++++++++++++++++++++++++++++++++++++++

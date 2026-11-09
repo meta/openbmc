@@ -1,7 +1,7 @@
-From 4e5f89af240858c8e1ca123af1308340a4e18c78 Mon Sep 17 00:00:00 2001
+From 468c2c1935e5c4cec490db10dd4257a181c440fb Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 17:58:08 +0200
-Subject: [PATCH 654/682] hw/sensor: tmp421: model device variants with a class
+Subject: [PATCH 42/70] hw/sensor: tmp421: model device variants with a class
  descriptor
 
 Replace the ad-hoc DeviceInfo table and its manual type-registration
@@ -20,10 +20,10 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  1 file changed, 46 insertions(+), 52 deletions(-)
 
 diff --git a/hw/sensor/tmp421.c b/hw/sensor/tmp421.c
-index a9d15601cb..7f0e3b3214 100644
+index 4b93d42b14..ef738b821e 100644
 --- a/hw/sensor/tmp421.c
 +++ b/hw/sensor/tmp421.c
-@@ -38,17 +38,6 @@
+@@ -39,17 +39,6 @@
  #define TMP422_DEVICE_ID                0x22
  #define TMP423_DEVICE_ID                0x23
  
@@ -41,7 +41,7 @@ index a9d15601cb..7f0e3b3214 100644
  struct TMP421State {
      /*< private >*/
      I2CSlave parent_obj;
-@@ -68,10 +57,14 @@ struct TMP421State {
+@@ -69,10 +58,14 @@ struct TMP421State {
  
  struct TMP421Class {
      I2CSlaveClass parent_class;
@@ -58,7 +58,7 @@ index a9d15601cb..7f0e3b3214 100644
  OBJECT_DECLARE_TYPE(TMP421State, TMP421Class, TMP421)
  
  
-@@ -177,7 +170,7 @@ static void tmp421_read(TMP421State *s)
+@@ -178,7 +171,7 @@ static void tmp421_read(TMP421State *s)
          s->buf[s->len++] = TMP421_MANUFACTURER_ID;
          break;
      case TMP421_DEVICE_ID_REG:
@@ -67,7 +67,7 @@ index a9d15601cb..7f0e3b3214 100644
          break;
      case TMP421_CONFIG_REG_1:
          s->buf[s->len++] = s->config[0];
-@@ -313,20 +306,7 @@ static void tmp421_reset(TMP421State *s)
+@@ -314,20 +307,7 @@ static void tmp421_reset(TMP421State *s)
       */
      s->pointer = 0;
      s->config[0] = 0;
@@ -89,7 +89,7 @@ index a9d15601cb..7f0e3b3214 100644
      s->rate = 0x7;       /* 8Hz */
      s->status = 0;
  }
-@@ -348,7 +328,9 @@ static void tmp421_class_init(ObjectClass *klass, const void *data)
+@@ -349,7 +329,9 @@ static void tmp421_class_init(ObjectClass *klass, const void *data)
      k->send = tmp421_tx;
      rc->phases.hold = tmp421_reset_hold;
      dc->vmsd = &vmstate_tmp421;
@@ -98,9 +98,9 @@ index a9d15601cb..7f0e3b3214 100644
 +    sc->device_id = TMP421_DEVICE_ID;
 +    sc->config2_reset = 0x1c;
  
-     object_class_property_add(klass, "temperature0", "int",
+     object_class_property_add(klass, "temperature0", "int", &int_type_info,
                                tmp421_get_temperature,
-@@ -364,28 +346,40 @@ static void tmp421_class_init(ObjectClass *klass, const void *data)
+@@ -365,28 +347,40 @@ static void tmp421_class_init(ObjectClass *klass, const void *data)
                                tmp421_set_temperature, NULL, NULL);
  }
  

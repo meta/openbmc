@@ -1,7 +1,7 @@
-From a6a3ec0b4bf229b39028492182870195ce97d609 Mon Sep 17 00:00:00 2001
+From 4557e257eeebd933fbee97eae9b8fcdc49252ce7 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 11:11:36 +0200
-Subject: [PATCH 620/682] tests/qtest: ds1338: cover persist-on-reset
+Subject: [PATCH 08/70] tests/qtest: ds1338: cover persist-on-reset
 
 The property had no coverage in either of its two settings.
 

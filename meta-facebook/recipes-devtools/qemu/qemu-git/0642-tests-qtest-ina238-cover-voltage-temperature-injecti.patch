@@ -1,7 +1,7 @@
-From 585def13484541561527bc47485ebab629a22934 Mon Sep 17 00:00:00 2001
+From 7500da92ce81e93151a6bcbf5b7d718ef6c6a73d Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 23 Jul 2026 16:49:34 +0200
-Subject: [PATCH 642/682] tests/qtest: ina238: cover voltage/temperature
+Subject: [PATCH 30/70] tests/qtest: ina238: cover voltage/temperature
  injection and derivation
 
 Cover the shunt-, bus- and die-temperature injection properties and the
@@ -9,6 +9,7 @@ current and power values derived through the Shunt Calibration register,
 including the zero-calibration case, the ADCRANGE rescaling and the
 clamp/overflow edges.
 
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  tests/qtest/ina238-test.c | 156 ++++++++++++++++++++++++++++++++++++++

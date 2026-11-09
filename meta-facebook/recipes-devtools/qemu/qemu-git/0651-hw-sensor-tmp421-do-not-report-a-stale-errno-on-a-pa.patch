@@ -1,7 +1,7 @@
-From d91f3b0c3eb1b24bda73ffe36fad10c91c289e2a Mon Sep 17 00:00:00 2001
+From 24feac794ff65a1af99c89c0894a02cdf9d8ed9c Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Tue, 11 Aug 2026 12:15:33 +0200
-Subject: [PATCH 651/682] hw/sensor: tmp421: do not report a stale errno on a
+Subject: [PATCH 39/70] hw/sensor: tmp421: do not report a stale errno on a
  parse failure
 
 The temperature property accessors decode the channel index out of the
@@ -17,10 +17,10 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/hw/sensor/tmp421.c b/hw/sensor/tmp421.c
-index 127edd0ba5..fde41b2323 100644
+index 0e4d0d0ec2..84c6ebec41 100644
 --- a/hw/sensor/tmp421.c
 +++ b/hw/sensor/tmp421.c
-@@ -117,7 +117,7 @@ static void tmp421_get_temperature(Object *obj, Visitor *v, const char *name,
+@@ -118,7 +118,7 @@ static void tmp421_get_temperature(Object *obj, Visitor *v, const char *name,
      int tempid;
  
      if (sscanf(name, "temperature%d", &tempid) != 1) {
@@ -29,7 +29,7 @@ index 127edd0ba5..fde41b2323 100644
          return;
      }
  
-@@ -154,7 +154,7 @@ static void tmp421_set_temperature(Object *obj, Visitor *v, const char *name,
+@@ -155,7 +155,7 @@ static void tmp421_set_temperature(Object *obj, Visitor *v, const char *name,
      }
  
      if (sscanf(name, "temperature%d", &tempid) != 1) {

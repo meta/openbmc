@@ -1,8 +1,8 @@
-From 406eafb1b4a10713272927c60c72610ce3495da9 Mon Sep 17 00:00:00 2001
+From 8ad1527965f28316d5e17095bab33728f043ef96 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 18:08:39 +0200
-Subject: [PATCH 665/682] tests/qtest: tmp421: cover software reset and
- N-factor registers
+Subject: [PATCH 53/70] tests/qtest: tmp421: cover software reset and N-factor
+ registers
 
 Check that the software-reset register restores the configuration and
 conversion-rate defaults, and that the N-factor correction registers

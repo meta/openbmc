@@ -24,13 +24,13 @@ index a7cfbd6c5e..3988820dc6 100644
 +
 +
 diff --git a/hw/arm/aspeed_ast2400_palmetto.c b/hw/arm/aspeed_ast2400_palmetto.c
-index e2350e5b6c..de2c4a5a1b 100644
+index 185185f0bb..f804e57177 100644
 --- a/hw/arm/aspeed_ast2400_palmetto.c
 +++ b/hw/arm/aspeed_ast2400_palmetto.c
-@@ -11,6 +11,15 @@
- #include "hw/arm/aspeed.h"
+@@ -12,6 +12,15 @@
  #include "hw/arm/aspeed_soc.h"
  #include "hw/i2c/smbus_eeprom.h"
+ #include "hw/rtc/ds1338.h"
 +#include "hw/nvram/eeprom_at24c.h"
 +#include "hw/sensor/tmp105.h"
 +
@@ -43,7 +43,7 @@ index e2350e5b6c..de2c4a5a1b 100644
  
  /* Palmetto hardware value: 0x120CE416 */
  #define PALMETTO_BMC_HW_STRAP1 (                                        \
-@@ -76,3 +85,55 @@ static const TypeInfo aspeed_ast2400_palmetto_types[] = {
+@@ -78,3 +87,55 @@ static const TypeInfo aspeed_ast2400_palmetto_types[] = {
  };
  
  DEFINE_TYPES(aspeed_ast2400_palmetto_types)
@@ -245,7 +245,7 @@ index 6ca2a36322..0c5948edd8 100644
 +
 +DEFINE_FB_MACHINES()
 diff --git a/hw/arm/aspeed_ast2600_evb.c b/hw/arm/aspeed_ast2600_evb.c
-index 8a17c4453e..b9e5c35517 100644
+index 8a17c4453e..9622c513fd 100644
 --- a/hw/arm/aspeed_ast2600_evb.c
 +++ b/hw/arm/aspeed_ast2600_evb.c
 @@ -17,6 +17,8 @@

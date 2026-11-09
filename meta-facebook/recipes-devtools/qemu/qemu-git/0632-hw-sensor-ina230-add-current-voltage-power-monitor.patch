@@ -1,7 +1,7 @@
-From 381c267cfb4d6dddcff4694218752407fc14053f Mon Sep 17 00:00:00 2001
+From 841be4c8bae28ce75a1992453f1d5a0335366847 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 20 Jul 2026 14:54:05 +0200
-Subject: [PATCH 632/682] hw/sensor: ina230: add current/voltage/power monitor
+Subject: [PATCH 20/70] hw/sensor: ina230: add current/voltage/power monitor
 
 Add a model for the Texas Instruments INA230, a 36V, 16-bit I2C
 current-shunt and power monitor.
@@ -17,23 +17,24 @@ Shunt and bus voltages can be injected through the "shunt-voltage" and
 Note: Conversion is instantaneous: the averaging and conversion-time
 fields are stored but have no timing effect.
 
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  hw/arm/Kconfig             |   1 +
  hw/sensor/Kconfig          |   4 +
- hw/sensor/ina230.c         | 597 +++++++++++++++++++++++++++++++++++++
+ hw/sensor/ina230.c         | 598 +++++++++++++++++++++++++++++++++++++
  hw/sensor/meson.build      |   1 +
  hw/sensor/trace-events     |   7 +
  include/hw/sensor/ina230.h |  14 +
- 6 files changed, 624 insertions(+)
+ 6 files changed, 625 insertions(+)
  create mode 100644 hw/sensor/ina230.c
  create mode 100644 include/hw/sensor/ina230.h
 
 diff --git a/hw/arm/Kconfig b/hw/arm/Kconfig
-index 4445f16f45..116d1c64ac 100644
+index e9f796f718..876acc0e43 100644
 --- a/hw/arm/Kconfig
 +++ b/hw/arm/Kconfig
-@@ -539,6 +539,7 @@ config ASPEED_SOC
+@@ -557,6 +557,7 @@ config ASPEED_SOC
      select TMP105
      select TMP421
      select EMC141X
@@ -58,10 +59,10 @@ index b459ac2240..da519159ac 100644
      depends on I2C
 diff --git a/hw/sensor/ina230.c b/hw/sensor/ina230.c
 new file mode 100644
-index 0000000000..988d12a6c5
+index 0000000000..eb6991b0b9
 --- /dev/null
 +++ b/hw/sensor/ina230.c
-@@ -0,0 +1,597 @@
+@@ -0,0 +1,598 @@
 +/*
 + * Texas Instruments INA230 36V, 16-bit current/voltage/power monitor
 + * with an I2C interface.
@@ -85,6 +86,7 @@ index 0000000000..988d12a6c5
 +#include "qemu/osdep.h"
 +#include "qemu/log.h"
 +#include "qapi/error.h"
++#include "qapi/qapi-builtin-type-infos.h"
 +#include "qapi/visitor.h"
 +#include "qom/object.h"
 +#include "hw/sensor/ina230.h"
@@ -607,13 +609,13 @@ index 0000000000..988d12a6c5
 +
 +static void ina230_initfn(Object *obj)
 +{
-+    object_property_add(obj, "shunt-voltage", "int", ina230_get_shunt,
-+                        ina230_set_shunt, NULL, NULL);
++    object_property_add(obj, "shunt-voltage", "int", &int_type_info,
++                        ina230_get_shunt, ina230_set_shunt, NULL, NULL);
 +    object_property_set_description(obj, "shunt-voltage",
 +                                    "Injected shunt (differential) voltage, "
 +                                    "in nanovolts");
-+    object_property_add(obj, "bus-voltage", "int", ina230_get_bus,
-+                        ina230_set_bus, NULL, NULL);
++    object_property_add(obj, "bus-voltage", "int", &int_type_info,
++                        ina230_get_bus, ina230_set_bus, NULL, NULL);
 +    object_property_set_description(obj, "bus-voltage",
 +                                    "Injected bus voltage, in microvolts");
 +}

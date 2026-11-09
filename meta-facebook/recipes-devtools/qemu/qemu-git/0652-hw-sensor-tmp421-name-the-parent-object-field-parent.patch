@@ -1,7 +1,7 @@
-From 6713fd53dfa71409f9edd729c8d8eb7e9b5fc893 Mon Sep 17 00:00:00 2001
+From 37d9f3e61f80bdc2ef55caf10f41dd368a958e79 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 17:55:46 +0200
-Subject: [PATCH 652/682] hw/sensor: tmp421: name the parent object field
+Subject: [PATCH 40/70] hw/sensor: tmp421: name the parent object field
  parent_obj
 
 Follow the QOM convention for the embedded I2CSlave, matching the other
@@ -13,10 +13,10 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/hw/sensor/tmp421.c b/hw/sensor/tmp421.c
-index fde41b2323..e7927699ce 100644
+index 84c6ebec41..55e261a090 100644
 --- a/hw/sensor/tmp421.c
 +++ b/hw/sensor/tmp421.c
-@@ -51,7 +51,7 @@ static const DeviceInfo devices[] = {
+@@ -52,7 +52,7 @@ static const DeviceInfo devices[] = {
  
  struct TMP421State {
      /*< private >*/
@@ -25,7 +25,7 @@ index fde41b2323..e7927699ce 100644
      /*< public >*/
  
      int16_t temperature[4];
-@@ -298,7 +298,7 @@ static const VMStateDescription vmstate_tmp421 = {
+@@ -299,7 +299,7 @@ static const VMStateDescription vmstate_tmp421 = {
          VMSTATE_UINT8(status, TMP421State),
          VMSTATE_UINT8(rate, TMP421State),
          VMSTATE_INT16_ARRAY(temperature, TMP421State, 4),
@@ -34,7 +34,7 @@ index fde41b2323..e7927699ce 100644
          VMSTATE_END_OF_LIST()
      }
  };
-@@ -334,7 +334,7 @@ static void tmp421_realize(DeviceState *dev, Error **errp)
+@@ -335,7 +335,7 @@ static void tmp421_realize(DeviceState *dev, Error **errp)
  {
      TMP421State *s = TMP421(dev);
  

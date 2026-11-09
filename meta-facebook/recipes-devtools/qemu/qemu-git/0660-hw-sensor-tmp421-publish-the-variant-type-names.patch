@@ -1,7 +1,7 @@
-From 49a2641542ea8a7702cec4545e36ba6ee4e42a24 Mon Sep 17 00:00:00 2001
+From f39e2c35f82abe1e6b2e94c087b982fb7c90e248 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 18:02:29 +0200
-Subject: [PATCH 660/682] hw/sensor: tmp421: publish the variant type names
+Subject: [PATCH 48/70] hw/sensor: tmp421: publish the variant type names
 
 Move TYPE_TMP421/TYPE_TMP422/TYPE_TMP423 from tmp421.c into a new
 include/hw/sensor/tmp421.h, so boards instantiating the device share
@@ -15,10 +15,10 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  create mode 100644 include/hw/sensor/tmp421.h
 
 diff --git a/hw/sensor/tmp421.c b/hw/sensor/tmp421.c
-index e391bb20e1..5c04960b29 100644
+index 1966301d7a..1d3d526d4a 100644
 --- a/hw/sensor/tmp421.c
 +++ b/hw/sensor/tmp421.c
-@@ -41,6 +41,7 @@
+@@ -42,6 +42,7 @@
  #include "qapi/visitor.h"
  #include "qemu/module.h"
  #include "qom/object.h"
@@ -26,7 +26,7 @@ index e391bb20e1..5c04960b29 100644
  
  /* Manufacturer / Device ID's */
  #define TMP421_MANUFACTURER_ID          0x55
-@@ -79,9 +80,6 @@ struct TMP421Class {
+@@ -80,9 +81,6 @@ struct TMP421Class {
      uint8_t config2_reset;
  };
  

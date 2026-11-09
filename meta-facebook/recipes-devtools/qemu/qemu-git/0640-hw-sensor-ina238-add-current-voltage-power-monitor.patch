@@ -1,7 +1,7 @@
-From cb1175b22562cfe62752070ba71c246e98cc66fc Mon Sep 17 00:00:00 2001
+From b9e4d66e6f3a9444258179f4b79f3a086093fc9d Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Tue, 21 Jul 2026 14:33:13 +0200
-Subject: [PATCH 640/682] hw/sensor: ina238: add current/voltage/power monitor
+Subject: [PATCH 28/70] hw/sensor: ina238: add current/voltage/power monitor
 
 Add a model for the Texas Instruments INA238, an 85V, 16-bit I2C
 current-shunt, power and temperature monitor.
@@ -17,23 +17,24 @@ the "shunt-voltage", "bus-voltage" and "die-temperature" QOM properties.
 Note: Conversion is instantaneous: the averaging and conversion-time
 fields are stored but have no timing effect.
 
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  hw/arm/Kconfig             |   1 +
  hw/sensor/Kconfig          |   4 +
- hw/sensor/ina238.c         | 802 +++++++++++++++++++++++++++++++++++++
+ hw/sensor/ina238.c         | 803 +++++++++++++++++++++++++++++++++++++
  hw/sensor/meson.build      |   1 +
  hw/sensor/trace-events     |   7 +
  include/hw/sensor/ina238.h |  14 +
- 6 files changed, 829 insertions(+)
+ 6 files changed, 830 insertions(+)
  create mode 100644 hw/sensor/ina238.c
  create mode 100644 include/hw/sensor/ina238.h
 
 diff --git a/hw/arm/Kconfig b/hw/arm/Kconfig
-index 116d1c64ac..3abe249ed5 100644
+index 876acc0e43..bef5f65727 100644
 --- a/hw/arm/Kconfig
 +++ b/hw/arm/Kconfig
-@@ -540,6 +540,7 @@ config ASPEED_SOC
+@@ -558,6 +558,7 @@ config ASPEED_SOC
      select TMP421
      select EMC141X
      select INA230
@@ -58,10 +59,10 @@ index da519159ac..9b7c76fcf5 100644
      depends on I2C
 diff --git a/hw/sensor/ina238.c b/hw/sensor/ina238.c
 new file mode 100644
-index 0000000000..e4033771b0
+index 0000000000..57734e7935
 --- /dev/null
 +++ b/hw/sensor/ina238.c
-@@ -0,0 +1,802 @@
+@@ -0,0 +1,803 @@
 +/*
 + * Texas Instruments INA238 85V, 16-bit current/voltage/power monitor
 + * with an I2C interface.
@@ -89,6 +90,7 @@ index 0000000000..e4033771b0
 +#include "qemu/osdep.h"
 +#include "qemu/log.h"
 +#include "qapi/error.h"
++#include "qapi/qapi-builtin-type-infos.h"
 +#include "qapi/visitor.h"
 +#include "qom/object.h"
 +#include "hw/sensor/ina238.h"
@@ -807,17 +809,17 @@ index 0000000000..e4033771b0
 +
 +static void ina238_initfn(Object *obj)
 +{
-+    object_property_add(obj, "shunt-voltage", "int", ina238_get_shunt,
-+                        ina238_set_shunt, NULL, NULL);
++    object_property_add(obj, "shunt-voltage", "int", &int_type_info,
++                        ina238_get_shunt, ina238_set_shunt, NULL, NULL);
 +    object_property_set_description(obj, "shunt-voltage",
 +                                    "Injected shunt (differential) voltage, "
 +                                    "in nanovolts");
-+    object_property_add(obj, "bus-voltage", "int", ina238_get_bus,
-+                        ina238_set_bus, NULL, NULL);
++    object_property_add(obj, "bus-voltage", "int", &int_type_info,
++                        ina238_get_bus, ina238_set_bus, NULL, NULL);
 +    object_property_set_description(obj, "bus-voltage",
 +                                    "Injected bus voltage, in microvolts");
-+    object_property_add(obj, "die-temperature", "int", ina238_get_temp,
-+                        ina238_set_temp, NULL, NULL);
++    object_property_add(obj, "die-temperature", "int", &int_type_info,
++                        ina238_get_temp, ina238_set_temp, NULL, NULL);
 +    object_property_set_description(obj, "die-temperature",
 +                                    "Injected die temperature, "
 +                                    "in millidegrees Celsius");

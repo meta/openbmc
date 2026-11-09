@@ -1,19 +1,20 @@
-From 84f4744cea325de2b1aae520b879a75c125bdaac Mon Sep 17 00:00:00 2001
+From c6130892ca51076ccb854323a90b3cd973fa2f66 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 7 Sep 2026 10:53:59 +0200
-Subject: [PATCH 639/682] tests/qtest: ina230: cover a cleared calibration per
+Subject: [PATCH 27/70] tests/qtest: ina230: cover a cleared calibration per
  channel
 
 Verify that without a calibration value the current and power
 registers read zero, whichever channels the mode converts.
 
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
  tests/qtest/ina230-test.c | 25 +++++++++++++++++++++++++
  1 file changed, 25 insertions(+)
 
 diff --git a/tests/qtest/ina230-test.c b/tests/qtest/ina230-test.c
-index 591927e551..5749b0bd46 100644
+index cda52bb815..f9e8d3ab9f 100644
 --- a/tests/qtest/ina230-test.c
 +++ b/tests/qtest/ina230-test.c
 @@ -301,6 +301,30 @@ static void test_zero_cal(void *obj, void *data, QGuestAllocator *alloc)

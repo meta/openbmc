@@ -10,9 +10,9 @@ management in servers.
 ---
  hw/arm/Kconfig        |   1 +
  hw/sensor/Kconfig     |   4 +
- hw/sensor/max31790.c  | 429 ++++++++++++++++++++++++++++++++++++++++++
+ hw/sensor/max31790.c  | 431 ++++++++++++++++++++++++++++++++++++++++++
  hw/sensor/meson.build |   1 +
- 4 files changed, 435 insertions(+)
+ 4 files changed, 437 insertions(+)
  create mode 100644 hw/sensor/max31790.c
 
 diff --git a/hw/arm/Kconfig b/hw/arm/Kconfig
@@ -44,10 +44,10 @@ index b459ac2240..2ed162f478 100644
      depends on I2C
 diff --git a/hw/sensor/max31790.c b/hw/sensor/max31790.c
 new file mode 100644
-index 0000000000..6a414e63fc
+index 0000000000..c98aa3da5d
 --- /dev/null
 +++ b/hw/sensor/max31790.c
-@@ -0,0 +1,429 @@
+@@ -0,0 +1,431 @@
 +/*
 + * MAX31790 Fan Controller
 + *
@@ -69,6 +69,7 @@ index 0000000000..6a414e63fc
 +#include "qom/object.h"
 +#include "qapi/error.h"
 +#include "qapi/visitor.h"
++#include "qapi/qapi-builtin-type-infos.h"
 +
 +#define TYPE_MAX31790 "max31790"
 +OBJECT_DECLARE_SIMPLE_TYPE(MAX31790State, MAX31790)
@@ -456,6 +457,7 @@ index 0000000000..6a414e63fc
 +            obj,
 +            name,
 +            "int",
++            &int_type_info,
 +            max31790_get_pwm,
 +            max31790_set_pwm,
 +            NULL,

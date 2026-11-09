@@ -19,10 +19,10 @@ Signed-off-by: Peter Delevoryas <pdel@fb.com>
 ---
  hw/arm/aspeed.c             |  2 --
  hw/arm/aspeed_ast2500_evb.c |  7 ++++++
- hw/i2c/aspeed_i2c.c         | 43 +++++++++++++++++++++++++++++++++++++
+ hw/i2c/aspeed_i2c.c         | 45 +++++++++++++++++++++++++++++++++++++
  hw/i2c/trace-events         |  1 +
  include/hw/i2c/aspeed_i2c.h |  1 +
- 5 files changed, 52 insertions(+), 2 deletions(-)
+ 5 files changed, 54 insertions(+), 2 deletions(-)
 
 diff --git a/hw/arm/aspeed.c b/hw/arm/aspeed.c
 index 3988820dc6..a7cfbd6c5e 100644
@@ -60,18 +60,19 @@ index 0c5948edd8..554561cab4 100644
      {
          .name        = "fbtp-bmc",
 diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
-index 0bc4bb6fbe..a2ab6fa1ab 100644
+index 0bc4bb6fbe..2344e70a4f 100644
 --- a/hw/i2c/aspeed_i2c.c
 +++ b/hw/i2c/aspeed_i2c.c
-@@ -26,6 +26,7 @@
+@@ -26,6 +26,8 @@
  #include "qemu/module.h"
  #include "qemu/error-report.h"
  #include "qapi/error.h"
 +#include "qapi/visitor.h"
++#include "qapi/qapi-builtin-type-infos.h"
  #include "hw/i2c/aspeed_i2c.h"
  #include "hw/core/irq.h"
  #include "hw/core/qdev-properties.h"
-@@ -109,6 +110,8 @@ static uint64_t aspeed_i2c_bus_old_read(AspeedI2CBus *bus, hwaddr offset,
+@@ -109,6 +111,8 @@ static uint64_t aspeed_i2c_bus_old_read(AspeedI2CBus *bus, hwaddr offset,
          break;
      case A_I2CD_CMD:
          value = SHARED_FIELD_DP32(value, BUS_BUSY_STS, i2c_bus_busy(bus->bus));
@@ -80,7 +81,7 @@ index 0bc4bb6fbe..a2ab6fa1ab 100644
          break;
      case A_I2CD_DMA_ADDR:
          if (!aic->has_dma) {
-@@ -640,11 +643,28 @@ static void aspeed_i2c_bus_handle_cmd(AspeedI2CBus *bus, uint64_t value)
+@@ -640,11 +644,28 @@ static void aspeed_i2c_bus_handle_cmd(AspeedI2CBus *bus, uint64_t value)
          aspeed_i2c_bus_cmd_dump(bus);
      }
  
@@ -109,7 +110,7 @@ index 0bc4bb6fbe..a2ab6fa1ab 100644
          aspeed_i2c_set_state(bus, state);
  
          addr = aspeed_i2c_get_addr(bus);
-@@ -1648,6 +1668,24 @@ static const Property aspeed_i2c_bus_properties[] = {
+@@ -1648,6 +1669,24 @@ static const Property aspeed_i2c_bus_properties[] = {
      DEFINE_PROP_STRING("bus-name", AspeedI2CBus, name),
  };
  
@@ -134,12 +135,13 @@ index 0bc4bb6fbe..a2ab6fa1ab 100644
  static void aspeed_i2c_bus_class_init(ObjectClass *klass, const void *data)
  {
      DeviceClass *dc = DEVICE_CLASS(klass);
-@@ -1657,6 +1695,11 @@ static void aspeed_i2c_bus_class_init(ObjectClass *klass, const void *data)
+@@ -1657,6 +1696,12 @@ static void aspeed_i2c_bus_class_init(ObjectClass *klass, const void *data)
      dc->realize = aspeed_i2c_bus_realize;
      rc->phases.hold = aspeed_i2c_bus_reset_hold;
      device_class_set_props(dc, aspeed_i2c_bus_properties);
 +
 +    object_class_property_add(klass, "scl-timeout", "bool",
++                              &bool_type_info,
 +                              aspeed_i2c_bus_get_scl_timeout,
 +                              aspeed_i2c_bus_set_scl_timeout,
 +                              NULL, NULL);

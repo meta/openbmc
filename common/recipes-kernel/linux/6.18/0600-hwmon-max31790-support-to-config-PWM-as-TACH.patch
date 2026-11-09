@@ -1,4 +1,4 @@
-From 130208a761f8675db3b7cbd2d989bc2d9be189e9 Mon Sep 17 00:00:00 2001
+From 21468473e54fabae236444435b3b79b6b6bfcf6e Mon Sep 17 00:00:00 2001
 From: Delphine CC Chiu <Delphine_CC_Chiu@wiwynn.com>
 Date: Wed, 6 Sep 2023 16:19:16 +0800
 Subject: [PATCH] hwmon: max31790: support to config PWM as TACH

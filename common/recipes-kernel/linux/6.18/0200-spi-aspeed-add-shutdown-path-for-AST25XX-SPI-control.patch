@@ -1,4 +1,4 @@
-From c4b2da2338a90a4133a7848ecae8dbf66025bc4f Mon Sep 17 00:00:00 2001
+From d989350b3afd695a62aecb87a8c92d19ffb2f56b Mon Sep 17 00:00:00 2001
 From: dhineskumareswaran <dhineskumar.eswaran@celestica.com>
 Date: Mon, 5 Dec 2022 12:17:20 +0000
 Subject: [PATCH] spi: aspeed: add shutdown path for AST25XX SPI controller
@@ -21,10 +21,10 @@ In reset path, restoring all FMC related register back to default state.
  1 file changed, 27 insertions(+)
 
 diff --git a/drivers/spi/spi-aspeed-smc.c b/drivers/spi/spi-aspeed-smc.c
-index 04eebb65cfa6..55851270956a 100644
+index 6720a78063a7..9b7ab77a5b66 100644
 --- a/drivers/spi/spi-aspeed-smc.c
 +++ b/drivers/spi/spi-aspeed-smc.c
-@@ -46,6 +46,8 @@
+@@ -47,6 +47,8 @@
  
  /* CEx Address Decoding Range Register */
  #define CE0_SEGMENT_ADDR_REG		0x30
@@ -33,15 +33,15 @@ index 04eebb65cfa6..55851270956a 100644
  
  /* CEx Read timing compensation register */
  #define CE0_TIMING_COMPENSATION_REG	0x94
-@@ -84,6 +86,7 @@ struct aspeed_spi_data {
- 	u32 (*segment_reg)(struct aspeed_spi *aspi, u32 start, u32 end);
+@@ -90,6 +92,7 @@ struct aspeed_spi_data {
+ 	u32 (*get_clk_div)(struct aspeed_spi_chip *chip, u32 hz);
  	int (*calibrate)(struct aspeed_spi_chip *chip, u32 hdiv,
  			 const u8 *golden_buf, u8 *test_buf);
 +	void (*shutdown)(struct aspeed_spi *aspi);
  };
  
  #define ASPEED_SPI_MAX_NUM_CS	5
-@@ -782,6 +785,15 @@ static void aspeed_spi_remove(struct platform_device *pdev)
+@@ -925,6 +928,15 @@ static void aspeed_spi_remove(struct platform_device *pdev)
  	aspeed_spi_enable(aspi, false);
  }
  
@@ -57,8 +57,8 @@ index 04eebb65cfa6..55851270956a 100644
  /*
   * AHB mappings
   */
-@@ -1087,6 +1099,18 @@ static int aspeed_spi_ast2600_calibrate(struct aspeed_spi_chip *chip, u32 hdiv,
- 	return -1;
+@@ -1446,6 +1458,18 @@ static int aspeed_spi_ast2600_calibrate(struct aspeed_spi_chip *chip, u32 hdiv,
+ 	return 0;
  }
  
 +static void aspeed_spi_ast2500_shutdown(struct aspeed_spi *aspi)
@@ -76,23 +76,23 @@ index 04eebb65cfa6..55851270956a 100644
  /*
   * Platform definitions
   */
-@@ -1128,6 +1152,7 @@ static const struct aspeed_spi_data ast2500_fmc_data = {
- 	.segment_start = aspeed_spi_segment_start,
+@@ -1494,6 +1518,7 @@ static const struct aspeed_spi_data ast2500_fmc_data = {
  	.segment_end   = aspeed_spi_segment_end,
  	.segment_reg   = aspeed_spi_segment_reg,
+ 	.adjust_window = aspeed_adjust_window_ast2500,
 +	.shutdown      = aspeed_spi_ast2500_shutdown,
  };
  
  static const struct aspeed_spi_data ast2500_spi_data = {
-@@ -1142,6 +1167,7 @@ static const struct aspeed_spi_data ast2500_spi_data = {
- 	.segment_start = aspeed_spi_segment_start,
+@@ -1511,6 +1536,7 @@ static const struct aspeed_spi_data ast2500_spi_data = {
  	.segment_end   = aspeed_spi_segment_end,
  	.segment_reg   = aspeed_spi_segment_reg,
+ 	.adjust_window = aspeed_adjust_window_ast2500,
 +	.shutdown      = aspeed_spi_ast2500_shutdown,
  };
  
  static const struct aspeed_spi_data ast2600_fmc_data = {
-@@ -1188,6 +1214,7 @@ MODULE_DEVICE_TABLE(of, aspeed_spi_matches);
+@@ -1599,6 +1625,7 @@ MODULE_DEVICE_TABLE(of, aspeed_spi_matches);
  static struct platform_driver aspeed_spi_driver = {
  	.probe			= aspeed_spi_probe,
  	.remove			= aspeed_spi_remove,

@@ -1,4 +1,4 @@
-From 3c820e6c6c13aadfa741c459dd777c5d8e24fa93 Mon Sep 17 00:00:00 2001
+From 0e51ca4c8909d4f5a06b0286c5ee2375d601f427 Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Tue, 1 Sep 2026 19:35:33 +0800
 Subject: [PATCH] i3c: mipi-i3c-hci: Program AST2700 IBI termination threshold

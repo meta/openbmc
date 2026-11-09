@@ -1,4 +1,4 @@
-From e644e0afb87afa9d7189bb94d9b5d79b23f97a47 Mon Sep 17 00:00:00 2001
+From 13159679c7a8a81a806b231fbcc227ee3b52cf34 Mon Sep 17 00:00:00 2001
 From: Ernesto Corona <ernesto.corona@intel.com>
 Date: Mon, 13 Apr 2020 15:29:19 -0700
 Subject: [PATCH] Documentation jtag: Add JTAG core driver ioctl number

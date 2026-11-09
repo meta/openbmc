@@ -1,4 +1,4 @@
-From 28645759a3ac39645fd457a9e6de21ba1991f750 Mon Sep 17 00:00:00 2001
+From d7601c24f0caf0d550fb1d6c524de9b742061536 Mon Sep 17 00:00:00 2001
 From: Patrick Williams <patrick@stwcx.xyz>
 Date: Wed, 4 Sep 2024 06:49:01 -0400
 Subject: [PATCH] ARM: dts: aspeed-g6: add jtag controllers
@@ -27,7 +27,7 @@ Signature: 27663040:1617989954:ef64ea4d7a805b0eb4967b7167589aa8afc5562c
  1 file changed, 20 insertions(+)
 
 diff --git a/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi b/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi
-index 8321f0fc333c..c8ac625bac09 100644
+index c1a380d3d8c2..14b2bfe0881c 100644
 --- a/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi
 +++ b/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi
 @@ -387,6 +387,26 @@ rng: hwrng@1e6e2524 {

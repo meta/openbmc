@@ -1,4 +1,4 @@
-From 5c863107bf544698b2969aecc007906a9b03f209 Mon Sep 17 00:00:00 2001
+From 9952c6db003299a0a0ca53746f82b061d727234c Mon Sep 17 00:00:00 2001
 From: "karthik.gengan" <gengankarthik@gmail.com>
 Date: Fri, 4 Nov 2022 06:31:37 +0000
 Subject: [PATCH] hwmon: (pmbus) Add xdpe132g5c driver

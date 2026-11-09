@@ -1,4 +1,4 @@
-From 336b32110734489638ef01e1776a21967be99bbc Mon Sep 17 00:00:00 2001
+From 98d949c5abbfe8cd455151cd3f1858fe2c3b1191 Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Thu, 21 Aug 2025 10:50:13 +0800
 Subject: [PATCH] i3c: dw: handle transfer abort errors distinctly
@@ -20,7 +20,7 @@ Change-Id: Ief964fe7b2a37014cb101a68e4bcdd7f035ebb56
  1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/i3c/master/dw-i3c-master.c b/drivers/i3c/master/dw-i3c-master.c
-index 7a4d1d01d66b..90a0b44d1109 100644
+index cde4f46d186c..917b7fb7f067 100644
 --- a/drivers/i3c/master/dw-i3c-master.c
 +++ b/drivers/i3c/master/dw-i3c-master.c
 @@ -582,9 +582,11 @@ static void dw_i3c_master_end_xfer_locked(struct dw_i3c_master *master, u32 isr)

@@ -1,4 +1,4 @@
-From 11791064b8692bd8441dc21d14dc70ea41446da7 Mon Sep 17 00:00:00 2001
+From 560b299449134a0bf25e3504e18c103210755c3a Mon Sep 17 00:00:00 2001
 From: Potin Lai <potin.lai@quantatw.com>
 Date: Sun, 8 Jun 2025 20:24:14 +0800
 Subject: [PATCH] i2c-ast2600: support ssif

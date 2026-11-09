@@ -1,4 +1,4 @@
-From 46927244813f75dd39a1bb22e11b97e2f2d6ed66 Mon Sep 17 00:00:00 2001
+From 03a54a360fffa23ea886cb12eddcbc3f27914cde Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Tue, 1 Sep 2026 19:35:28 +0800
 Subject: [PATCH] dt-bindings: i3c: Document the AST2700 I3C controller

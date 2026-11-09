@@ -1,4 +1,4 @@
-From c309a91781ec2b11e9355335de088939b38b8533 Mon Sep 17 00:00:00 2001
+From 5adb0765273ae80e66a3fb6774a3805fd4f38216 Mon Sep 17 00:00:00 2001
 From: Adrian Hunter <adrian.hunter@intel.com>
 Date: Fri, 6 Mar 2026 09:24:49 +0200
 Subject: [PATCH] i3c: mipi-i3c-hci: Fix race in DMA error handling in
@@ -66,7 +66,7 @@ index e6f7be9a1976..2f61c7aa97f8 100644
  
  	return 0;
 diff --git a/drivers/i3c/master/mipi-i3c-hci/dma.c b/drivers/i3c/master/mipi-i3c-hci/dma.c
-index 3fa7f46ab2c2..516c14b99c2b 100644
+index 464c58f5d4d7..b6607a22e3ae 100644
 --- a/drivers/i3c/master/mipi-i3c-hci/dma.c
 +++ b/drivers/i3c/master/mipi-i3c-hci/dma.c
 @@ -546,6 +546,11 @@ static bool hci_dma_dequeue_xfer(struct i3c_hci *hci,

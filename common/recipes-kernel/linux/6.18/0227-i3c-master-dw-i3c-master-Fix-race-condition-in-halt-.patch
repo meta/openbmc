@@ -1,4 +1,4 @@
-From 26eb2bffc78a6dd500aa9e07087762dff7ed4c22 Mon Sep 17 00:00:00 2001
+From 4385d5673e7c2aa6d1b1633fd14c713fc93326bb Mon Sep 17 00:00:00 2001
 From: Zoey Chung <zoey_yj_chung@wiwynn.com>
 Date: Tue, 10 Mar 2026 14:22:37 +0800
 Subject: [PATCH] i3c: master: dw-i3c-master: Fix race condition in halt/resume
@@ -28,7 +28,7 @@ Signed-off-by: Zoey Chung <zoey_yj_chung@wiwynn.com>
  1 file changed, 12 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/i3c/master/dw-i3c-master.c b/drivers/i3c/master/dw-i3c-master.c
-index 23e72651ef2a..4ae7a01f9dbf 100644
+index 0cfb8a4b4201..5f7841d6d210 100644
 --- a/drivers/i3c/master/dw-i3c-master.c
 +++ b/drivers/i3c/master/dw-i3c-master.c
 @@ -369,14 +369,14 @@ static void dw_i3c_master_enable(struct dw_i3c_master *master)

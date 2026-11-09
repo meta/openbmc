@@ -1,4 +1,4 @@
-From 259dad1c91a58a904d73245b62a7ff715ca4236f Mon Sep 17 00:00:00 2001
+From ea5fb42c72f7a1e002abe26c11ec96558685f942 Mon Sep 17 00:00:00 2001
 From: Bianca Giocas <bgiocas@arista.com>
 Date: Tue, 11 Aug 2026 14:35:00 +0000
 Subject: [PATCH] usb: gadget: aspeed-vhub: Add AST2700 support

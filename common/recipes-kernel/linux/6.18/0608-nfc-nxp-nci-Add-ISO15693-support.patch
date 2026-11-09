@@ -1,4 +1,4 @@
-From 5b2cd6b93460de3bf7952cee8f6d9c6d8b04d409 Mon Sep 17 00:00:00 2001
+From 5c7c9cef3c6050febc5e95db28667e99689aab25 Mon Sep 17 00:00:00 2001
 From: Carl Lee <carl.lee@amd.com>
 Date: Tue, 12 May 2026 17:46:09 +0800
 Subject: [PATCH] nfc: nxp-nci: Add ISO15693 support

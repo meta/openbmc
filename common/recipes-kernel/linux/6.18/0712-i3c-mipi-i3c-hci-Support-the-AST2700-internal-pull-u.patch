@@ -1,4 +1,4 @@
-From d7ff76631efc776677af84553e58f77607d6fd06 Mon Sep 17 00:00:00 2001
+From d8f7f0713aa93876b9844316eae31145a7176189 Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Tue, 1 Sep 2026 19:35:35 +0800
 Subject: [PATCH] i3c: mipi-i3c-hci: Support the AST2700 internal pull-ups

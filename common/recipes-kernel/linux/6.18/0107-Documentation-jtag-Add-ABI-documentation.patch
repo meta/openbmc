@@ -1,4 +1,4 @@
-From 47d1887da10a628d4bf3931138fd1e7b5da678eb Mon Sep 17 00:00:00 2001
+From 90e4ae8aa737f7a70fd5fb7e151e7a3455d58faa Mon Sep 17 00:00:00 2001
 From: Ernesto Corona <ernesto.corona@intel.com>
 Date: Mon, 13 Apr 2020 15:29:18 -0700
 Subject: [PATCH] Documentation: jtag: Add ABI documentation

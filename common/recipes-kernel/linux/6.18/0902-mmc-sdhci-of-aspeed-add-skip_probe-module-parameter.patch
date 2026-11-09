@@ -1,4 +1,4 @@
-From 18e7f071764b259a5cf25942fcda1d23f17f4a4b Mon Sep 17 00:00:00 2001
+From 3259cd79e11d3f5c5ae14c704cf0b412f8997a00 Mon Sep 17 00:00:00 2001
 From: Tao Ren <taoren@fb.com>
 Date: Tue, 18 Oct 2022 11:38:44 -0700
 Subject: [PATCH] mmc: sdhci-of-aspeed: add "skip_probe" module parameter
@@ -24,7 +24,7 @@ T79173094):
  1 file changed, 21 insertions(+)
 
 diff --git a/drivers/mmc/host/sdhci-of-aspeed.c b/drivers/mmc/host/sdhci-of-aspeed.c
-index ca97b01996b1..be772e56b657 100644
+index f2d133aca48d..d3c1f7fa6c48 100644
 --- a/drivers/mmc/host/sdhci-of-aspeed.c
 +++ b/drivers/mmc/host/sdhci-of-aspeed.c
 @@ -77,6 +77,22 @@ struct aspeed_sdhci {

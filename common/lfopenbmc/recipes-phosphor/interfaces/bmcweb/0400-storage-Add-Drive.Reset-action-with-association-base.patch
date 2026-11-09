@@ -1,4 +1,4 @@
-From 11c367429255cb3a98f21e65000b3e801fe9b709 Mon Sep 17 00:00:00 2001
+From c46d79abd51d5762929f5740ae7b9dd2d22fbcba Mon Sep 17 00:00:00 2001
 From: Eric Yang <eric.yang.wiwynn@gmail.com>
 Date: Thu, 23 Apr 2026 08:54:42 +0000
 Subject: [PATCH] storage: Add Drive.Reset action with association-based state
@@ -287,7 +287,7 @@ index 4b6e6b1c..df763619 100644
  
  } // namespace redfish
 diff --git a/redfish-core/lib/storage_chassis.hpp b/redfish-core/lib/storage_chassis.hpp
-index ffa4e916..60579f20 100644
+index 7fb45b97..d78ed153 100644
 --- a/redfish-core/lib/storage_chassis.hpp
 +++ b/redfish-core/lib/storage_chassis.hpp
 @@ -5,6 +5,7 @@
@@ -426,7 +426,7 @@ index ffa4e916..60579f20 100644
  inline void getDrivePresent(const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
                              const std::string& connectionName,
                              const std::string& path)
-@@ -364,6 +482,10 @@ inline void afterGetSubtreeSystemsStorageDrive(
+@@ -372,6 +490,10 @@ inline void afterGetSubtreeSystemsStorageDrive(
  
      addAllDriveInfo(asyncResp, connectionNames[0].first, path,
                      connectionNames[0].second);
@@ -438,5 +438,5 @@ index ffa4e916..60579f20 100644
  
  inline void afterChassisDriveCollectionSubtreeGet(
 -- 
-2.53.0-Meta
+2.52.0
 

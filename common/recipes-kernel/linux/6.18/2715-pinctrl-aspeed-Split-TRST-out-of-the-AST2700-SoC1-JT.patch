@@ -1,4 +1,4 @@
-From 293374793c00a280dddc302a8fe622aaa81152f0 Mon Sep 17 00:00:00 2001
+From 1cf8e959b8cd7f5ef11834092f2b364fa2b7740b Mon Sep 17 00:00:00 2001
 From: Bianca Giocas <bgiocas@arista.com>
 Date: Wed, 9 Sep 2026 14:53:13 +0000
 Subject: [PATCH] pinctrl: aspeed: Split TRST out of the AST2700 SoC1 JTAGM1

@@ -1,4 +1,4 @@
-From 8409ac3412d8c6e48557092cccb9f83f17eda9c5 Mon Sep 17 00:00:00 2001
+From a0d1d0e5069703319f8131e61bd2194a606693da Mon Sep 17 00:00:00 2001
 From: Jeremy Kerr <jk@codeconstruct.com.au>
 Date: Thu, 12 Sep 2024 14:23:57 +0800
 Subject: [PATCH] net: ncsi: check for netlink-driven responses before

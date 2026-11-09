@@ -1,4 +1,4 @@
-From 85ae9d07302281d8313f1019cd388e35e45ed2f0 Mon Sep 17 00:00:00 2001
+From 804c76012da83c36b102827c50eec8190364d9ea Mon Sep 17 00:00:00 2001
 From: Kevin Tung <kevin.tung.openbmc@gmail.com>
 Date: Mon, 5 Oct 2026 14:18:06 +0800
 Subject: [PATCH] misc: amd-apml: support APML driver

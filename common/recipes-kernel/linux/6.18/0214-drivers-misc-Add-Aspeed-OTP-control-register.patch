@@ -1,4 +1,4 @@
-From d9b724da66ddb3c286ddf14e294f113acf4060a6 Mon Sep 17 00:00:00 2001
+From 5853f0bafdcbd8b7ff82502932129a02667317f6 Mon Sep 17 00:00:00 2001
 From: Johnny Huang <johnny_huang@aspeedtech.com>
 Date: Mon, 26 Dec 2022 10:04:48 +0800
 Subject: [PATCH] drivers/misc: Add Aspeed OTP control register

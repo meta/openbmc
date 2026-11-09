@@ -1,4 +1,4 @@
-From bd3a41820d6bfae16a8c971616517d4b845a96ad Mon Sep 17 00:00:00 2001
+From c69cbc1941d05ae2a74c25c456a9d15d5883a6a8 Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Tue, 1 Sep 2026 19:35:30 +0800
 Subject: [PATCH] i3c: mipi-i3c-hci: Add a quirk for 64-bit DMA addressing

@@ -1,4 +1,4 @@
-From 8be49eeed20136394c48e2c3cd74ab59bca00d4c Mon Sep 17 00:00:00 2001
+From c33b79c8f5a48250d191cae0703c22b2e0cb74da Mon Sep 17 00:00:00 2001
 From: Tao Ren <taoren@fb.com>
 Date: Thu, 26 Sep 2019 16:03:16 -0700
 Subject: [PATCH] jffs2: suppress jffs2 messages when reading inode

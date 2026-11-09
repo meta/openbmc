@@ -1,4 +1,4 @@
-From 11bd41f48b55d4bf44a47d0d15435b9fe7b94f0d Mon Sep 17 00:00:00 2001
+From d6fb2df348231d2073a6f460d7a3f72f8428b652 Mon Sep 17 00:00:00 2001
 From: Tao Ren <taoren@meta.com>
 Date: Tue, 23 Sep 2025 17:50:53 -0700
 Subject: [PATCH] usb: gadget: f_ecm: disable suspend/resume feature

@@ -1,4 +1,4 @@
-From a3cdc36aa4280ea32c8b1f5fbe7737fd610c7c59 Mon Sep 17 00:00:00 2001
+From 48907787cfca39a87305580cbc4a08092d2caa2c Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Tue, 1 Sep 2026 19:35:31 +0800
 Subject: [PATCH] i3c: mipi-i3c-hci: Add a quirk to clear the TX start

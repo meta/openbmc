@@ -1,4 +1,4 @@
-From d5a26e5e9ce2f63b2ea8588cf2def02c8a3efa54 Mon Sep 17 00:00:00 2001
+From 029959ad7c377767657a202218cfa9442d6b09f7 Mon Sep 17 00:00:00 2001
 From: Chia-Wei Wang <chiawei_wang@aspeedtech.com>
 Date: Mon, 20 Mar 2023 16:11:32 +0800
 Subject: [PATCH] serial: 8250: Add AST2600 UART driver

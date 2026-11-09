@@ -1,4 +1,4 @@
-From 96c3da00b202c1bef778b9b1e1cc9a0bd1e1b753 Mon Sep 17 00:00:00 2001
+From e2a5a0a1fde8aa3da2c93698cc1c4740b06e6dcb Mon Sep 17 00:00:00 2001
 From: Steven Niu <steven.niu.uj@renesas.com>
 Date: Sat, 17 Feb 2024 21:14:12 +0800
 Subject: [PATCH] i3c: i3c-hub: Add Renesas RG3MxxB12A1 I3C HUB driver

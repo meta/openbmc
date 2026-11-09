@@ -1,4 +1,4 @@
-From ca781b16d55322c0a1212504a8f9a1a183fd50a9 Mon Sep 17 00:00:00 2001
+From e34d1ebed632e17d7cc04e72c59d48a310063069 Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Tue, 1 Sep 2026 19:35:32 +0800
 Subject: [PATCH] i3c: mipi-i3c-hci: Add support for the AST2700 I3C controller

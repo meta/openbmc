@@ -1,42 +1,34 @@
-From 6c29c450c8d50a0afa0d6a2d96659e9324ee8b9e Mon Sep 17 00:00:00 2001
+From 3c010984af804e990bdf9804888d0884a1a1af77 Mon Sep 17 00:00:00 2001
 From: Bianca Giocas <bgiocas@arista.com>
 Date: Thu, 16 Jul 2026 11:16:23 +0000
-Subject: [PATCH] arm64: dts: aspeed: Add AST2700 VHUBA0 node
+Subject: [PATCH] arm64: dts: aspeed: Enable TX FIFO retry quirk on AST2700
+ VHUBA0
 
-Backporting the AST2700 SoC0 VHUBA0 node from
-https://github.com/torvalds/linux/commit/e77bb5dc57593a4698aaacd57a776728cf552e73
+The VHUBA0 node this patch originally backported from
+torvalds/linux@e77bb5dc5759 is now provided by the upstream AST2700
+device tree. It lacks the aspeed,txfifo-retry-quirk property, which the
+vendor-derived aspeed-vhub AST2700 support ("usb: gadget: aspeed-vhub:
+Add AST2700 support") reads, so add it.
 
 Signed-off-by: Bianca Giocas <bgiocas@arista.com>
+[Reduced from "arm64: dts: aspeed: Add AST2700 VHUBA0 node" to the
+ quirk property when rebasing onto the upstream AST2700 device tree.]
 ---
- arch/arm64/boot/dts/aspeed/aspeed-g7-common.dtsi | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ arch/arm64/boot/dts/aspeed/aspeed-g7-soc0.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/boot/dts/aspeed/aspeed-g7-common.dtsi b/arch/arm64/boot/dts/aspeed/aspeed-g7-common.dtsi
-index 3ceb82197de4..4711628aa60c 100644
---- a/arch/arm64/boot/dts/aspeed/aspeed-g7-common.dtsi
-+++ b/arch/arm64/boot/dts/aspeed/aspeed-g7-common.dtsi
-@@ -127,6 +127,21 @@ uart4: serial@12c1a000 {
- 		no-loopback-test;
+diff --git a/arch/arm64/boot/dts/aspeed/aspeed-g7-soc0.dtsi b/arch/arm64/boot/dts/aspeed/aspeed-g7-soc0.dtsi
+index db42db2592e0..271c0082e442 100644
+--- a/arch/arm64/boot/dts/aspeed/aspeed-g7-soc0.dtsi
++++ b/arch/arm64/boot/dts/aspeed/aspeed-g7-soc0.dtsi
+@@ -69,6 +69,7 @@ vhuba0: usb-vhub@12060000 {
+ 		aspeed,vhub-generic-endpoints = <21>;
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&pinctrl_usb2ad0_default>;
++		aspeed,txfifo-retry-quirk;
  		status = "disabled";
  	};
-+
-+	vhuba0: usb-vhub@12060000 {
-+		compatible = "aspeed,ast2700-usb-vhub";
-+		reg = <0x0 0x12060000 0x0 0x820>;
-+		interrupts-extended = <&intc0 33>;
-+		clocks = <&syscon0 SCU0_CLK_GATE_PORTAUSB2CLK>;
-+		resets = <&syscon0 SCU0_RESET_PORTA_VHUB_EHCI>;
-+		aspeed,vhub-downstream-ports = <7>;
-+		aspeed,vhub-generic-endpoints = <21>;
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&pinctrl_usb2ad0_default>;
-+		aspeed,txfifo-retry-quirk;
-+		status = "disabled";
-+	};
-+
- };
  
- &soc1 {
 -- 
 2.53.0-Meta
 

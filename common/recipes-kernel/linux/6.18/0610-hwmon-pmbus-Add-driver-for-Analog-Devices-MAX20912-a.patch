@@ -1,4 +1,4 @@
-From e54f4c94c06990462a53835c202aafab69ed74a0 Mon Sep 17 00:00:00 2001
+From 73c070cbfc22610a28e161ba05f8eb0e9bfd7b07 Mon Sep 17 00:00:00 2001
 From: Fred Chen <fredchen.openbmc@gmail.com>
 Date: Tue, 7 Jul 2026 12:22:11 +0800
 Subject: [PATCH] hwmon: (pmbus) Add driver for Analog Devices MAX20912 and
@@ -196,10 +196,10 @@ index 000000000000..da1430751e93
 +
 +**power4_label**
 diff --git a/MAINTAINERS b/MAINTAINERS
-index e43eb85c2128..f4ce8464a1c5 100644
+index a59b89038f50..e9986b02caa3 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -15236,6 +15236,13 @@ S:	Maintained
+@@ -15246,6 +15246,13 @@ S:	Maintained
  F:	Documentation/hwmon/max15301.rst
  F:	drivers/hwmon/pmbus/max15301.c
  

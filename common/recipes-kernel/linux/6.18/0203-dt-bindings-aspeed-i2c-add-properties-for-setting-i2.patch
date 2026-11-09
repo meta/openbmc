@@ -1,4 +1,4 @@
-From 97afe36007b1333b116298bc23202ab2d8d7c6cd Mon Sep 17 00:00:00 2001
+From 58e3cecb852a6fa8ac77428d35c7c63c20c42f40 Mon Sep 17 00:00:00 2001
 From: Potin Lai <potin.lai.pt@gmail.com>
 Date: Wed, 1 Jun 2022 10:10:37 +0800
 Subject: [PATCH] dt-bindings: aspeed-i2c: add properties for setting i2c clock

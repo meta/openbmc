@@ -1,4 +1,4 @@
-From 11fbebcd4dd1f67a1578055ba46a318acf4ef0f4 Mon Sep 17 00:00:00 2001
+From d7ebe1c77b8d4333446f835411196443518a86da Mon Sep 17 00:00:00 2001
 From: Bianca Giocas <bgiocas@arista.com>
 Date: Tue, 1 Sep 2026 00:00:00 +0000
 Subject: [PATCH] arm64: dts: aspeed: Add AST2700 128MB flash layout

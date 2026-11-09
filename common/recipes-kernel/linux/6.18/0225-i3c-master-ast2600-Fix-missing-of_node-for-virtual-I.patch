@@ -1,4 +1,4 @@
-From d937cea328d37171e13ee4ae995afc3ea76a1711 Mon Sep 17 00:00:00 2001
+From 87a8648bdf72c4d0a864e5b95f70f5d90b5b4fa8 Mon Sep 17 00:00:00 2001
 From: Peter Yin <peter.yin@quantatw.com>
 Date: Wed, 25 Feb 2026 15:19:35 +0800
 Subject: [PATCH] i3c: master: ast2600: Fix missing of_node for virtual I2C

@@ -1,4 +1,4 @@
-From 341b4fa74657adbb7c5bd0ef973d3230b3ce4f10 Mon Sep 17 00:00:00 2001
+From c6e23c6859427bf62c7fa28b659384e5ea1fa30a Mon Sep 17 00:00:00 2001
 From: Adrian Hunter <adrian.hunter@intel.com>
 Date: Fri, 6 Mar 2026 09:24:44 +0200
 Subject: [PATCH] i3c: mipi-i3c-hci: Fix race between DMA ring dequeue and

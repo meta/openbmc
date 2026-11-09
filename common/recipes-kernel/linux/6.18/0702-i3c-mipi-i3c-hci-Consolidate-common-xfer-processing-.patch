@@ -1,4 +1,4 @@
-From 886dbf5a1ee6b1bf8b55cadfaadac605094ca84a Mon Sep 17 00:00:00 2001
+From 0feb90dd1480d6cca9783ec817dbff50720083ac Mon Sep 17 00:00:00 2001
 From: Adrian Hunter <adrian.hunter@intel.com>
 Date: Fri, 6 Mar 2026 09:24:48 +0200
 Subject: [PATCH] i3c: mipi-i3c-hci: Consolidate common xfer processing logic

@@ -1,4 +1,4 @@
-From 42a3e0f1abe30722ae5230942d00d4262528f623 Mon Sep 17 00:00:00 2001
+From baea3007f673cc4d91c406b55242decc0f9d2437 Mon Sep 17 00:00:00 2001
 From: Igor Kanyuka <ifelmail@gmail.com>
 Date: Wed, 26 Mar 2025 16:20:54 +0000
 Subject: [PATCH] Show mapped and raw Dbus messages in Log services
@@ -102,5 +102,5 @@ index b005bb59..1ef3ff61 100644
          objectToFillOut["Message"] = entry.Message;
          if ((entry.Resolution != nullptr) && !entry.Resolution->empty())
 -- 
-2.53.0-Meta
+2.52.0
 

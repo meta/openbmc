@@ -1,4 +1,4 @@
-From f3f1a5c1223ca02d245437db7256fa1cb600c2d6 Mon Sep 17 00:00:00 2001
+From e3114bf9e5e4efcbebdb068dba5f2d7528fcd325 Mon Sep 17 00:00:00 2001
 From: Adrian Hunter <adrian.hunter@intel.com>
 Date: Wed, 3 Jun 2026 12:07:46 +0300
 Subject: [PATCH] i3c: mipi-i3c-hci: Add DMA ring abort/reset quirk for Intel
@@ -51,7 +51,7 @@ index 2f61c7aa97f8..3e1a17d0731e 100644
  void mipi_i3c_hci_dct_index_reset(struct i3c_hci *hci)
  {
 diff --git a/drivers/i3c/master/mipi-i3c-hci/dma.c b/drivers/i3c/master/mipi-i3c-hci/dma.c
-index 516c14b99c2b..e4d820e7a901 100644
+index b6607a22e3ae..08f6a6ec3339 100644
 --- a/drivers/i3c/master/mipi-i3c-hci/dma.c
 +++ b/drivers/i3c/master/mipi-i3c-hci/dma.c
 @@ -506,6 +506,10 @@ static bool hci_dma_dequeue_xfer(struct i3c_hci *hci,

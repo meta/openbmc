@@ -1,4 +1,4 @@
-From 3ad4522d1ce50bcf1bbb74d051e9dbbb4a4a87ca Mon Sep 17 00:00:00 2001
+From 717e9f544030465a4a86272640aba98046f39245 Mon Sep 17 00:00:00 2001
 From: YikaiTsai-wiwynn <yikai_tsai@wiwynn.com>
 Date: Tue, 29 Oct 2024 09:43:50 +0800
 Subject: [PATCH] Add ASPEED AST2600 I2Cv2 controller driver

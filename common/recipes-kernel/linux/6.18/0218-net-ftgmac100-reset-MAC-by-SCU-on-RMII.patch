@@ -1,4 +1,4 @@
-From a4faf04b51730326f6e854b02ddbfa30f1f1f914 Mon Sep 17 00:00:00 2001
+From a131e20f7366b2f6c86e62bd8697431b15efd260 Mon Sep 17 00:00:00 2001
 From: Jacky Chou <jacky_chou@aspeedtech.com>
 Date: Tue, 29 Apr 2025 18:27:38 +0800
 Subject: [PATCH] net: ftgmac100: reset MAC by SCU on RMII
@@ -14,7 +14,7 @@ Change-Id: I130487c2dcfb3890b7629ff2946f68f0feb808a7
  1 file changed, 4 insertions(+)
 
 diff --git a/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi b/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi
-index e8d3b2ae8e4f..63bf8b7f3ce2 100644
+index 7a8948c72001..b35b2390c98a 100644
 --- a/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi
 +++ b/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi
 @@ -250,6 +250,7 @@ mac0: ethernet@1e660000 {

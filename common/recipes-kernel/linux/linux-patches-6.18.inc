@@ -60,10 +60,6 @@ SRC_URI:append = " \
     file://0225-i3c-master-ast2600-Fix-missing-of_node-for-virtual-I.patch \
     file://0226-i3c-dw-Improve-IBI-queue-handling-when-encountering-.patch \
     file://0227-i3c-master-dw-i3c-master-Fix-race-condition-in-halt-.patch \
-    file://0228-watchdog-aspeed-Support-variable-number-of-reset-mas.patch \
-    file://0229-watchdog-aspeed-Add-support-for-AST2700-platform.patch \
-    file://0230-spi-aspeed-Use-phys_addr_t-for-bus-addresses-to-supp.patch \
-    file://0231-spi-aspeed-Add-support-for-the-AST2700-SPI-controlle.patch \
     file://0232-gpio-aspeed-sgpio-Create-llops-to-handle-hardware-ac.patch \
     file://0233-gpio-aspeed-sgpio-Convert-IRQ-functions-to-use-llops.patch \
     file://0234-gpio-aspeed-sgpio-Support-G7-Aspeed-sgpiom-controlle.patch \
@@ -153,13 +149,6 @@ SRC_URI:append = " \
 # for basic SOC to be merged they dont yet have LORE Links
 #
 SRC_URI:append = " \
-    file://2700-clk-aspeed-add-AST2700-clock-driver.patch \
-    file://2701-arm64-Kconfig-Add-ASPEED-SoC-family-Kconfig-support.patch \
-    file://2702-arm64-dts-aspeed-Add-initial-AST27xx-SoC-device-tree.patch \
-    file://2703-irqchip-ast2700-intc-Add-AST2700-A2-support.patch \
-    file://2704-pinctrl-aspeed-Add-AST2700-SoC1-support.patch \
-    file://2705-pinctrl-aspeed-Add-AST2700-SoC0-support.patch \
-    file://2706-arm64-dts-aspeed-add-pinctrl-definitions-for-G7-plat.patch \
     file://2707-arm64-dts-aspeed-add-peripheral-nodes-for-G7-platfor.patch \
     file://2708-pinctrl-aspeed-Fix-GPIO-mux-value-for-ADC-capable-ba.patch \
     file://2709-usb-host-ehci-platform-add-ASPEED-AST2700-support.patch \

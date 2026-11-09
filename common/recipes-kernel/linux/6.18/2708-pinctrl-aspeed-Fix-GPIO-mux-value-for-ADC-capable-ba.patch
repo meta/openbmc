@@ -1,4 +1,4 @@
-From 2319e8b62ca47033f5be3c35b1060c5672984f47 Mon Sep 17 00:00:00 2001
+From 4b667df254d1466ef350e286bfcd65690885a1a3 Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Fri, 5 Jun 2026 14:38:09 +0800
 Subject: [PATCH] pinctrl: aspeed: Fix GPIO mux value for ADC-capable balls

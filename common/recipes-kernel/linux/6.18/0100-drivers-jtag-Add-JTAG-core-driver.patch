@@ -1,4 +1,4 @@
-From 479378f1caaaedc07cbe6031e6473238720d3570 Mon Sep 17 00:00:00 2001
+From e10c40661ee10e1a8194187ccfb16499a073023a Mon Sep 17 00:00:00 2001
 From: Ernesto Corona <ernesto.corona@intel.com>
 Date: Mon, 13 Apr 2020 15:29:15 -0700
 Subject: [PATCH] drivers: jtag: Add JTAG core driver

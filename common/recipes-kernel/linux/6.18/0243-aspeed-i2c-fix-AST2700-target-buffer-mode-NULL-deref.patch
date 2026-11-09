@@ -1,4 +1,4 @@
-From e803d00b9f0b03479e880d39a17db45122e7fb35 Mon Sep 17 00:00:00 2001
+From 1ccaf01c01d5c6641fdde7fef19745da927c7695 Mon Sep 17 00:00:00 2001
 From: Alan Tsai <alan-tsai@quantatw.com>
 Date: Thu, 3 Sep 2026 14:28:59 +0800
 Subject: [PATCH] aspeed: i2c: fix AST2700 target buffer mode NULL dereference
@@ -27,7 +27,7 @@ pointer dereference.
  1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/i2c/busses/i2c-ast2600.c b/drivers/i2c/busses/i2c-ast2600.c
-index 772bd9fc4..da7ab72e4 100644
+index 772bd9fc48ee..da7ab72e428e 100644
 --- a/drivers/i2c/busses/i2c-ast2600.c
 +++ b/drivers/i2c/busses/i2c-ast2600.c
 @@ -1320,8 +1320,8 @@ static void ast2700_i2c_target_packet_buff_irq(struct ast2600_i2c_bus *i2c_bus,

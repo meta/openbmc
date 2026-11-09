@@ -1,4 +1,4 @@
-From 215186489f7fdfc54585b81fff3ea993c9e0b514 Mon Sep 17 00:00:00 2001
+From 83ede800f807383bb7d45ba469c39e335cfb5f7a Mon Sep 17 00:00:00 2001
 From: Delphine CC Chiu <Delphine_CC_Chiu@wiwynn.com>
 Date: Wed, 1 Nov 2023 18:18:29 +0800
 Subject: [PATCH] hwmon: max31790: add fanN_enable for all fans

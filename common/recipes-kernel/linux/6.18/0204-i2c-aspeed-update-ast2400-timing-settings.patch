@@ -1,4 +1,4 @@
-From b7ba98cbe8dcae1428b9cec78e2d81eedd2c772c Mon Sep 17 00:00:00 2001
+From 5333e99ea3d34a1ea6c6c5cb56d4a84517e1947d Mon Sep 17 00:00:00 2001
 From: Tao Ren <taoren@fb.com>
 Date: Wed, 21 Apr 2021 16:20:34 -0700
 Subject: [PATCH] i2c: aspeed: update ast2400 timing settings

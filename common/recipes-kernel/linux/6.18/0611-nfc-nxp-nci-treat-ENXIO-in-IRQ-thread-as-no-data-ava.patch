@@ -1,4 +1,4 @@
-From 2e680e823627f6a9bc080eb9870197bac889c4d1 Mon Sep 17 00:00:00 2001
+From 5ba109b61fdb8a2882869a7c1c268fa2bf53ee2b Mon Sep 17 00:00:00 2001
 From: Carl Lee <carl.lee@amd.com>
 Date: Wed, 20 May 2026 18:23:56 +0800
 Subject: [PATCH] nfc: nxp-nci: treat -ENXIO in IRQ thread as no data available

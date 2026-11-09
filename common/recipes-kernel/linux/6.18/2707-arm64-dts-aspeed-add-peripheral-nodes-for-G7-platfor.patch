@@ -1,4 +1,4 @@
-From daac25344eb0bb16ad2cca5ff2c9035d825dbed0 Mon Sep 17 00:00:00 2001
+From 9d598a0bfd13da440f2d4eb0f65fd6fe462e13ba Mon Sep 17 00:00:00 2001
 From: Cosmo Chou <cosmo.chou@quantatw.com>
 Date: Thu, 16 Apr 2026 09:49:37 +0800
 Subject: [PATCH] arm64: dts: aspeed: add peripheral nodes for G7 platforms
@@ -7,39 +7,111 @@ Add device tree nodes for peripherals in AST2700, including SGPIOM,
 I2C, I3C, OTP, UDMA, FMC/SPI, MAC, ADC, LPC, and WDT.
 
 Signed-off-by: Cosmo Chou <cosmo.chou@quantatw.com>
+[Rebased onto the upstream AST2700 device tree: the nodes now live in
+ aspeed-g7-soc1.dtsi. Upstream already provides the SGPIOM, FMC/SPI,
+ ADC and WDT nodes, so for those only the local additions are kept:
+ sgpiom0 pinctrl, the spi2 flash children and aspeed,scu on adc0/adc1.]
 ---
- .../boot/dts/aspeed/aspeed-g7-common.dtsi     | 772 ++++++++++++++++++
- 1 file changed, 772 insertions(+)
+ .../arm64/boot/dts/aspeed/aspeed-g7-soc1.dtsi | 616 ++++++++++++++++++
+ 1 file changed, 616 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/aspeed/aspeed-g7-common.dtsi b/arch/arm64/boot/dts/aspeed/aspeed-g7-common.dtsi
-index 2a6f80a255aa..c6b261f2fd90 100644
---- a/arch/arm64/boot/dts/aspeed/aspeed-g7-common.dtsi
-+++ b/arch/arm64/boot/dts/aspeed/aspeed-g7-common.dtsi
-@@ -165,6 +165,22 @@ gpio1: gpio@14c0b000 {
- 		#interrupt-cells = <2>;
+diff --git a/arch/arm64/boot/dts/aspeed/aspeed-g7-soc1.dtsi b/arch/arm64/boot/dts/aspeed/aspeed-g7-soc1.dtsi
+index bc990f79e693..709edcaa3e2a 100644
+--- a/arch/arm64/boot/dts/aspeed/aspeed-g7-soc1.dtsi
++++ b/arch/arm64/boot/dts/aspeed/aspeed-g7-soc1.dtsi
+@@ -109,6 +109,22 @@ spi2: spi@14030000 {
+ 		interrupts-extended = <&intc1 124>;
+ 		num-cs = <2>;
+ 		status = "disabled";
++
++		flash@0 {
++			reg = < 0 >;
++			compatible = "jedec,spi-nor";
++			spi-max-frequency = <50000000>;
++			spi-rx-bus-width = <2>;
++			status = "disabled";
++		};
++
++		flash@1 {
++			reg = < 1 >;
++			compatible = "jedec,spi-nor";
++			spi-max-frequency = <50000000>;
++			spi-rx-bus-width = <2>;
++			status = "disabled";
++		};
  	};
  
-+	sgpiom0: sgpiom@14c0c000 {
-+		#gpio-cells = <2>;
-+		gpio-controller;
-+		compatible = "aspeed,ast2700-sgpiom";
-+		reg = <0x0 0x14c0c000 0x0 0x100>;
-+		interrupts-extended = <&intc1 85>;
-+		clocks = <&syscon1 SCU1_CLK_APB>;
-+		interrupt-controller;
-+		#interrupt-cells = <2>;
-+		ngpios = <256>;
-+		bus-frequency = <12000000>;
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&pinctrl_sgpm0_default>;
+ 	mdio0: mdio@14040000 {
+@@ -138,6 +154,26 @@ mdio2: mdio@14040010 {
+ 		status = "disabled";
+ 	};
+ 
++	mac0: ethernet@14050000 {
++		compatible = "aspeed,ast2700-mac", "faraday,ftgmac100";
++		reg = <0x0 0x14050000 0x0 0x200>;
++		interrupts-extended = <&intc1 128>;
++		clocks = <&syscon1 SCU1_CLK_GATE_MAC0CLK>;
++		resets = <&syscon1 SCU1_RESET_MAC0>;
++		aspeed,scu = <&syscon1>;
 +		status = "disabled";
 +	};
 +
- 	intc1: interrupt-controller@14c18000 {
- 		compatible = "aspeed,ast2700-intc1";
- 		reg = <0 0x14c18000 0 0x400>;
-@@ -180,6 +196,246 @@ intc1: interrupt-controller@14c18000 {
- 			<50 1 &bootmcu_intc 0>; /* only 1 pin to BootMCU */
++	mac1: ethernet@14060000 {
++		compatible = "aspeed,ast2700-mac", "faraday,ftgmac100";
++		reg = <0x0 0x14060000 0x0 0x200>;
++		interrupts-extended = <&intc1 129>;
++		clocks = <&syscon1 SCU1_CLK_GATE_MAC1CLK>;
++		resets = <&syscon1 SCU1_RESET_MAC1>;
++		aspeed,scu = <&syscon1>;
++		status = "disabled";
++	};
++
+ 	sdio_controller: sdc@14080000 {
+ 		compatible = "aspeed,ast2700-sd-controller", "aspeed,ast2600-sd-controller";
+ 		reg = <0 0x14080000 0 0x100>;
+@@ -247,6 +283,7 @@ adc0: adc@14c00000 {
+ 		resets = <&syscon1 SCU1_RESET_ADC>;
+ 		interrupts-extended = <&intc1 80>;
+ 		#io-channel-cells = <1>;
++		aspeed,scu = <&syscon1>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -257,6 +294,7 @@ adc1: adc@14c00100 {
+ 		resets = <&syscon1 SCU1_RESET_ADC>;
+ 		interrupts-extended = <&intc1 80>;
+ 		#io-channel-cells = <1>;
++		aspeed,scu = <&syscon1>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -291,6 +329,15 @@ pinctrl1: pinctrl@400 {
+ 		};
+ 	};
+ 
++	otp: otp@14c07000 {
++		compatible = "aspeed,ast2700-otp";
++		reg = <0 0x14c07000 0 0x1000>;
++		interrupts-extended = <&intc1 168>;
++		aspeed,scu0 = <&syscon0>;
++		aspeed,scu1 = <&syscon1>;
++		status = "disabled";
++	};
++
+ 	gpio1: gpio@14c0b000 {
+ 		#gpio-cells = <2>;
+ 		gpio-controller;
+@@ -315,6 +362,8 @@ sgpiom0: sgpiom@14c0c000 {
+ 		interrupt-controller;
+ 		#interrupt-cells = <2>;
+ 		bus-frequency = <12000000>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_sgpm0_default>;
+ 		status = "disabled";
+ 	};
+ 
+@@ -332,6 +381,22 @@ sgpiom1: sgpiom@14c0d000 {
+ 		status = "disabled";
  	};
  
 +	i2c: bus@14c0f000 {
@@ -49,6 +121,22 @@ index 2a6f80a255aa..c6b261f2fd90 100644
 +		ranges = <0x0 0x0 0x14c0f000 0x1100>;
 +	};
 +
++	udma: uart-dma@14c12000 {
++		compatible = "aspeed,ast2700-udma";
++		reg = <0x0 0x14c12000 0x0 0x1000>;
++		interrupts-extended = <&intc1 147>;
++		dma-channels = <32>;
++		#dma-cells = <1>;
++		status = "disabled";
++	};
++
+ 	intc1: interrupt-controller@14c18000 {
+ 		compatible = "aspeed,ast2700-intc1";
+ 		reg = <0 0x14c18000 0 0x400>;
+@@ -347,6 +412,294 @@ intc1: interrupt-controller@14c18000 {
+ 			<50 1 &bootmcu_hlic 11>; /* only 1 pin to BootMCU */
+ 	};
+ 
 +	i3c0: i3c@14c20000 {
 +		compatible = "aspeed,ast2700-i3c-hci";
 +		#address-cells = <3>;
@@ -273,190 +361,6 @@ index 2a6f80a255aa..c6b261f2fd90 100644
 +		status = "disabled";
 +	};
 +
-+	otp: otp@14c07000 {
-+		compatible = "aspeed,ast2700-otp";
-+		reg = <0 0x14c07000 0 0x1000>;
-+		interrupts-extended = <&intc1 168>;
-+		aspeed,scu0 = <&syscon0>;
-+		aspeed,scu1 = <&syscon1>;
-+		status = "disabled";
-+	};
-+
- 	uart0: serial@14c33000 {
- 		compatible = "ns16550a";
- 		reg = <0x0 0x14c33000 0x0 0x100>;
-@@ -333,6 +589,522 @@ uart14: serial@14c33d00 {
- 		no-loopback-test;
- 		status = "disabled";
- 	};
-+
-+	udma: uart-dma@14c12000 {
-+		compatible = "aspeed,ast2700-udma";
-+		reg = <0x0 0x14c12000 0x0 0x1000>;
-+		interrupts-extended = <&intc1 147>;
-+		dma-channels = <32>;
-+		#dma-cells = <1>;
-+		status = "disabled";
-+	};
-+
-+	fmc: spi@14000000 {
-+		reg = <0x0 0x14000000 0x0 0xc4>, <0x1 0x00000000 0x0 0x80000000>;
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+		compatible = "aspeed,ast2700-fmc";
-+		clocks = <&syscon1 SCU1_CLK_AHB>;
-+		interrupts-extended = <&intc1 121>;
-+		status = "disabled";
-+		num-cs = <3>;
-+
-+		flash@0 {
-+			reg = < 0 >;
-+			compatible = "jedec,spi-nor";
-+			spi-max-frequency = <50000000>;
-+			spi-rx-bus-width = <2>;
-+			status = "disabled";
-+		};
-+
-+		flash@1 {
-+			reg = < 1 >;
-+			compatible = "jedec,spi-nor";
-+			spi-max-frequency = <50000000>;
-+			spi-rx-bus-width = <2>;
-+			status = "disabled";
-+		};
-+
-+		flash@2 {
-+			reg = < 2 >;
-+			compatible = "jedec,spi-nor";
-+			spi-max-frequency = <50000000>;
-+			spi-rx-bus-width = <2>;
-+			status = "disabled";
-+		};
-+	};
-+
-+	spi0: spi@14010000 {
-+		reg = <0x0 0x14010000 0x0 0xc4>, <0x1 0x80000000 0x0 0x80000000>;
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+		compatible = "aspeed,ast2700-spi";
-+		clocks = <&syscon1 SCU1_CLK_AHB>;
-+		interrupts-extended = <&intc1 122>;
-+		status = "disabled";
-+		num-cs = <2>;
-+
-+		flash@0 {
-+			reg = < 0 >;
-+			compatible = "jedec,spi-nor";
-+			spi-max-frequency = <50000000>;
-+			spi-rx-bus-width = <2>;
-+			status = "disabled";
-+		};
-+
-+		flash@1 {
-+			reg = < 1 >;
-+			compatible = "jedec,spi-nor";
-+			spi-max-frequency = <50000000>;
-+			spi-rx-bus-width = <2>;
-+			status = "disabled";
-+		};
-+	};
-+
-+	spi1: spi@14020000 {
-+		reg = <0x0 0x14020000 0x0 0xc4>, <0x2 0x00000000 0x0 0x80000000>;
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+		compatible = "aspeed,ast2700-spi";
-+		clocks = <&syscon1 SCU1_CLK_AHB>;
-+		interrupts-extended = <&intc1 123>;
-+		status = "disabled";
-+		num-cs = <2>;
-+
-+		flash@0 {
-+			reg = < 0 >;
-+			compatible = "jedec,spi-nor";
-+			spi-max-frequency = <50000000>;
-+			spi-rx-bus-width = <2>;
-+			status = "disabled";
-+		};
-+
-+		flash@1 {
-+			reg = < 1 >;
-+			compatible = "jedec,spi-nor";
-+			spi-max-frequency = <50000000>;
-+			spi-rx-bus-width = <2>;
-+			status = "disabled";
-+		};
-+	};
-+
-+	spi2: spi@14030000 {
-+		reg = <0x0 0x14030000 0x0 0x1f0>, <0x2 0x80000000 0x0 0x80000000>;
-+		#address-cells = <1>;
-+		#size-cells = <0>;
-+		compatible = "aspeed,ast2700-spi";
-+		clocks = <&syscon1 SCU1_CLK_AHB>;
-+		interrupts-extended = <&intc1 124>;
-+		status = "disabled";
-+		num-cs = <2>;
-+
-+		flash@0 {
-+			reg = < 0 >;
-+			compatible = "jedec,spi-nor";
-+			spi-max-frequency = <50000000>;
-+			spi-rx-bus-width = <2>;
-+			status = "disabled";
-+		};
-+
-+		flash@1 {
-+			reg = < 1 >;
-+			compatible = "jedec,spi-nor";
-+			spi-max-frequency = <50000000>;
-+			spi-rx-bus-width = <2>;
-+			status = "disabled";
-+		};
-+	};
-+
-+	mac0: ethernet@14050000 {
-+		compatible = "aspeed,ast2700-mac", "faraday,ftgmac100";
-+		reg = <0x0 0x14050000 0x0 0x200>;
-+		interrupts-extended = <&intc1 128>;
-+		clocks = <&syscon1 SCU1_CLK_GATE_MAC0CLK>;
-+		resets = <&syscon1 SCU1_RESET_MAC0>;
-+		aspeed,scu = <&syscon1>;
-+		status = "disabled";
-+	};
-+
-+	mac1: ethernet@14060000 {
-+		compatible = "aspeed,ast2700-mac", "faraday,ftgmac100";
-+		reg = <0x0 0x14060000 0x0 0x200>;
-+		interrupts-extended = <&intc1 129>;
-+		clocks = <&syscon1 SCU1_CLK_GATE_MAC1CLK>;
-+		resets = <&syscon1 SCU1_RESET_MAC1>;
-+		aspeed,scu = <&syscon1>;
-+		status = "disabled";
-+	};
-+
-+	adc0: adc@14c00000 {
-+		compatible = "aspeed,ast2700-adc0";
-+		reg = <0x0 0x14c00000 0 0x100>;
-+		clocks = <&syscon1 SCU1_CLK_AHB>;
-+		resets = <&syscon1 SCU1_RESET_ADC>;
-+		interrupts-extended = <&intc1 80>;
-+		#io-channel-cells = <1>;
-+		aspeed,scu = <&syscon1>;
-+		status = "disabled";
-+	};
-+
-+	adc1: adc@14c00100 {
-+		compatible = "aspeed,ast2700-adc1";
-+		reg = <0x0 0x14c00100 0x0 0x100>;
-+		clocks = <&syscon1 SCU1_CLK_AHB>;
-+		resets = <&syscon1 SCU1_RESET_ADC>;
-+		interrupts-extended = <&intc1 80>;
-+		#io-channel-cells = <1>;
-+		aspeed,scu = <&syscon1>;
-+		status = "disabled";
-+	};
-+
 +	lpc0: lpc@14c31000 {
 +		compatible = "aspeed,ast2600-lpc-v2", "simple-mfd", "syscon";
 +		reg = <0x0 0x14c31000 0x0 0x1000>;
@@ -521,31 +425,13 @@ index 2a6f80a255aa..c6b261f2fd90 100644
 +		};
 +	};
 +
-+	wdt0: watchdog@14c37000 {
-+		compatible = "aspeed,ast2700-wdt";
-+		reg = <0x0 0x14c37000 0x0 0x80>;
-+	};
-+
-+	wdt1: watchdog@14c37080 {
-+		compatible = "aspeed,ast2700-wdt";
-+		reg = <0x0 0x14c37080 0x0 0x80>;
-+	};
-+
-+	wdt2: watchdog@14c37100 {
-+		compatible = "aspeed,ast2700-wdt";
-+		reg = <0x0 0x14c37100 0x0 0x80>;
-+		status = "disabled";
-+	};
-+
-+	wdt3: watchdog@14c37180 {
-+		compatible = "aspeed,ast2700-wdt";
-+		reg = <0x0 0x14c37180 0x0 0x80>;
-+		status = "disabled";
-+	};
+ 	uart0: serial@14c33000 {
+ 		compatible = "ns16550a";
+ 		reg = <0x0 0x14c33000 0x0 0x100>;
+@@ -554,4 +907,267 @@ fsim1: fsi@23800000 {
+ 	};
  };
  
- #include "aspeed-g7-pinctrl.dtsi"
-+
 +&i2c {
 +	i2c_global: i2c-global-regs@0 {
 +		compatible = "aspeed,i2c-global", "simple-mfd", "syscon";
@@ -808,6 +694,8 @@ index 2a6f80a255aa..c6b261f2fd90 100644
 +		status = "disabled";
 +	};
 +};
++
+ #include "aspeed-g7-soc1-pinctrl.dtsi"
 -- 
 2.52.0
 

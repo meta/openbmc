@@ -1,4 +1,4 @@
-From 39a9c22dbc0a9743a198e7f6cffe31f80d65d5ab Mon Sep 17 00:00:00 2001
+From 69450a2d1f4da81dc313b9a09d4d81886b40d2d3 Mon Sep 17 00:00:00 2001
 From: Tao Ren <taoren@fb.com>
 Date: Thu, 13 Oct 2022 03:38:28 -0700
 Subject: [PATCH] fixup jtag patch series

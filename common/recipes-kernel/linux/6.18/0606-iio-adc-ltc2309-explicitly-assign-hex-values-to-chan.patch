@@ -1,4 +1,4 @@
-From 6e34e3fd5d4f0bae33cfbbc6d9139eb3708ffa7c Mon Sep 17 00:00:00 2001
+From 720afad46680785067cd98f3921b6361d84fb294 Mon Sep 17 00:00:00 2001
 From: Kyle Hsieh <kylehsieh1995@gmail.com>
 Date: Wed, 25 Mar 2026 10:05:23 +0800
 Subject: [PATCH] iio: adc: ltc2309: explicitly assign hex values to channel

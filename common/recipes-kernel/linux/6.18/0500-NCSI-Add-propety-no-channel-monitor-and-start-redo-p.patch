@@ -1,4 +1,4 @@
-From cbfe79421cc5e389c523606e5a1150dcf51a850a Mon Sep 17 00:00:00 2001
+From 96d04b1734624d7302ae0954a5526c6169e5914e Mon Sep 17 00:00:00 2001
 From: Delphine CC Chiu <Delphine_CC_Chiu@wiwynn.com>
 Date: Tue, 2 Jan 2024 17:50:00 +0800
 Subject: [PATCH] NCSI: Add propety : no-channel-monitor and start-redo-probe

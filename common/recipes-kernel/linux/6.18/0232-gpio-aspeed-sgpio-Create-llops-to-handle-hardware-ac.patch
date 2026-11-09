@@ -1,4 +1,4 @@
-From 1b2fe3c412c7638b4ae92bf20908d342c3f931f2 Mon Sep 17 00:00:00 2001
+From 5d500e2148d4e537e8cac23906bc50c07eae436c Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Fri, 23 Jan 2026 17:26:28 +0800
 Subject: [PATCH] gpio: aspeed-sgpio: Create llops to handle hardware access

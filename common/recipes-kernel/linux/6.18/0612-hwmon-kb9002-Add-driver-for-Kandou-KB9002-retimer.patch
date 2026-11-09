@@ -1,4 +1,4 @@
-From cae72ed69d971db3e924036bcc388a5cd5d51ce6 Mon Sep 17 00:00:00 2001
+From fc7111743f2fca3989c8112fe3122de3bc218d81 Mon Sep 17 00:00:00 2001
 From: Andy Chung <Andy.Chung@amd.com>
 Date: Thu, 16 Jul 2026 14:08:59 +0800
 Subject: [PATCH] hwmon: (kb9002) Add driver for Kandou KB9002 retimer

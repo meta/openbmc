@@ -1,4 +1,4 @@
-From c0efb5d4786c5767d5272d39f9f21a2e66e84ef2 Mon Sep 17 00:00:00 2001
+From ff809de713c8e32cefb3c8780e7546b936dc98ea Mon Sep 17 00:00:00 2001
 From: Dylan Hung <dylan_hung@aspeedtech.com>
 Date: Mon, 29 Apr 2024 17:37:38 +0800
 Subject: [PATCH] ARM: dts: aspeed-g6: Add AST2600 I3Cs
@@ -15,7 +15,7 @@ Change-Id: I1a1d2fddb574a543cfc3b3b6741547d573197d87
  1 file changed, 68 insertions(+)
 
 diff --git a/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi b/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi
-index 7f0a89e9ab5f..c1d0ba5ed76e 100644
+index d2a6bfb65b9d..6241ba0092c3 100644
 --- a/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi
 +++ b/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi
 @@ -13,6 +13,12 @@ / {

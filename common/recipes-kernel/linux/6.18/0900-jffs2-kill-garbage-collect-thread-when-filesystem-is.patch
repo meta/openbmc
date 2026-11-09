@@ -1,4 +1,4 @@
-From 38065bfcc94a74b27a47fe4bf9ad53d770ec4013 Mon Sep 17 00:00:00 2001
+From 05bcbd531cb1d87b503433160493db2a54015beb Mon Sep 17 00:00:00 2001
 From: Tao Ren <taoren@fb.com>
 Date: Thu, 22 Aug 2019 17:07:24 -0700
 Subject: [PATCH] jffs2: kill garbage collect thread when filesystem is

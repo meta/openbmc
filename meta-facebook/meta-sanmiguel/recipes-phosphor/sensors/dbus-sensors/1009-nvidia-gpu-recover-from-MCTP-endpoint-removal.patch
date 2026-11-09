@@ -1,4 +1,4 @@
-From 41a6371710b891e40460e4cd5036fc341dac7964 Mon Sep 17 00:00:00 2001
+From 1548f0e9d1c0385f79de60f30929868017a673f3 Mon Sep 17 00:00:00 2001
 From: Ender Hsieh <andhsieh@nvidia.com>
 Date: Mon, 29 Jun 2026 14:23:40 +0900
 Subject: [PATCH] nvidia-gpu: recover from MCTP endpoint removal
@@ -83,7 +83,7 @@ Signed-off-by: Ender Hsieh <andhsieh@nvidia.com>
  8 files changed, 353 insertions(+), 21 deletions(-)
 
 diff --git a/src/nvidia-gpu/DeviceManager.cpp b/src/nvidia-gpu/DeviceManager.cpp
-index b9e3725..598b13a 100644
+index acf95ac..7baadc2 100644
 --- a/src/nvidia-gpu/DeviceManager.cpp
 +++ b/src/nvidia-gpu/DeviceManager.cpp
 @@ -23,6 +23,7 @@
@@ -494,7 +494,7 @@ index d5e0924..e798dfc 100644
      void processResponse(const std::error_code& ec,
                           std::span<const uint8_t> buffer);
 diff --git a/src/nvidia-gpu/NvidiaSmaDevice.cpp b/src/nvidia-gpu/NvidiaSmaDevice.cpp
-index 8db42c1..2e4019b 100644
+index e04d2c7..7852f40 100644
 --- a/src/nvidia-gpu/NvidiaSmaDevice.cpp
 +++ b/src/nvidia-gpu/NvidiaSmaDevice.cpp
 @@ -45,6 +45,7 @@ SmaDevice::SmaDevice(const SensorConfigs& configs, const std::string& name,
@@ -559,7 +559,7 @@ index 8db42c1..2e4019b 100644
  void SmaDevice::setOffline()
  {
 +    setFunctional(false);
-     waitTimer.cancel();
+     waitTimerPriority.cancel();
      tempSensor->markFunctional(false);
  }
  
@@ -567,7 +567,7 @@ index 8db42c1..2e4019b 100644
  {
 +    setFunctional(true);
      tempSensor->markFunctional(true);
-     read();
+     readPriority();
  }
  
 +void SmaDevice::setEid(uint8_t newEid)
@@ -579,11 +579,11 @@ index 8db42c1..2e4019b 100644
 +    }
 +}
 +
- void SmaDevice::read()
+ void SmaDevice::readPriority()
  {
      tempSensor->update();
 diff --git a/src/nvidia-gpu/NvidiaSmaDevice.hpp b/src/nvidia-gpu/NvidiaSmaDevice.hpp
-index 18b1c7c..e5a2fb9 100644
+index 4d6642b..961c07e 100644
 --- a/src/nvidia-gpu/NvidiaSmaDevice.hpp
 +++ b/src/nvidia-gpu/NvidiaSmaDevice.hpp
 @@ -48,6 +48,8 @@ class SmaDevice : public std::enable_shared_from_this<SmaDevice>
@@ -607,7 +607,7 @@ index 18b1c7c..e5a2fb9 100644
 +    // offline (Degraded/Recovering/Removed).
 +    void setFunctional(bool functional);
 +
-     void read();
+     void readPriority();
  
      uint8_t eid{};
 @@ -74,9 +84,19 @@ class SmaDevice : public std::enable_shared_from_this<SmaDevice>
@@ -681,5 +681,5 @@ index c17c208..6a6cea8 100644
 +    EXPECT_EQ(available.action, EndpointAction::None);
 +}
 -- 
-2.53.0-Meta
+2.52.0
 

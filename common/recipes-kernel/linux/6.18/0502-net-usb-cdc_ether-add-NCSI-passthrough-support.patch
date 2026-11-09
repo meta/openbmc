@@ -1,4 +1,4 @@
-From c8e136c56f2305c4def56b11c19b674f25371c60 Mon Sep 17 00:00:00 2001
+From 7355f31c766c9d27f05f460a981cd4989f2471c1 Mon Sep 17 00:00:00 2001
 From: Adrian Ambrozewicz <aambrozewicz@nvidia.com>
 Date: Sat, 24 Jan 2026 00:26:06 +0000
 Subject: [PATCH] net: usb: cdc_ether: add NCSI passthrough support

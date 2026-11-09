@@ -1,4 +1,4 @@
-From 09119295fc1c7e0b054191c0ac551e15408a3c5a Mon Sep 17 00:00:00 2001
+From dcd407427259bffa0d1c64d68e753927467d0261 Mon Sep 17 00:00:00 2001
 From: Chia-Wei Wang <chiawei_wang@aspeedtech.com>
 Date: Mon, 20 Mar 2023 16:11:33 +0800
 Subject: [PATCH] ARM: dts: aspeed-g6: Add UDMA node
@@ -11,7 +11,7 @@ Signed-off-by: Chia-Wei Wang <chiawei_wang@aspeedtech.com>
  1 file changed, 9 insertions(+)
 
 diff --git a/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi b/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi
-index 8f44e0e200a8..e8d3b2ae8e4f 100644
+index 2673cc964356..7a8948c72001 100644
 --- a/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi
 +++ b/arch/arm/boot/dts/aspeed/aspeed-g6.dtsi
 @@ -1316,6 +1316,15 @@ otp: otp@1e6f2000 {

@@ -1,4 +1,4 @@
-From 4f4512a28d346922d5f6d8246998c7e2d334dae0 Mon Sep 17 00:00:00 2001
+From 8197d99b64cb70cbf3661092e05edc18453be4e4 Mon Sep 17 00:00:00 2001
 From: Cosmo Chou <cosmo.chou@quantatw.com>
 Date: Wed, 22 May 2024 01:36:37 +0800
 Subject: [PATCH] net/ncsi: specify maximum package to probe

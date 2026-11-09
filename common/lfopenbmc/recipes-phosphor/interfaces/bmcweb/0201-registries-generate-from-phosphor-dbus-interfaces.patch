@@ -1,4 +1,4 @@
-From a9257cde1e0238c4f83fb49f10eb0ea6f9d85415 Mon Sep 17 00:00:00 2001
+From 644e8d088146ce8e041fa57ce6f4027b7b1a5811 Mon Sep 17 00:00:00 2001
 From: Patrick Williams <patrick@stwcx.xyz>
 Date: Thu, 27 Feb 2025 22:13:03 -0500
 Subject: [PATCH] registries: generate from phosphor-dbus-interfaces
@@ -126,5 +126,5 @@ index 00000000..935a8b25
 +url = https://github.com/openbmc/phosphor-dbus-interfaces.git
 +revision = HEAD
 -- 
-2.53.0-Meta
+2.52.0
 

@@ -1,4 +1,4 @@
-From de18fe8c348e0cc19c22f10668c46020ed7f8545 Mon Sep 17 00:00:00 2001
+From 589b8f817147a6c3e22150c8fdaf58d6037e338f Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Tue, 1 Sep 2026 19:35:29 +0800
 Subject: [PATCH] i3c: mipi-i3c-hci: Support address-indexed DAT slots

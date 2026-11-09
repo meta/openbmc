@@ -1,4 +1,4 @@
-From 17cce0a54ec78091528e0c599a69c4011e94b7da Mon Sep 17 00:00:00 2001
+From 13a4878f089e41bc50a61392db44cc90057c2d35 Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Fri, 21 Nov 2025 18:32:59 +0800
 Subject: [PATCH] i3c: dw: Handle unexpected responses caused by SDA noise

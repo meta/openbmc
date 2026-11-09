@@ -1,4 +1,4 @@
-From 76f9c70d60d25a40ea6c86bc7aa946af010b20bd Mon Sep 17 00:00:00 2001
+From 28476edcaf4c5665d8467cd628b907b1ab151b16 Mon Sep 17 00:00:00 2001
 From: Kyle Hsieh <kylehsieh1995@gmail.com>
 Date: Wed, 25 Mar 2026 10:09:28 +0800
 Subject: [PATCH] iio: adc: ltc2309: add support for ltc2305

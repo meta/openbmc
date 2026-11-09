@@ -1,4 +1,4 @@
-From fea56ad5cd9d5ec27de3a0e82b7b60eed8077849 Mon Sep 17 00:00:00 2001
+From 40fc22de4b4261e6b656012ffea1bba543ed734d Mon Sep 17 00:00:00 2001
 From: Jae Hyun Yoo <jae.hyun.yoo@linux.intel.com>
 Date: Tue, 13 Sep 2022 08:56:54 -0700
 Subject: [PATCH] i2c: aspeed: add i2c slave inactive timeout support

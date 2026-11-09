@@ -1,4 +1,4 @@
-From 5f809f6994f145bff8e0457e44c2b669a31cd379 Mon Sep 17 00:00:00 2001
+From dfbd557a4336aa9382bcb1cc4701c61e6cf45769 Mon Sep 17 00:00:00 2001
 From: Adrian Hunter <adrian.hunter@intel.com>
 Date: Fri, 6 Mar 2026 09:24:42 +0200
 Subject: [PATCH] i3c: mipi-i3c-hci: Fix race in DMA ring enqueue for parallel
@@ -30,7 +30,7 @@ Signed-off-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
  1 file changed, 17 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/i3c/master/mipi-i3c-hci/dma.c b/drivers/i3c/master/mipi-i3c-hci/dma.c
-index 34c21a56a25d..775c62fe85ee 100644
+index 37717e530a25..bfff538cccbe 100644
 --- a/drivers/i3c/master/mipi-i3c-hci/dma.c
 +++ b/drivers/i3c/master/mipi-i3c-hci/dma.c
 @@ -131,7 +131,7 @@ struct hci_rh_data {

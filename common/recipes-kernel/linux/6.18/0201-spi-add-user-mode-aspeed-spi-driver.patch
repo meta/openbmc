@@ -1,4 +1,4 @@
-From 9ec97d4aaca58196ad43867c0fe6b457da74f290 Mon Sep 17 00:00:00 2001
+From 8a9615ce91629d33b55458ed0b2dc302c541b95a Mon Sep 17 00:00:00 2001
 From: Tao Ren <taoren@fb.com>
 Date: Mon, 9 May 2022 22:55:21 -0700
 Subject: [PATCH] spi: add user-mode aspeed spi driver

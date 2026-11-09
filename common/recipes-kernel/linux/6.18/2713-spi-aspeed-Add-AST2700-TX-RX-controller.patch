@@ -1,4 +1,4 @@
-From b41f8d226af4e434557ae62f38cff33be293ece5 Mon Sep 17 00:00:00 2001
+From da99c079275cf7b45b0bac5a081d641e7bbea43f Mon Sep 17 00:00:00 2001
 From: Bianca Giocas <bgiocas@arista.com>
 Date: Tue, 1 Sep 2026 10:26:13 +0000
 Subject: [PATCH] spi: aspeed: Add AST2700 TX/RX controller

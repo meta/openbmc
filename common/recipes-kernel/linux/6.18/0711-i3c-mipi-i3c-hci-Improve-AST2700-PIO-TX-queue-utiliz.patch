@@ -1,4 +1,4 @@
-From 75cc1dc9eac43012fe1a631fa12b90959bc8196c Mon Sep 17 00:00:00 2001
+From 2126eaaa2b53fb81ae7a287b4fb8c5f6ed6c0df2 Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Tue, 1 Sep 2026 19:35:34 +0800
 Subject: [PATCH] i3c: mipi-i3c-hci: Improve AST2700 PIO TX queue utilization
@@ -26,7 +26,7 @@ Link: https://lore.kernel.org/r/20260901-b4-i3c-hci-ast2700-v1-7-19909e7cbd7e@as
  3 files changed, 38 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/i3c/master/mipi-i3c-hci/pio.c b/drivers/i3c/master/mipi-i3c-hci/pio.c
-index 830bb209b40c..02ec8c1c9700 100644
+index 1df43177daf0..00d3dd45ef1e 100644
 --- a/drivers/i3c/master/mipi-i3c-hci/pio.c
 +++ b/drivers/i3c/master/mipi-i3c-hci/pio.c
 @@ -15,6 +15,7 @@

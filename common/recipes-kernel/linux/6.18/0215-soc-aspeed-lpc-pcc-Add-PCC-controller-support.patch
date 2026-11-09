@@ -1,4 +1,4 @@
-From 95c57f764dad5bb14766a237af8c413e45b5a4d9 Mon Sep 17 00:00:00 2001
+From 633ac41b48fe520a5a505e88a0ab627ff1199989 Mon Sep 17 00:00:00 2001
 From: Kevin Chen <kevin_chen@aspeedtech.com>
 Date: Fri, 14 Mar 2025 19:21:13 +0800
 Subject: [PATCH] soc: aspeed: lpc-pcc: Add PCC controller support

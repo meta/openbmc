@@ -1,4 +1,4 @@
-From 801515a56690c8eb31a8883d1e5a71db8eb222b3 Mon Sep 17 00:00:00 2001
+From be0fa81d7475d1fdd4e36be4dc51e2fd505ff800 Mon Sep 17 00:00:00 2001
 From: Ernesto Corona <ernesto.corona@intel.com>
 Date: Mon, 13 Apr 2020 15:29:17 -0700
 Subject: [PATCH] Add Aspeed SoC 24xx and 25xx families JTAG master driver

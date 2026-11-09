@@ -1,4 +1,4 @@
-From 74d499ff54620c5bbb219e93befbfd6085b07fbf Mon Sep 17 00:00:00 2001
+From 2a218fa778d74ecf7a48e429c5ad0ef2e9896861 Mon Sep 17 00:00:00 2001
 From: Zoey Chung <zoey_yj_chung@wiwynn.com>
 Date: Mon, 18 Aug 2025 18:20:47 +0800
 Subject: [PATCH] i3c: dw: Add err messages for ibi_fifo_clear handling

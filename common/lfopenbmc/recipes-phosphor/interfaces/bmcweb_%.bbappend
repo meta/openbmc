@@ -19,12 +19,11 @@ EXTRA_OEMESON:append = " -Dhttp2=disabled"
 EXTRA_OEMESON:append = " -Dredfish-allow-dbus-messages-mapping=enabled"
 # Patches for PDI-generated Redfish Message Registries
 SRC_URI:append = " \
-    file://0200-registries-generate-registries_selector.hpp.patch \
-    file://0201-Add-generation-for-Vendor-registries-and-a-DBus-to-R.patch \
-    file://0202-registries-generate-from-phosphor-dbus-interfaces.patch \
-    file://0203-Add-required-MemberId-to-the-EventRecord-definition.patch \
-    file://0204-Map-DBus-event-to-RF-MessageID-and-parse-args.patch \
-    file://0205-Show-mapped-and-raw-Dbus-messages-in-Log-services.patch \
+    file://0200-Add-generation-for-Vendor-registries-and-a-DBus-to-R.patch \
+    file://0201-registries-generate-from-phosphor-dbus-interfaces.patch \
+    file://0202-Add-required-MemberId-to-the-EventRecord-definition.patch \
+    file://0203-Map-DBus-event-to-RF-MessageID-and-parse-args.patch \
+    file://0204-Show-mapped-and-raw-Dbus-messages-in-Log-services.patch \
 "
 
 # Dependency variables for PDI-generated Redfish Message Registries

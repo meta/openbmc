@@ -1,4 +1,4 @@
-From bf48d50388101bfee52d8b968fabc8dcfa029923 Mon Sep 17 00:00:00 2001
+From 75e4d82a60337bf5ad2c1506d9c14e60a08d5683 Mon Sep 17 00:00:00 2001
 From: Adrian Ambrozewicz <aambrozewicz@nvidia.com>
 Date: Thu, 29 Jan 2026 12:47:30 +0000
 Subject: [PATCH] net/ncsi: fix use-after-free in ncsi_unregister_dev()

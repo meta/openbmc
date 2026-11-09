@@ -1,4 +1,4 @@
-From 1d1bb9e5c7cdbf3f0ea17d3afda0bcd1a006ce22 Mon Sep 17 00:00:00 2001
+From 5c99936a94b0e95c333446b62664b3752d1248f1 Mon Sep 17 00:00:00 2001
 From: Igor Kanyuka <ifelmail@gmail.com>
 Date: Tue, 11 Mar 2025 12:10:57 +0000
 Subject: [PATCH] Add required MemberId to the EventRecord definition
@@ -66,5 +66,5 @@ index 8704580f..6bd28a8e 100644
          eventId++;
      }
 -- 
-2.53.0-Meta
+2.52.0
 

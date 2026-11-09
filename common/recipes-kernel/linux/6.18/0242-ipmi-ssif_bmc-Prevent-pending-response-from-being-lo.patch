@@ -1,4 +1,4 @@
-From 29966393c2b5285f19d24066bd7da08f3b4c5467 Mon Sep 17 00:00:00 2001
+From 480c65ccf9179359aca86827817c7ff05598edce Mon Sep 17 00:00:00 2001
 From: Alan Tsai <alan-tsai@quantatw.com>
 Date: Fri, 21 Aug 2026 08:04:37 +0800
 Subject: [PATCH] ipmi: ssif_bmc: Prevent pending response from being lost

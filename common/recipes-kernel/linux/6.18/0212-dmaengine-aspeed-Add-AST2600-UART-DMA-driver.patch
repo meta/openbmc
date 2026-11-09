@@ -1,4 +1,4 @@
-From 9f705c63d96d1731747e5c209a5f65235dda2ce8 Mon Sep 17 00:00:00 2001
+From 4223df88c979b11b9d21a2d8b4dcb95320d4debb Mon Sep 17 00:00:00 2001
 From: Chia-Wei Wang <chiawei_wang@aspeedtech.com>
 Date: Mon, 20 Mar 2023 16:11:31 +0800
 Subject: [PATCH] dmaengine: aspeed: Add AST2600 UART DMA driver

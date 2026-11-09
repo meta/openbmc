@@ -1,4 +1,4 @@
-From 39c2170b2ea3b4a437e9e4d61912c572e7d9c457 Mon Sep 17 00:00:00 2001
+From c31c7c07b25473830ba09129e76c7024796a2b0a Mon Sep 17 00:00:00 2001
 From: Fred Chen <fredchen.openbmc@gmail.com>
 Date: Tue, 7 Jul 2026 11:04:01 +0800
 Subject: [PATCH] dt-bindings: trivial-devices: Add adi max20912 and max20916

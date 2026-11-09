@@ -1,4 +1,4 @@
-From 7734c287037a72bf5809a9ea05f10400f6b54d49 Mon Sep 17 00:00:00 2001
+From b4286ffc2f823fd17971e9a05c1f92e7a8764ee3 Mon Sep 17 00:00:00 2001
 From: Tao Ren <taoren@fb.com>
 Date: Mon, 11 May 2020 13:51:25 -0700
 Subject: [PATCH] ARM: dts: aspeed-g5: add jtag controller

@@ -1,4 +1,4 @@
-From 24d76e58fb1185c6a821d3b505748dfdcec3e789 Mon Sep 17 00:00:00 2001
+From 22d0970536af821caaa41e15e0ae0070b634e321 Mon Sep 17 00:00:00 2001
 From: Ernesto Corona <ernesto.corona@intel.com>
 Date: Mon, 13 Apr 2020 15:29:16 -0700
 Subject: [PATCH] dt-binding: jtag: Aspeed 2400 and 2500 series

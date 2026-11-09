@@ -1,4 +1,4 @@
-From 6389c287758a90e221853a47a3c78737bb334e36 Mon Sep 17 00:00:00 2001
+From 069e8f466464098080e2df09a4de6c0f296008c5 Mon Sep 17 00:00:00 2001
 From: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
 Date: Wed, 4 Feb 2026 15:05:26 +0800
 Subject: [PATCH] hwmon: pmbus: tda38640: Add identification for

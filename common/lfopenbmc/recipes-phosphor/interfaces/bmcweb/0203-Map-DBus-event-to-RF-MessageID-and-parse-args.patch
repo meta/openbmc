@@ -1,4 +1,4 @@
-From c85a81a360e703b8b75557e84447717e328ae3c4 Mon Sep 17 00:00:00 2001
+From a64cd690e6aa817d42d0a4678edb775e9d758f08 Mon Sep 17 00:00:00 2001
 From: Igor Kanyuka <ifelmail@gmail.com>
 Date: Mon, 24 Feb 2025 15:59:10 +0000
 Subject: [PATCH] Map DBus event to RF MessageID and parse args
@@ -1140,5 +1140,5 @@ index 00000000..c98a1cae
 +}
 +} // namespace redfish
 -- 
-2.53.0-Meta
+2.52.0
 

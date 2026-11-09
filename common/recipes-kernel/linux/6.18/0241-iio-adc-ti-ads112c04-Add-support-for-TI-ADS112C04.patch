@@ -1,4 +1,4 @@
-From 5cecc129a8cf620824d5a120639b984b8f3a1dc6 Mon Sep 17 00:00:00 2001
+From 229c4abccd10c859d0b1438436587a8b060ed78d Mon Sep 17 00:00:00 2001
 From: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
 Date: Fri, 21 Aug 2026 15:01:30 +0800
 Subject: [PATCH] iio: adc: ti-ads112c04: Add support for TI ADS112C04

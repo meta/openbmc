@@ -1,4 +1,4 @@
-From 18d7482c4ff36070759d728fc1d83ade90bfd7ec Mon Sep 17 00:00:00 2001
+From cd3fec9cd102c3157ffbbe9fe62ff18ce4452860 Mon Sep 17 00:00:00 2001
 From: Michael Garner <garnermic@fb.com>
 Date: Tue, 21 Jun 2022 15:13:30 -0700
 Subject: [PATCH] i2c: add a slave backend to receive and queue messages

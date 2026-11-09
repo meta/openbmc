@@ -1,4 +1,4 @@
-From b67a1153b1a158a898d8d6adc22dfcd5ea609dd9 Mon Sep 17 00:00:00 2001
+From 7454bea00d9ffca52cbe6ef1e72bf40483fd10bf Mon Sep 17 00:00:00 2001
 From: Lakshay Piplani <lakshay.piplani@nxp.com>
 Date: Mon, 14 Sep 2026 19:45:37 +0530
 Subject: [PATCH] rtc: Add NXP PCF85053 driver support
@@ -27,10 +27,10 @@ Signed-off-by: Lakshay Piplani <lakshay.piplani@nxp.com>
  create mode 100644 drivers/rtc/rtc-pcf85053.c
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index b6dcaf9fa6d2..b0392b165504 100644
+index 540fa298024c..fb8d7d7a7501 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -18736,6 +18736,14 @@ S:	Maintained
+@@ -18746,6 +18746,14 @@ S:	Maintained
  F:	Documentation/devicetree/bindings/extcon/extcon-ptn5150.yaml
  F:	drivers/extcon/extcon-ptn5150.c
  

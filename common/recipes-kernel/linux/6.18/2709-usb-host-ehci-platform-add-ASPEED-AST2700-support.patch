@@ -1,4 +1,4 @@
-From d6ca405b4481ba711f8b73401df65ad115f5f212 Mon Sep 17 00:00:00 2001
+From bd63d537e8593291ae553892b1d4f5c29c5fecf2 Mon Sep 17 00:00:00 2001
 From: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
 Date: Mon, 22 Jun 2026 09:54:24 +0800
 Subject: [PATCH] usb: host: ehci-platform: add ASPEED AST2700 support
@@ -14,7 +14,7 @@ Signed-off-by: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
  1 file changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/usb/host/ehci-platform.c b/drivers/usb/host/ehci-platform.c
-index 6aab45c85..5e7af830a 100644
+index 6aab45c8525c..5e7af830a071 100644
 --- a/drivers/usb/host/ehci-platform.c
 +++ b/drivers/usb/host/ehci-platform.c
 @@ -27,6 +27,7 @@

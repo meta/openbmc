@@ -1,4 +1,4 @@
-From e5231128293475c36130a9327ba2d09845904e6a Mon Sep 17 00:00:00 2001
+From 685a58dcd793d20ceee0bec00c01dc90c6cd5444 Mon Sep 17 00:00:00 2001
 From: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
 Date: Fri, 21 Aug 2026 14:59:55 +0800
 Subject: [PATCH] dt-bindings: iio: adc: ti,ads112c04: Add binding for

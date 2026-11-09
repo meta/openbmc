@@ -1,4 +1,4 @@
-From b73b0808e642d41fb702b1ac3d97e7a98722f0f0 Mon Sep 17 00:00:00 2001
+From bce17db80367b84f90c9ffc7ca469388c9d6a842 Mon Sep 17 00:00:00 2001
 From: Jacky Chou <jacky_chou@aspeedtech.com>
 Date: Wed, 1 Oct 2025 18:42:40 +0800
 Subject: [PATCH] net: ftgmac100: add support for AST2700

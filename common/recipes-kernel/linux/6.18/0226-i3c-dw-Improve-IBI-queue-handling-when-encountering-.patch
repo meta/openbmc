@@ -1,4 +1,4 @@
-From 0bf6e5d727c440a0ee840a710041c701909d4346 Mon Sep 17 00:00:00 2001
+From 01e194685e24804222d4a932d83c7b23b02f7ce2 Mon Sep 17 00:00:00 2001
 From: Zoey Chung <zoey_yj_chung@wiwynn.com>
 Date: Tue, 10 Mar 2026 14:16:35 +0800
 Subject: [PATCH] i3c: dw: Improve IBI queue handling when encountering

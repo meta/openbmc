@@ -22,4 +22,5 @@ IMAGE_INSTALL += " \
   ssifd \
   oob-switch-util \
   fbmc-snapshot \
+  host-recovery \
   "

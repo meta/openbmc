@@ -17,7 +17,19 @@
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 
+# shellcheck disable=SC1091
+. /usr/local/bin/openbmc-utils.sh
+
 #
-# Create "pwrcpld" and scm/chassis EEPROMs.
+# Create mcbcpld as early as possible so the driver can be attached to
+# the device when power-on.service is triggered.
 #
-echo "FIXME: instantiate I2C client devices in setup_i2c.sh!!"
+modprobe mcbcpld
+i2c_device_add 1 0x60 mcbcpld
+
+# FRU IDPROMs
+if i2cget -y -f 14 0x56 > /dev/null 2>&1; then
+    i2c_device_add 14 0x56 24c64    # SCM IDPROM
+fi
+
+i2c_device_add 6 0x53 24c64     # Chassis EEPROM

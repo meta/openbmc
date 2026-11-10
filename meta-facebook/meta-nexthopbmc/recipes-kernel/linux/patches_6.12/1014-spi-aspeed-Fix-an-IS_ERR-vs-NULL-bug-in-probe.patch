@@ -1,0 +1,38 @@
+From 6738a15a80467e70f5b0aab284f435850ca3e3bc Mon Sep 17 00:00:00 2001
+From: Dan Carpenter <dan.carpenter@linaro.org>
+Date: Fri, 17 Oct 2025 19:04:34 +0300
+Subject: [PATCH 6/7] spi: aspeed: Fix an IS_ERR() vs NULL bug in probe()
+
+The platform_get_resource() function doesn't return error pointers, it
+returns NULL on error.  Update the error checking to match.
+
+Fixes: 64d87ccfae33 ("spi: aspeed: Only map necessary address window region")
+Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
+Link: https://patch.msgid.link/aPJpEnfK31pHz8_w@stanley.mountain
+Signed-off-by: Mark Brown <broonie@kernel.org>
+
+(cherry picked from commit 0cc08c8130ac8f74419f99fe707dc193b7f79d86)
+Signed-off-by: Nate White <nate@nexthop.ai>
+---
+ drivers/spi/spi-aspeed-smc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/spi/spi-aspeed-smc.c b/drivers/spi/spi-aspeed-smc.c
+index b1198e7..37031fe 100644
+--- a/drivers/spi/spi-aspeed-smc.c
++++ b/drivers/spi/spi-aspeed-smc.c
+@@ -874,9 +874,9 @@ static int aspeed_spi_probe(struct platform_device *pdev)
+ 		return PTR_ERR(aspi->regs);
+ 
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+-	if (IS_ERR(res)) {
++	if (!res) {
+ 		dev_err(dev, "missing AHB memory\n");
+-		return PTR_ERR(res);
++		return -EINVAL;
+ 	}
+ 
+ 	aspi->ahb_window_size = resource_size(res);
+-- 
+2.43.0
+

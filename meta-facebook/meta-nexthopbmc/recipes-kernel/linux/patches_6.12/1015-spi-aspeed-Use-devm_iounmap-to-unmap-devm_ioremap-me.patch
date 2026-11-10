@@ -1,0 +1,42 @@
+From 2fbf45f3cda331739bbecbdfbdebc2fb8109c3ca Mon Sep 17 00:00:00 2001
+From: Chin-Ting Kuo <chin-ting_kuo@aspeedtech.com>
+Date: Wed, 5 Nov 2025 16:49:52 +0800
+Subject: [PATCH 7/7] spi: aspeed: Use devm_iounmap() to unmap devm_ioremap()
+ memory
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The AHB IO memory for each chip select is mapped using
+devm_ioremap(), so it should be unmapped using devm_iounmap()
+to ensure proper device-managed resource cleanup.
+
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202510292356.JnTUBxCl-lkp@intel.com/
+Signed-off-by: Chin-Ting Kuo <chin-ting_kuo@aspeedtech.com>
+Reviewed-by: Cédric Le Goater <clg@redhat.com>
+Link: https://patch.msgid.link/20251105084952.1063489-1-chin-ting_kuo@aspeedtech.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+
+(cherry picked from commit 2f538ef9f6f7c3d700c68536f21447dfc598f8c8)
+Signed-off-by: Nate White <nate@nexthop.ai>
+---
+ drivers/spi/spi-aspeed-smc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/spi/spi-aspeed-smc.c b/drivers/spi/spi-aspeed-smc.c
+index 37031fe..49a83a6 100644
+--- a/drivers/spi/spi-aspeed-smc.c
++++ b/drivers/spi/spi-aspeed-smc.c
+@@ -405,7 +405,7 @@ static int aspeed_spi_set_window(struct aspeed_spi *aspi)
+ 
+ 	for (cs = 0; cs < aspi->data->max_cs; cs++) {
+ 		if (aspi->chips[cs].ahb_base) {
+-			iounmap(aspi->chips[cs].ahb_base);
++			devm_iounmap(dev, aspi->chips[cs].ahb_base);
+ 			aspi->chips[cs].ahb_base = NULL;
+ 		}
+ 	}
+-- 
+2.43.0
+

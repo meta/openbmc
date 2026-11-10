@@ -1,0 +1,63 @@
+From: Nate White <nate@nexthop.ai>
+Date: Mon, 31 Aug 2026 16:00:00 +0000
+Subject: [PATCH] ARM: dts: aspeed: fblite-r1: add BIOS flash on SPI1 CS1
+
+The CPU BIOS SPI flash is reachable from the BMC on SPI1 chip-select 1
+(behind the CPU FPGA mux). Add a jedec,spi-nor node for it so it shows
+up as an MTD device, and enable the SPI1CS1 pin group.
+
+SPI1 on the AST2620 sits on the GPIOZ strap pins, which carry internal
+pull-downs on A2/A3 silicon (SCU638[15:8]). Together with the external
+4.7k strap pull-down, the one on GPIOZ5 (SPI1 MISO, ball AA11) loads the
+level-translated MISO from the CPU card enough to corrupt every array
+read of the BIOS flash while RDID still succeeds. Add a bias-disable
+pinconf for the SPI1 pins to the spi1 pinctrl state. Straps are latched
+at reset, before this applies, so strap values are unchanged. GPIOZ2
+(WP#, AE10) is omitted: external pull-up, no pinconf entry in the driver.
+
+Pin the flash node to single-IO, which is all the CPU FPGA mux passes,
+and request fast read so the controller uses FAST_READ4B with dummy
+cycles.
+
+Co-authored-by: Jack Cai <jack@nexthop.ai>
+---
+ arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
+diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
+--- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
++++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
+@@ -119,3 +119,33 @@
+ 		spi-rx-bus-width = <1>;
+ 	};
+ };
++
++&pinctrl {
++	/*
++	 * SPI1 sits on the GPIOZ strap pins, which carry internal pull-downs on
++	 * AST2620 A2/A3. They load the level-translated MISO from the CPU card
++	 * enough to corrupt BIOS flash reads. Straps are latched at reset, so
++	 * dropping the pull-downs afterwards is safe. GPIOZ2 (WP#, AE10) has
++	 * an external pull-up and no pinconf entry in the driver.
++	 */
++	pinctrl_spi1_nopd: spi1-nopd {
++		pins = "AC10", "AD10", "AB11", "AC11", "AA11", "AD11", "AF10";
++		bias-disable;
++	};
++};
++
++&spi1 {
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_spi1_default &pinctrl_spi1cs1_default &pinctrl_spi1_nopd>;
++
++	flash@1 {
++		status = "okay";
++		compatible = "jedec,spi-nor";
++		reg = <1>;
++		spi-max-frequency = <10000000>;
++		spi-tx-bus-width = <1>;
++		spi-rx-bus-width = <1>;
++		m25p,fast-read;
++		label = "bios";
++	};
++};

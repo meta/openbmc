@@ -26,6 +26,7 @@ PLAT_DISTRO_OVERRIDES=(
 # master rolling-release platforms
   meta-acctonbmc:lf-master
   meta-anacapa:lf-master
+  meta-aristabmc:lf-master
   meta-bletchley15:lf-master
   meta-bletchley:lf-master
   meta-catalina:lf-master

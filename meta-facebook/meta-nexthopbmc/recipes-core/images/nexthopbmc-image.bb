@@ -20,4 +20,6 @@ require recipes-core/images/fboss-lite-image.inc
 IMAGE_INSTALL += " \
   apml \
   ssifd \
+  oob-switch-util \
+  fbmc-snapshot \
   "

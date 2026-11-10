@@ -1,0 +1,34 @@
+From 6996789fc755e272dc7001485ff195be1a7863f1 Mon Sep 17 00:00:00 2001
+From: Nate White <nate@nexthop.ai>
+Date: Thu, 5 Nov 2026 16:21:12 +0000
+Subject: [PATCH] ARM: dts: aspeed: fblite-r1: enable MDIO3
+
+The nexthopbmc board manages its out-of-band Ethernet switch over
+MDIO3, whose pins are shared with I2C11, so disable I2C11 and enable
+mdio3 in place of mdio1.
+---
+ .../arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
+index 60ffe06..a70f6c8 100644
+--- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
++++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
+@@ -27,7 +27,7 @@
+ };
+ 
+ &i2c11 {
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &lpc_ctrl {
+@@ -69,7 +69,7 @@
+ 	};
+ };
+ 
+-&mdio1 {
++&mdio3 {
+ 	status = "okay";
+ };
+ 

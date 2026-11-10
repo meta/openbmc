@@ -26,6 +26,7 @@ SRC_URI:append = " \
     file://1003-ARM-dts-aspeed-fblite-r1-fix-usb-device.patch \
     file://1004-ARM-dts-aspeed-fblite-r1-Add-ssif.patch \
     file://1005-i2c-aspeed-Acknowledge-Tx-ack-late-when-in-SLAVE_REA.patch \
+    file://1006-ARM-dts-aspeed-fblite-r1-enable-MDIO3.patch \
 "
 
 # The host CPU's SB-RMI (rev 0x10) only answers 1-byte register addresses.

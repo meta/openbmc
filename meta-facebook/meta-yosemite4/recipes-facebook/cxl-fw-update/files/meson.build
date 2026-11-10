@@ -19,5 +19,6 @@ src = [
 executable(
   'cxl-fw-update',
   src,
+  dependencies: [dependency('sdbusplus')],
   install: true,
 )

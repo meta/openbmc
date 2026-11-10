@@ -1,4 +1,4 @@
-From 132cd02389db7c713d473d801e4d8dc4a106d126 Mon Sep 17 00:00:00 2001
+From 0d31b21181d7ab058120633160743d5c95d085d8 Mon Sep 17 00:00:00 2001
 From: Carl Lee <carl.lee@amd.com>
 Date: Mon, 19 Oct 2026 11:42:17 +0800
 Subject: [PATCH] platform-mc: Add option to control terminus D-Bus objects

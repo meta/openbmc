@@ -1,4 +1,4 @@
-From 66195cf4b95f64097a5c671ddc678ce7d07391a5 Mon Sep 17 00:00:00 2001
+From 06305941b893007a5cf2a41bc37d4c98148d24b9 Mon Sep 17 00:00:00 2001
 From: Colin Huang <colin.huang2@amd.com>
 Date: Tue, 18 Aug 2026 11:46:06 +0800
 Subject: [PATCH] PSUSensor: add TDA38725 and TDA38740 support
@@ -21,10 +21,10 @@ Signed-off-by: Colin Huang <colin.huang2@amd.com>
  1 file changed, 2 insertions(+)
 
 diff --git a/src/psu/PSUSensorMain.cpp b/src/psu/PSUSensorMain.cpp
-index 3df3761..9ad91d3 100644
+index 4b5cb9a..5f2280b 100644
 --- a/src/psu/PSUSensorMain.cpp
 +++ b/src/psu/PSUSensorMain.cpp
-@@ -159,6 +159,8 @@ static constexpr auto sensorTypes = std::to_array<
+@@ -163,6 +163,8 @@ static constexpr auto sensorTypes = std::to_array<
      {"smpro_hwmon", I2CDeviceType{"smpro", false}},
      {"SY24655", I2CDeviceType{"sy24655", true}},
      {"TDA38640", I2CDeviceType{"tda38640", true}},
@@ -33,3 +33,6 @@ index 3df3761..9ad91d3 100644
      {"TPS25990", I2CDeviceType{"tps25990", true}},
      {"TPS53679", I2CDeviceType{"tps53679", true}},
      {"TPS546D24", I2CDeviceType{"tps546d24", true}},
+-- 
+2.53.0-Meta
+

@@ -1,4 +1,4 @@
-From bce17db80367b84f90c9ffc7ca469388c9d6a842 Mon Sep 17 00:00:00 2001
+From d927a6e3f2b23321b4e9dabbcea8f0f0aa811059 Mon Sep 17 00:00:00 2001
 From: Jacky Chou <jacky_chou@aspeedtech.com>
 Date: Wed, 1 Oct 2025 18:42:40 +0800
 Subject: [PATCH] net: ftgmac100: add support for AST2700
@@ -316,5 +316,5 @@ index 4968f6f0bdbc..f8c30a09ddca 100644
 +#define FTGMAC100_RXDES2_RXBUF_BADR_HI	GENMASK(18, 16)
  #endif /* __FTGMAC100_H */
 -- 
-2.52.0
+2.53.0-Meta
 

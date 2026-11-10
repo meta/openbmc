@@ -1,4 +1,4 @@
-From b68e6ab615ffead5dc515caae16d1aa4302517b6 Mon Sep 17 00:00:00 2001
+From 47a26d6cb5ffee98ddb2d3d9c682adfff8f7038c Mon Sep 17 00:00:00 2001
 From: Peter Delevoryas <peter@pjd.dev>
 Date: Thu, 5 Jan 2023 01:13:45 -0800
 Subject: [PATCH] hw/misc: Add byte-by-byte i2c network device
@@ -282,7 +282,7 @@ index 0000000000..1c7f7449cb
 +
 +type_init(register_types);
 diff --git a/hw/misc/meson.build b/hw/misc/meson.build
-index 2b70fdd5d6..f0f9f212af 100644
+index e8501d3a60..064e15e320 100644
 --- a/hw/misc/meson.build
 +++ b/hw/misc/meson.build
 @@ -159,7 +159,7 @@ system_ss.add(when: 'CONFIG_NRF51_SOC', if_true: files('nrf51_rng.c'))
@@ -544,10 +544,10 @@ index 0000000000..aaf8c85427
 +    return ret;
 +}
 diff --git a/tests/qtest/meson.build b/tests/qtest/meson.build
-index 46d4fc1d2b..c0c5f21d1c 100644
+index 7994696086..02690f23f8 100644
 --- a/tests/qtest/meson.build
 +++ b/tests/qtest/meson.build
-@@ -232,6 +232,7 @@ qtests_npcm8xx = \
+@@ -235,6 +235,7 @@ qtests_npcm8xx = \
  qtests_aspeed = \
    ['aspeed-acry-test',
     'aspeed_gpio-test',

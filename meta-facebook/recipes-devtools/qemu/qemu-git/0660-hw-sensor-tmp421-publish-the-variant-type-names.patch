@@ -1,7 +1,7 @@
-From f39e2c35f82abe1e6b2e94c087b982fb7c90e248 Mon Sep 17 00:00:00 2001
+From ceafc47e2f4565846aff9cd384ffdaee7893b189 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 18:02:29 +0200
-Subject: [PATCH 48/70] hw/sensor: tmp421: publish the variant type names
+Subject: [PATCH] hw/sensor: tmp421: publish the variant type names
 
 Move TYPE_TMP421/TYPE_TMP422/TYPE_TMP423 from tmp421.c into a new
 include/hw/sensor/tmp421.h, so boards instantiating the device share

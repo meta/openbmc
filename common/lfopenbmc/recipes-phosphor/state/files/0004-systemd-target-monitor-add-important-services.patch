@@ -1,4 +1,4 @@
-From 44a053edd44812c0d0c881cbee94a85816da65e1 Mon Sep 17 00:00:00 2001
+From cee3d2d5404fa7109b5956de129bf5da2ee7a36b Mon Sep 17 00:00:00 2001
 From: Pete O_o <pmb@meta.com>
 Date: Thu, 29 Oct 2026 14:54:44 -0700
 Subject: [PATCH] systemd-target-monitor: add important services
@@ -85,7 +85,7 @@ Signed-off-by: Pete O_o <pmb@meta.com>
  8 files changed, 219 insertions(+), 15 deletions(-)
 
 diff --git a/systemd_service_parser.cpp b/systemd_service_parser.cpp
-index cf3af4f9..f9532ba7 100644
+index cf3af4f..f9532ba 100644
 --- a/systemd_service_parser.cpp
 +++ b/systemd_service_parser.cpp
 @@ -3,6 +3,7 @@
@@ -131,7 +131,7 @@ index cf3af4f9..f9532ba7 100644
      return result;
  }
 diff --git a/systemd_service_parser.hpp b/systemd_service_parser.hpp
-index e4229234..741ae97e 100644
+index e422923..741ae97 100644
 --- a/systemd_service_parser.hpp
 +++ b/systemd_service_parser.hpp
 @@ -19,11 +19,33 @@ using ServiceMonitorData = std::vector<std::string>;
@@ -186,7 +186,7 @@ index e4229234..741ae97e 100644
  ServiceMonitorResult parseServiceFiles(
      const std::vector<std::string>& filePaths);
 diff --git a/systemd_target_monitor.cpp b/systemd_target_monitor.cpp
-index 6952f313..cc161d20 100644
+index 6952f31..cc161d2 100644
 --- a/systemd_target_monitor.cpp
 +++ b/systemd_target_monitor.cpp
 @@ -68,7 +68,8 @@ int main(int argc, char* argv[])
@@ -200,10 +200,10 @@ index 6952f313..cc161d20 100644
      // Subscribe to systemd D-bus signals indicating target completions
      targetMon.subscribeToSystemdSignals();
 diff --git a/systemd_target_signal.cpp b/systemd_target_signal.cpp
-index 52e48ff8..9b276d38 100644
+index 03ff2c8..bb1bf81 100644
 --- a/systemd_target_signal.cpp
 +++ b/systemd_target_signal.cpp
-@@ -42,15 +42,22 @@ using LoggingEntry = sdbusplus::client::xyz::openbmc_project::logging::Entry<>;
+@@ -43,15 +43,22 @@ using LoggingEntry = sdbusplus::client::xyz::openbmc_project::logging::Entry<>;
  
  constexpr auto CRITICAL_SERVICE_ERROR =
      "xyz.openbmc_project.State.Error.CriticalServiceFailure";
@@ -228,7 +228,7 @@ index 52e48ff8..9b276d38 100644
      method.append("replace");
      try
      {
-@@ -58,13 +65,11 @@ void SystemdTargetLogging::startBmcQuiesceTarget()
+@@ -59,13 +66,11 @@ void SystemdTargetLogging::startBmcQuiesceTarget()
      }
      catch (const sdbusplus::exception_t& e)
      {
@@ -244,7 +244,7 @@ index 52e48ff8..9b276d38 100644
  }
  
  sdbusplus::object_path SystemdTargetLogging::logError(
-@@ -74,9 +79,13 @@ sdbusplus::object_path SystemdTargetLogging::logError(
+@@ -75,9 +80,13 @@ sdbusplus::object_path SystemdTargetLogging::logError(
      auto method = this->bus.new_method_call(
          LoggingCreate::default_service, LoggingCreate::instance_path,
          LoggingCreate::interface, "Create");
@@ -259,7 +259,7 @@ index 52e48ff8..9b276d38 100644
          std::array<std::pair<std::string, std::string>, 2>(
              {std::pair<std::string, std::string>({"SYSTEMD_RESULT", result}),
               std::pair<std::string, std::string>({"SYSTEMD_UNIT", unit})}));
-@@ -144,6 +153,29 @@ std::string SystemdTargetLogging::processError(const std::string& unit,
+@@ -145,6 +154,29 @@ std::string SystemdTargetLogging::processError(const std::string& unit,
          }
      }
  
@@ -290,7 +290,7 @@ index 52e48ff8..9b276d38 100644
  }
  
 diff --git a/systemd_target_signal.hpp b/systemd_target_signal.hpp
-index 593fcd86..b93f53bb 100644
+index 593fcd8..b93f53b 100644
 --- a/systemd_target_signal.hpp
 +++ b/systemd_target_signal.hpp
 @@ -33,9 +33,11 @@ class SystemdTargetLogging
@@ -330,7 +330,7 @@ index 593fcd86..b93f53bb 100644
      sdbusplus::bus_t& bus;
  
 diff --git a/test/meson.build b/test/meson.build
-index d9806f0d..92fdc85f 100644
+index d9806f0..92fdc85 100644
 --- a/test/meson.build
 +++ b/test/meson.build
 @@ -4,6 +4,7 @@ test(
@@ -342,7 +342,7 @@ index d9806f0d..92fdc85f 100644
          dependencies: [gtest, nlohmann_json_dep, phosphorlogging],
          implicit_include_directories: true,
 diff --git a/test/systemd_parser.cpp b/test/systemd_parser.cpp
-index 65fbec43..13a272cf 100644
+index 5926d30..772fb8a 100644
 --- a/test/systemd_parser.cpp
 +++ b/test/systemd_parser.cpp
 @@ -1,3 +1,4 @@
@@ -350,7 +350,7 @@ index 65fbec43..13a272cf 100644
  #include <systemd_target_parser.hpp>
  
  #include <cstdio>
-@@ -136,3 +137,41 @@ TEST(TargetJsonParser, NotJustDefault)
+@@ -194,3 +195,41 @@ TEST(TargetJsonParser, NotJustDefault)
                   std::invalid_argument);
      std::remove("/tmp/not_just_default_file.json");
  }
@@ -393,7 +393,7 @@ index 65fbec43..13a272cf 100644
 +    std::remove("/tmp/important_services.json");
 +}
 diff --git a/test/systemd_signal.cpp b/test/systemd_signal.cpp
-index 65ec9c8f..3d50ec29 100644
+index 65ec9c8..3d50ec2 100644
 --- a/test/systemd_signal.cpp
 +++ b/test/systemd_signal.cpp
 @@ -28,13 +28,15 @@ TEST(TargetSignalData, BasicPaths)

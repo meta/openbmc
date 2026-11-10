@@ -1,8 +1,8 @@
-From 24feac794ff65a1af99c89c0894a02cdf9d8ed9c Mon Sep 17 00:00:00 2001
+From 1b5174a469d863c5d2cde4e1cebb41218d8c4ef0 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Tue, 11 Aug 2026 12:15:33 +0200
-Subject: [PATCH 39/70] hw/sensor: tmp421: do not report a stale errno on a
- parse failure
+Subject: [PATCH] hw/sensor: tmp421: do not report a stale errno on a parse
+ failure
 
 The temperature property accessors decode the channel index out of the
 property name and report a failure with error_setg_errno(). sscanf()

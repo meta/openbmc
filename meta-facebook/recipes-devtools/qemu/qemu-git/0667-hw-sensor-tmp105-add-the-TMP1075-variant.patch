@@ -1,7 +1,7 @@
-From 2f84bfa1907a757a6ba6fb794bd9608bfb510b67 Mon Sep 17 00:00:00 2001
+From 5e03eee5b71d6616a96d75e12302683a460c69df Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 6 Aug 2026 16:20:59 +0200
-Subject: [PATCH 55/70] hw/sensor: tmp105: add the TMP1075 variant
+Subject: [PATCH] hw/sensor: tmp105: add the TMP1075 variant
 
 The TMP1075 is register-compatible with the xx75 family but widens the
 Config register to 16 bits and adds a read-only Device ID register.

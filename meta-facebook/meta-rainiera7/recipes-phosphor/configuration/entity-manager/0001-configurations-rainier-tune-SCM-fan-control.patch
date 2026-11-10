@@ -1,4 +1,4 @@
-From 1497f263c8000950d94fb348b4dd16d882adfc68 Mon Sep 17 00:00:00 2001
+From 118e1a7c7b9c9ffdc1da12f8e8e7993dcca64246 Mon Sep 17 00:00:00 2001
 From: Neil Cheng <Neil.Cheng@quantatw.com>
 Date: Tue, 3 Nov 2026 08:33:40 +0800
 Subject: [PATCH] configurations: rainier: tune SCM fan control
@@ -103,3 +103,6 @@ index 415698f..ab8ca3f 100644
                  91.0
              ],
              "Type": "Stepwise",
+-- 
+2.53.0-Meta
+

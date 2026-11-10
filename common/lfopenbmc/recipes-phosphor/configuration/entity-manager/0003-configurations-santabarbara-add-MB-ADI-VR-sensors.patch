@@ -1,4 +1,4 @@
-From 973bf179d2d6f93f9f90ec36e2244a9dca2c57d5 Mon Sep 17 00:00:00 2001
+From 6733bcf2262851aee331aeb21c4115b0cb918026 Mon Sep 17 00:00:00 2001
 From: Fred Chen <Fred.Chen@quantatw.com>
 Date: Tue, 21 Jul 2026 15:20:54 +0800
 Subject: [PATCH] configurations: santabarbara: add MB ADI VR sensors
@@ -350,10 +350,10 @@ index 43227c5..e436b6f 100644
              ],
              "Name": "Stepwise_MB_VR",
 diff --git a/schemas/legacy.json b/schemas/legacy.json
-index 21fa23b..cc4afec 100644
+index 2e5d825..49970ff 100644
 --- a/schemas/legacy.json
 +++ b/schemas/legacy.json
-@@ -1013,6 +1013,8 @@
+@@ -1017,6 +1017,8 @@
                          "MAX20710",
                          "MAX20730",
                          "MAX20734",

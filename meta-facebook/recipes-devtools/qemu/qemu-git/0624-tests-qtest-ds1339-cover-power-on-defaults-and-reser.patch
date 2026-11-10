@@ -1,8 +1,8 @@
-From a178169e326c924b7226a17db567434925a2e785 Mon Sep 17 00:00:00 2001
+From d7173b9c64858aa502591d6a394848295bde4d2f Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 17:15:29 +0200
-Subject: [PATCH 12/70] tests/qtest: ds1339: cover power-on defaults and
- reserved-bit masking
+Subject: [PATCH] tests/qtest: ds1339: cover power-on defaults and reserved-bit
+ masking
 
 Neither the power-on defaults nor the reserved bits of the register
 file were pinned.

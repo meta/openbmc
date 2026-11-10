@@ -1,4 +1,4 @@
-From b86f806e5e3a7958915fc14a5100d27bdf0d55af Mon Sep 17 00:00:00 2001
+From 5f4aeb015fffd1affaba3915ec5892c422f144b4 Mon Sep 17 00:00:00 2001
 From: Peter Yin <peter.yin@quantatw.com>
 Date: Tue, 31 Mar 2026 20:37:28 +0800
 Subject: [PATCH] terminus: replace inventory and sensor configuration
@@ -276,7 +276,7 @@ index b2d1565..f4779a7 100644
  } // namespace platform_mc
  } // namespace pldm
 diff --git a/platform-mc/terminus.hpp b/platform-mc/terminus.hpp
-index 8bcc047..5588a83 100644
+index 6342814..2f29614 100644
 --- a/platform-mc/terminus.hpp
 +++ b/platform-mc/terminus.hpp
 @@ -119,6 +119,23 @@ class Terminus
@@ -303,9 +303,9 @@ index 8bcc047..5588a83 100644
      /** @brief Parse record data from FRU table
       *
       *  @param[in] fruData - pointer to FRU record table
-@@ -182,6 +199,12 @@ class Terminus
-      */
-     std::shared_ptr<NumericSensor> getSensorObject(SensorID id);
+@@ -197,6 +214,12 @@ class Terminus
+         return inventoryPath;
+     }
  
 +    /** @brief Fetch sensor names from Entity Manager via D-Bus
 +     *
@@ -316,7 +316,7 @@ index 8bcc047..5588a83 100644
    private:
      /** @brief Find the Terminus Name from the Entity Auxiliary name list
       *         The Entity Auxiliary name list is entityAuxiliaryNamesTbl.
-@@ -326,6 +349,9 @@ class Terminus
+@@ -341,6 +364,9 @@ class Terminus
      std::unique_ptr<pldm::dbus_api::PldmFruDecorators> fruDecoratorsIntf =
          nullptr;
  

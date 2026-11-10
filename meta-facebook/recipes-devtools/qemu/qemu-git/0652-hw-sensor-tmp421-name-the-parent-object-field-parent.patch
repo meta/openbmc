@@ -1,8 +1,7 @@
-From 37d9f3e61f80bdc2ef55caf10f41dd368a958e79 Mon Sep 17 00:00:00 2001
+From dbed8ce3f9f0f66b60b37fa563cb0de97b2c12ef Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 17:55:46 +0200
-Subject: [PATCH 40/70] hw/sensor: tmp421: name the parent object field
- parent_obj
+Subject: [PATCH] hw/sensor: tmp421: name the parent object field parent_obj
 
 Follow the QOM convention for the embedded I2CSlave, matching the other
 hw/sensor I2C devices. No functional change.

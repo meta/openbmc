@@ -1,8 +1,8 @@
-From 7500da92ce81e93151a6bcbf5b7d718ef6c6a73d Mon Sep 17 00:00:00 2001
+From 1b4d3942f041245558fcdeb07ede10c4953c4060 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 23 Jul 2026 16:49:34 +0200
-Subject: [PATCH 30/70] tests/qtest: ina238: cover voltage/temperature
- injection and derivation
+Subject: [PATCH] tests/qtest: ina238: cover voltage/temperature injection and
+ derivation
 
 Cover the shunt-, bus- and die-temperature injection properties and the
 current and power values derived through the Shunt Calibration register,

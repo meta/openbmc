@@ -1,4 +1,4 @@
-From 688dae8f86861540b8c50a0d126a8ff9aaff0a1f Mon Sep 17 00:00:00 2001
+From f3fe8f1024fea238f88c6214e84b201e27d73f5f Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Fri, 23 Jan 2026 17:26:31 +0800
 Subject: [PATCH] gpio: aspeed-sgpio: Support G7 Aspeed sgpiom controller
@@ -183,5 +183,5 @@ index bf83e19a1bf0..bf828b0727df 100644
  	raw_spin_lock_init(&gpio->lock);
  
 -- 
-2.52.0
+2.53.0-Meta
 

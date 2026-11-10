@@ -1,4 +1,4 @@
-From 8031fb95459aad89db7ab0762af16b4690b2d553 Mon Sep 17 00:00:00 2001
+From 31c8ee76fc5423cf837c0b7f65b0306d22eece7d Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Mon, 3 Nov 2025 18:52:17 +0800
 Subject: [PATCH] iio: adc: aspeed: Add AST2700 ADC support

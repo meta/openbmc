@@ -1,4 +1,4 @@
-From 0ac53e7a4a28911c5284f2b043a4e10898a7f5a0 Mon Sep 17 00:00:00 2001
+From ddc95a72c5aac2d464000526d3b6fd424e0552b5 Mon Sep 17 00:00:00 2001
 From: Bright Cheng <bright_cheng@wiwynn.com>
 Date: Mon, 26 Aug 2024 11:37:53 +0800
 Subject: [PATCH] Utils: support powerState for multi-node system
@@ -921,10 +921,10 @@ index 10d9a31..59d46a5 100644
  
      void getPath(const std::string& path, const std::string& interface,
 diff --git a/src/hwmon-temp/HwmonTempMain.cpp b/src/hwmon-temp/HwmonTempMain.cpp
-index b575db6..6f81785 100644
+index 50d996e..3f07ed6 100644
 --- a/src/hwmon-temp/HwmonTempMain.cpp
 +++ b/src/hwmon-temp/HwmonTempMain.cpp
-@@ -617,6 +617,33 @@ void interfaceRemoved(
+@@ -618,6 +618,33 @@ void interfaceRemoved(
      }
  }
  
@@ -958,7 +958,7 @@ index b575db6..6f81785 100644
  int main()
  {
      boost::asio::io_context io;
-@@ -632,9 +659,7 @@ int main()
+@@ -633,9 +660,7 @@ int main()
  
      auto powerCallBack = [&sensors, &io, &objectServer,
                            &systemBus](PowerState type, bool state) {
@@ -1013,10 +1013,10 @@ index 8599826..42d4800 100644
  
  struct PSUProperty
 diff --git a/src/psu/PSUSensorMain.cpp b/src/psu/PSUSensorMain.cpp
-index 4b5cb9a..17ca200 100644
+index 5f2280b..83d6aab 100644
 --- a/src/psu/PSUSensorMain.cpp
 +++ b/src/psu/PSUSensorMain.cpp
-@@ -859,6 +859,7 @@ static void createSensorsCallback(
+@@ -861,6 +861,7 @@ static void createSensorsCallback(
          checkGroupEvent(directory.string(), groupEventPathList);
  
          PowerState readState = getPowerState(*baseConfig);
@@ -1024,7 +1024,7 @@ index 4b5cb9a..17ca200 100644
  
          /* Check if there are more sensors in the same interface */
          int i = 1;
-@@ -1444,7 +1445,7 @@ static void createSensorsCallback(
+@@ -1446,7 +1447,7 @@ static void createSensorsCallback(
                      sensorName, std::move(sensorThresholds), *interfacePath,
                      readState, sensorUnits, factor, maxReading, minReading,
                      sensorOffset, labelHead, thresholdConfSize, pollRate,
@@ -1033,7 +1033,7 @@ index 4b5cb9a..17ca200 100644
  
                  if (fwName != nullptr)
                  {
-@@ -1570,6 +1571,33 @@ void createSensors(
+@@ -1572,6 +1573,33 @@ void createSensors(
      getter->getConfiguration(types);
  }
  
@@ -1067,7 +1067,7 @@ index 4b5cb9a..17ca200 100644
  int main()
  {
      boost::asio::io_context io;
-@@ -1582,12 +1610,10 @@ int main()
+@@ -1584,12 +1612,10 @@ int main()
      auto sensorsChanged =
          std::make_shared<boost::container::flat_set<std::string>>();
  

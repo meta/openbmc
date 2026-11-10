@@ -1,8 +1,8 @@
-From 1a2b0db784e68fc0704010b2d8f175738fdf1a0a Mon Sep 17 00:00:00 2001
+From 4f8b25596aba336f098cdce131065e5393fdf8de Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 17:15:30 +0200
-Subject: [PATCH 13/70] tests/qtest: ds1339: cover oscillator stop/restart and
- time programming
+Subject: [PATCH] tests/qtest: ds1339: cover oscillator stop/restart and time
+ programming
 
 Stopping and restarting the oscillator had no coverage, nor did the
 time the clock resumes from.

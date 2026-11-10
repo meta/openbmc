@@ -38,9 +38,8 @@ SRC_URI:append:openbmc-fb-lf = " \
     file://0030-fw_update-stop-sensor-polling-during-update-when-con.patch \
     file://0031-requester-complete-queued-requests-on-endpoint-cance.patch \
     file://0032-platform-mc-drop-stale-discovery-work-on-endpoint-re.patch \
-    file://0033-platform-mc-cper-submit-events-for-processing.patch \
-    file://0034-platform-mc-Add-option-to-control-terminus-D-Bus-obj.patch \
-    file://0035-oem-arm-accept-events-from-indexed-PHX-termini.patch \
+    file://0033-platform-mc-Add-option-to-control-terminus-D-Bus-obj.patch \
+    file://0034-oem-arm-accept-events-from-indexed-PHX-termini.patch \
 "
 
 # ARM crashlog support, PLDM file transfer dependencies, and compatibility fixes

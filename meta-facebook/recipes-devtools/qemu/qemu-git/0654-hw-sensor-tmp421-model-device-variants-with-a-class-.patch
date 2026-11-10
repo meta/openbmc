@@ -1,7 +1,7 @@
-From 468c2c1935e5c4cec490db10dd4257a181c440fb Mon Sep 17 00:00:00 2001
+From 2d91f7eb0f0543586d674496e039a44c9509c00b Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 17:58:08 +0200
-Subject: [PATCH 42/70] hw/sensor: tmp421: model device variants with a class
+Subject: [PATCH] hw/sensor: tmp421: model device variants with a class
  descriptor
 
 Replace the ad-hoc DeviceInfo table and its manual type-registration
@@ -16,8 +16,8 @@ longer exists, and a TMP421 cast now succeeds for the two supersets.
 
 Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
 ---
- hw/sensor/tmp421.c | 98 ++++++++++++++++++++++------------------------
- 1 file changed, 46 insertions(+), 52 deletions(-)
+ hw/sensor/tmp421.c | 94 ++++++++++++++++++++++------------------------
+ 1 file changed, 44 insertions(+), 50 deletions(-)
 
 diff --git a/hw/sensor/tmp421.c b/hw/sensor/tmp421.c
 index 4b93d42b14..ef738b821e 100644
@@ -110,6 +110,7 @@ index 4b93d42b14..ef738b821e 100644
 -    .instance_size = sizeof(TMP421State),
 -    .class_size    = sizeof(TMP421Class),
 -    .abstract      = true,
+-};
 +static void tmp422_class_init(ObjectClass *klass, const void *data)
 +{
 +    TMP421Class *sc = TMP421_CLASS(klass);
@@ -117,15 +118,29 @@ index 4b93d42b14..ef738b821e 100644
 +    sc->device_id = TMP422_DEVICE_ID;
 +    sc->config2_reset = 0x3c;
 +}
-+
+ 
+-static void tmp421_register_types(void)
 +static void tmp423_class_init(ObjectClass *klass, const void *data)
-+{
+ {
+-    int i;
+-
+-    type_register_static(&tmp421_info);
+-    for (i = 0; i < ARRAY_SIZE(devices); ++i) {
+-        TypeInfo ti = {
+-            .name       = devices[i].name,
+-            .parent     = TYPE_TMP421,
+-            .class_init = tmp421_class_init,
+-            .class_data = &devices[i],
+-        };
+-        type_register_static(&ti);
+-    }
 +    TMP421Class *sc = TMP421_CLASS(klass);
 +
 +    sc->device_id = TMP423_DEVICE_ID;
 +    sc->config2_reset = 0x7c;
-+}
-+
+ }
+ 
+-type_init(tmp421_register_types)
 +static const TypeInfo tmp421_types[] = {
 +    {
 +        .name          = TYPE_TMP421,
@@ -144,25 +159,8 @@ index 4b93d42b14..ef738b821e 100644
 +        .parent        = TYPE_TMP421,
 +        .class_init    = tmp423_class_init,
 +    },
- };
- 
--static void tmp421_register_types(void)
--{
--    int i;
--
--    type_register_static(&tmp421_info);
--    for (i = 0; i < ARRAY_SIZE(devices); ++i) {
--        TypeInfo ti = {
--            .name       = devices[i].name,
--            .parent     = TYPE_TMP421,
--            .class_init = tmp421_class_init,
--            .class_data = &devices[i],
--        };
--        type_register_static(&ti);
--    }
--}
--
--type_init(tmp421_register_types)
++};
++
 +DEFINE_TYPES(tmp421_types)
 -- 
 2.53.0-Meta

@@ -1,8 +1,8 @@
-From 5e17f151f0a9741bda5cea93124d4717742430bd Mon Sep 17 00:00:00 2001
+From 2ca0f1aabca1afb0ac77608469eaec4478d2fa10 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Fri, 7 Aug 2026 17:23:08 +0200
-Subject: [PATCH 67/70] hw/arm: bletchley: select the board revision with a
- machine property
+Subject: [PATCH] hw/arm: bletchley: select the board revision with a machine
+ property
 
 Two Bletchley revisions are in the field, differing in FRU layout and
 in one hardware strap bit: the BMC MAC address moved from a custom

@@ -1,4 +1,4 @@
-From 5d500e2148d4e537e8cac23906bc50c07eae436c Mon Sep 17 00:00:00 2001
+From 5b60b6aee7a99e237c80a9dfe87f17334d5c5390 Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Fri, 23 Jan 2026 17:26:28 +0800
 Subject: [PATCH] gpio: aspeed-sgpio: Create llops to handle hardware access
@@ -427,5 +427,5 @@ index 318cd0e39741..04ac47819b5a 100644
  	if (rc < 0) {
  		dev_err(&pdev->dev, "Could not read ngpios property\n");
 -- 
-2.52.0
+2.53.0-Meta
 

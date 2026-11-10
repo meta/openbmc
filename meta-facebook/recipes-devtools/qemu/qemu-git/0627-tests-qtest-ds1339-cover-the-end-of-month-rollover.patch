@@ -1,7 +1,7 @@
-From 720179fd7b4e55a57609c4bc37e0d66ec22488e6 Mon Sep 17 00:00:00 2001
+From 63e9fa4f1e9cb9541561c0feb4dd7d7a5d0daf04 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 17:15:30 +0200
-Subject: [PATCH 15/70] tests/qtest: ds1339: cover the end-of-month rollover
+Subject: [PATCH] tests/qtest: ds1339: cover the end-of-month rollover
 
 The end-of-month rollover was untested, for any of the lengths the
 calendar gives a month.

@@ -1,4 +1,4 @@
-From 0b587b10d957870ec8d5c03e090ef319a1fbb02a Mon Sep 17 00:00:00 2001
+From f3286384d19e1a8fdf4aae732cf4116d07fc86f2 Mon Sep 17 00:00:00 2001
 From: Richard Purdie <richard.purdie@linuxfoundation.org>
 Date: Mon, 1 Mar 2021 13:00:47 +0000
 Subject: [PATCH] qemu: Determinism fixes
@@ -16,10 +16,10 @@ RP 2021/3/1
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/scripts/decodetree.py b/scripts/decodetree.py
-index f992472b73..2e4218b146 100644
+index eadc385053..2039a0675a 100644
 --- a/scripts/decodetree.py
 +++ b/scripts/decodetree.py
-@@ -1559,7 +1559,7 @@ def main():
+@@ -1563,7 +1563,7 @@ def main():
      toppat = ExcMultiPattern(0)
  
      for filename in args:

@@ -1,7 +1,7 @@
-From 3f0c3def5513b5b3980f45dcd79020c2bbe24611 Mon Sep 17 00:00:00 2001
+From 8ea4c769e0a2c58adf286aa7939c561b296d3a54 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Fri, 4 Sep 2026 15:03:55 +0200
-Subject: [PATCH 66/70] hw/arm: bletchley: match the device tree
+Subject: [PATCH] hw/arm: bletchley: match the device tree
 
 The board had drifted from the platform device tree: an I/O expander,
 the power monitor and the six per-sled EEPROMs were absent, a PCA9552

@@ -1,8 +1,7 @@
-From c6130892ca51076ccb854323a90b3cd973fa2f66 Mon Sep 17 00:00:00 2001
+From 5e60a8b696f8a8db884271e3041fa90bf1557417 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 7 Sep 2026 10:53:59 +0200
-Subject: [PATCH 27/70] tests/qtest: ina230: cover a cleared calibration per
- channel
+Subject: [PATCH] tests/qtest: ina230: cover a cleared calibration per channel
 
 Verify that without a calibration value the current and power
 registers read zero, whichever channels the mode converts.

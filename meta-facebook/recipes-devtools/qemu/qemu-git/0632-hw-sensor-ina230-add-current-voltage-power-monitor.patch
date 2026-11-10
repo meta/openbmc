@@ -1,7 +1,7 @@
-From 841be4c8bae28ce75a1992453f1d5a0335366847 Mon Sep 17 00:00:00 2001
+From b0f7c52229bf150388d72838e4df2c96f9151f0d Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 20 Jul 2026 14:54:05 +0200
-Subject: [PATCH 20/70] hw/sensor: ina230: add current/voltage/power monitor
+Subject: [PATCH] hw/sensor: ina230: add current/voltage/power monitor
 
 Add a model for the Texas Instruments INA230, a 36V, 16-bit I2C
 current-shunt and power monitor.
@@ -31,10 +31,10 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  create mode 100644 include/hw/sensor/ina230.h
 
 diff --git a/hw/arm/Kconfig b/hw/arm/Kconfig
-index e9f796f718..876acc0e43 100644
+index 53bbfa724b..68fc477c25 100644
 --- a/hw/arm/Kconfig
 +++ b/hw/arm/Kconfig
-@@ -557,6 +557,7 @@ config ASPEED_SOC
+@@ -558,6 +558,7 @@ config ASPEED_SOC
      select TMP105
      select TMP421
      select EMC141X
@@ -43,7 +43,7 @@ index e9f796f718..876acc0e43 100644
      select UNIMP
      select LED
 diff --git a/hw/sensor/Kconfig b/hw/sensor/Kconfig
-index b459ac2240..da519159ac 100644
+index 2ed162f478..cc409963fe 100644
 --- a/hw/sensor/Kconfig
 +++ b/hw/sensor/Kconfig
 @@ -2,6 +2,10 @@ config ADC128D818
@@ -662,7 +662,7 @@ index 0000000000..eb6991b0b9
 +
 +DEFINE_TYPES(ina230_types)
 diff --git a/hw/sensor/meson.build b/hw/sensor/meson.build
-index fe36c9ef91..b81f001fdf 100644
+index 1945aa4edb..d913a282f9 100644
 --- a/hw/sensor/meson.build
 +++ b/hw/sensor/meson.build
 @@ -1,4 +1,5 @@

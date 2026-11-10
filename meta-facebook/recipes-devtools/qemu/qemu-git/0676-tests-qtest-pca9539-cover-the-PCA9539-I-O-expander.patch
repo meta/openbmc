@@ -1,7 +1,7 @@
-From deee9ffb25a7602d4ddaf21621e8977288da6012 Mon Sep 17 00:00:00 2001
+From 257adb5bbf215112c5ead2fd713622d63ccd0540 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 6 Aug 2026 17:24:49 +0200
-Subject: [PATCH 64/70] tests/qtest: pca9539: cover the PCA9539 I/O expander
+Subject: [PATCH] tests/qtest: pca9539: cover the PCA9539 I/O expander
 
 Exercise the register model through the qgraph i2c interface: reset
 defaults, output-to-input reflection, polarity inversion, port
@@ -23,10 +23,10 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  create mode 100644 tests/qtest/pca9539-test.c
 
 diff --git a/tests/qtest/meson.build b/tests/qtest/meson.build
-index 8f0622b052..b7edc6c33c 100644
+index 8319a0ca1d..93fd30bfbc 100644
 --- a/tests/qtest/meson.build
 +++ b/tests/qtest/meson.build
-@@ -352,6 +352,7 @@ qos_test_ss.add(
+@@ -356,6 +356,7 @@ qos_test_ss.add(
    'pca9552-test.c',
    'pca9554-test.c',
    'pca9555-test.c',

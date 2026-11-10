@@ -1,7 +1,7 @@
-From 070a635d7de758a5c15014fe30625353a1623773 Mon Sep 17 00:00:00 2001
+From 4f95069b7fb56a9b38104b9d66bcca83345114a6 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Fri, 14 Aug 2026 18:13:54 +0200
-Subject: [PATCH 47/70] hw/sensor: tmp421: migrate the exact measurement
+Subject: [PATCH] hw/sensor: tmp421: migrate the exact measurement
 
 The register form the stream carries only resolves a sixteenth of a
 degree, so a temperature set through the property does not survive a

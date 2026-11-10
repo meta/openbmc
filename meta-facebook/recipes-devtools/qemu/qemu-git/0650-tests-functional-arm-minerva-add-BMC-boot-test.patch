@@ -1,7 +1,7 @@
-From 151ea370c494e8913bd580c5b242f257ef52366d Mon Sep 17 00:00:00 2001
+From b6aaae70b6a9efc276f0f6514067d6a7cb288d4b Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 20 Jul 2026 10:45:21 +0200
-Subject: [PATCH 38/70] tests/functional/arm: minerva: add BMC boot test
+Subject: [PATCH] tests/functional/arm: minerva: add BMC boot test
 
 Add a functional test booting the Facebook Minerva BMC machine.
 

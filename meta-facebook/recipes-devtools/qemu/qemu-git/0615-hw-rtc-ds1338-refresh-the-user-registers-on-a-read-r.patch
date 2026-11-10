@@ -1,8 +1,8 @@
-From 8c3857a9a5c78a0da4fc4431df2810c82e4b049a Mon Sep 17 00:00:00 2001
+From b505dcb4cb4dc6e86264142cfe304bba95f99efc Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 16:03:07 +0200
-Subject: [PATCH 03/70] hw/rtc: ds1338: refresh the user registers on a read
- rollover only
+Subject: [PATCH] hw/rtc: ds1338: refresh the user registers on a read rollover
+ only
 
 Synchronising the user buffers when the register pointer rolls over to
 zero is a property of reading them; hardware routes a write to the

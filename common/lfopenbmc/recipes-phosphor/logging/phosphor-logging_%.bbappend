@@ -2,11 +2,6 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 SRC_URI:append = " \
     file://0001-lg2-commit-Allow-users-to-provide-additional-data.patch \
-    file://0002-cper-add-trivial-processing-daemon.patch \
-    file://0003-cper-read-CPER-binary.patch \
-    file://0004-cper-decode-add-libcper-decoding.patch \
-    file://0005-cper-add-OEM-registration-API.patch \
-    file://0006-cper-implement-oem-parser-registry.patch \
 "
 
 DEPENDS:append = " \

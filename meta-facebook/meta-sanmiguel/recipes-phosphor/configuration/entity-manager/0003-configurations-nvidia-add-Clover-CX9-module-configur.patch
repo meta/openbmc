@@ -1,4 +1,4 @@
-From 8094619ecaf4c1b2d1b147cf144abe4ee40a4ca6 Mon Sep 17 00:00:00 2001
+From 2937d185680b97e466097ce677986283a5568cb9 Mon Sep 17 00:00:00 2001
 From: Potin Lai <potin.lai@quantatw.com>
 Date: Thu, 5 Mar 2026 19:07:57 +0800
 Subject: [PATCH] configurations: nvidia: add Clover CX9 module configuration
@@ -27,11 +27,11 @@ Signed-off-by: Potin Lai <potin.lai@quantatw.com>
  create mode 100644 configurations/nvidia/clover_cx9.json
 
 diff --git a/configurations/meson.build b/configurations/meson.build
-index e9a2479..3b41fd6 100644
+index c4c2e72..780e18c 100644
 --- a/configurations/meson.build
 +++ b/configurations/meson.build
-@@ -343,6 +343,7 @@ configs = [
-     'nuvoton/npcm8xx_evb.json',
+@@ -348,6 +348,7 @@ configs = [
+     'nvidia/bluefield4_b4240v.json',
      'nvidia/bmc_p3809.json',
      'nvidia/cable_cartridge.json',
 +    'nvidia/clover_cx9.json',

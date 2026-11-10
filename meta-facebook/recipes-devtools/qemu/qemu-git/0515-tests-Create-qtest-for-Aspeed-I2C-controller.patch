@@ -1,4 +1,4 @@
-From bc3b87488ffbac38b97cead1ee0e29131fa435fd Mon Sep 17 00:00:00 2001
+From 6c72fc8447935f1a9aa19ddd341604bc3df0f4ab Mon Sep 17 00:00:00 2001
 From: Peter Delevoryas <peter@pjd.dev>
 Date: Fri, 26 Aug 2022 07:12:09 -0700
 Subject: [PATCH] tests: Create qtest for Aspeed I2C controller
@@ -19,7 +19,7 @@ Signed-off-by: Peter Delevoryas <peter@pjd.dev>
 
 diff --git a/tests/qtest/aspeed_i2c-echo-test.c b/tests/qtest/aspeed_i2c-echo-test.c
 new file mode 100644
-index 0000000000..1db23222f0
+index 0000000000..675b534a45
 --- /dev/null
 +++ b/tests/qtest/aspeed_i2c-echo-test.c
 @@ -0,0 +1,140 @@
@@ -164,10 +164,10 @@ index 0000000000..1db23222f0
 +    return g_test_run();
 +}
 diff --git a/tests/qtest/meson.build b/tests/qtest/meson.build
-index 460a0b92de..0d90ccd70f 100644
+index 02690f23f8..b91deb25dd 100644
 --- a/tests/qtest/meson.build
 +++ b/tests/qtest/meson.build
-@@ -233,6 +233,7 @@ qtests_aspeed = \
+@@ -236,6 +236,7 @@ qtests_aspeed = \
    ['aspeed-acry-test',
     'aspeed_gpio-test',
     'aspeed_i2c-test',
@@ -176,5 +176,5 @@ index 460a0b92de..0d90ccd70f 100644
     'aspeed-sbc-test',
     'aspeed_scu-test',
 -- 
-2.54.0
+2.53.0-Meta
 

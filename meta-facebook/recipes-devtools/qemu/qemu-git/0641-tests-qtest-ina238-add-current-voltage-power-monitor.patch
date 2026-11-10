@@ -1,8 +1,7 @@
-From 78ea51d78d44b7c09a8180837328cb7da36e53df Mon Sep 17 00:00:00 2001
+From 281a757f4ca339f38c69c31aa7d24a327b32c21d Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Tue, 21 Jul 2026 14:33:30 +0200
-Subject: [PATCH 29/70] tests/qtest: ina238: add current/voltage/power monitor
- test
+Subject: [PATCH] tests/qtest: ina238: add current/voltage/power monitor test
 
 Introduce the INA238 qtest: the qgraph node, the QMP injection helpers
 and the register map. Cover the reset defaults, the software reset, and
@@ -200,10 +199,10 @@ index 0000000000..6e59ed30b5
 +}
 +libqos_init(ina238_register_nodes);
 diff --git a/tests/qtest/meson.build b/tests/qtest/meson.build
-index b367da9b99..4ddf47ebda 100644
+index 00c0edea37..bd0ad1d81d 100644
 --- a/tests/qtest/meson.build
 +++ b/tests/qtest/meson.build
-@@ -340,6 +340,7 @@ qos_test_ss.add(
+@@ -344,6 +344,7 @@ qos_test_ss.add(
    'eepro100-test.c',
    'es1370-test.c',
    'ina230-test.c',

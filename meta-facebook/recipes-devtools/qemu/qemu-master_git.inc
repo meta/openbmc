@@ -28,7 +28,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=a3b50d8b88dcc0eb3d7d39b760b9e821 \
 #   git ls-remote https://github.com/qemu/qemu.git refs/heads/master | cut -f1
 # This is normally updated by the daily yocto sync job when
 # --refresh-patches is enabled
-QEMU_REF ?= "f71afb409a87c4ecd0f9d63a5963eb645dfab780"
+QEMU_REF ?= "723622bedb0b423de7d1c61ebbe6e7a71934949c"
 
 # Use git protocol (required by BitBake QA)
 SRC_URI = "git://github.com/qemu/qemu.git;protocol=https;branch=master;lfs=0 \
@@ -194,7 +194,7 @@ SRC_URI:append = " \
            file://0712-hw-arm-bletchley-take-the-FRU-MAC-from-the-configure.patch \
            file://0713-slirp-pin-the-guest-address-with-a-static-DHCP-lease.patch \
            file://0714-hw-i2c-aspeed_i2c-hold-the-target-RX-ACK-until-the-I.patch \
-           file://0715-tests-functional-arm-bletchley-expect-the-FRU-MAC-of-.patch \
+           file://0715-tests-functional-arm-bletchley-expect-the-FRU-MAC-of.patch \
            file://0716-tests-functional-arm-device_locator-drop-the-SanMigu.patch \
            file://0717-hw-usb-usb-net-derive-CDC-framing-from-the-endpoint-.patch \
            file://0718-hw-usb-usb-net-add-high-speed-descriptors.patch \

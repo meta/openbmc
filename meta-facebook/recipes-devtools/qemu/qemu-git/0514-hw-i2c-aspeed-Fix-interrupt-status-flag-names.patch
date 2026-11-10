@@ -1,4 +1,4 @@
-From 59dd940cbe3a8db05d6798636ce72228c3cf431f Mon Sep 17 00:00:00 2001
+From 18724f82da4bdc1e86e696cfa2297eb0164978d6 Mon Sep 17 00:00:00 2001
 From: Peter Delevoryas <peter@pjd.dev>
 Date: Fri, 26 Aug 2022 07:10:35 -0700
 Subject: [PATCH] hw/i2c/aspeed: Fix interrupt status flag names
@@ -13,10 +13,10 @@ Signed-off-by: Peter Delevoryas <peter@pjd.dev>
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
-index b76237be59..bedc2847ca 100644
+index 57a2d84615..15154a3fe6 100644
 --- a/hw/i2c/aspeed_i2c.c
 +++ b/hw/i2c/aspeed_i2c.c
-@@ -49,13 +49,13 @@ static inline void aspeed_i2c_bus_raise_interrupt(AspeedI2CBus *bus)
+@@ -50,13 +50,13 @@ static inline void aspeed_i2c_bus_raise_interrupt(AspeedI2CBus *bus)
          g_autofree char *buf = g_strdup_printf("%s%s%s%s%s%s%s",
                 aspeed_i2c_bus_pkt_mode_en(bus) &&
                 ARRAY_FIELD_EX32(bus->regs, I2CM_INTR_STS, PKT_CMD_DONE) ?

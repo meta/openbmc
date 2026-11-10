@@ -1,4 +1,4 @@
-From cc1d1ed2869e70c8eb7c59be7201a1f4934e99c2 Mon Sep 17 00:00:00 2001
+From dc4f2f29f8fa548a3c523adbdc743a9ab445340a Mon Sep 17 00:00:00 2001
 From: Peter Shen <peter.shen@amd.com>
 Date: Tue, 3 Nov 2026 11:01:46 +0800
 Subject: [PATCH] hwmon-temp: Support software calibration offset and scale
@@ -37,10 +37,10 @@ Signed-off-by: Peter Shen <peter.shen@amd.com>
  1 file changed, 50 insertions(+), 2 deletions(-)
 
 diff --git a/src/hwmon-temp/HwmonTempMain.cpp b/src/hwmon-temp/HwmonTempMain.cpp
-index b575db6..c6a5b93 100644
+index 87f1b38..cbfffe9 100644
 --- a/src/hwmon-temp/HwmonTempMain.cpp
 +++ b/src/hwmon-temp/HwmonTempMain.cpp
-@@ -262,6 +262,51 @@ static SensorConfigMap buildSensorConfigMap(
+@@ -261,6 +261,51 @@ static SensorConfigMap buildSensorConfigMap(
      return configMap;
  }
  
@@ -92,7 +92,7 @@ index b575db6..c6a5b93 100644
  void createSensors(
      boost::asio::io_context& io, sdbusplus::asio::object_server& objectServer,
      boost::container::flat_map<std::string, std::shared_ptr<HwmonTempSensor>>&
-@@ -348,6 +393,11 @@ void createSensors(
+@@ -347,6 +392,11 @@ void createSensors(
                      continue;
                  }
  
@@ -104,7 +104,7 @@ index b575db6..c6a5b93 100644
                  const std::string& interfacePath =
                      findSensorCfg->second.sensorPath;
                  auto findI2CDev = devices.find(interfacePath);
-@@ -372,8 +422,6 @@ void createSensors(
+@@ -371,8 +421,6 @@ void createSensors(
                  {
                      sensorType = sensorType.substr(pos + 1);
                  }
@@ -114,5 +114,5 @@ index b575db6..c6a5b93 100644
                      findSensorCfg->second.name;
  
 -- 
-2.34.1
+2.53.0-Meta
 

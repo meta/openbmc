@@ -1,8 +1,7 @@
-From 832932d50f809c25e4f0da7b59505975e60c4af7 Mon Sep 17 00:00:00 2001
+From 94a18547a360a30eecf4f7bf3bc619c1c16b96dd Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 7 Sep 2026 10:53:59 +0200
-Subject: [PATCH 35/70] tests/qtest: ina238: cover a cleared calibration per
- channel
+Subject: [PATCH] tests/qtest: ina238: cover a cleared calibration per channel
 
 Verify that without a calibration value the current and power
 registers read zero, whichever channels the mode converts.

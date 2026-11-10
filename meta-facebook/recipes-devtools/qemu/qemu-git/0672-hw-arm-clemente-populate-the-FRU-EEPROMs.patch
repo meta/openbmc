@@ -1,7 +1,7 @@
-From 4e87864d91c9d887afcc153f6830d02d54e8e3a7 Mon Sep 17 00:00:00 2001
+From 53bd7236489ca490a1e77598defd26f5ccadec46 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 12 Aug 2026 16:07:13 +0200
-Subject: [PATCH 60/70] hw/arm: clemente: populate the FRU EEPROMs
+Subject: [PATCH] hw/arm: clemente: populate the FRU EEPROMs
 
 Back 24 of the 27 FRU EEPROMs with images read from hardware, so guest
 firmware can identify the boards, the compute and management modules,

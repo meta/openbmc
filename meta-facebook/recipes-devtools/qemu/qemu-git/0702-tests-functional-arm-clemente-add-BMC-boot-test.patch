@@ -1,4 +1,4 @@
-From bb1d2893d242944c64446f023fe6d8a4edb941ae Mon Sep 17 00:00:00 2001
+From f7eacf29feabff71ce1ac9ff165e0386b5059603 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 6 Aug 2026 11:09:35 +0200
 Subject: [PATCH] tests/functional/arm: clemente: add BMC boot test
@@ -15,7 +15,7 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  create mode 100644 tests/functional/arm/test_aspeed_clemente.py
 
 diff --git a/tests/functional/arm/meson.build b/tests/functional/arm/meson.build
-index 8000d2f2f8..c032f81e98 100644
+index 5cd49cbeb7..f1d0672f30 100644
 --- a/tests/functional/arm/meson.build
 +++ b/tests/functional/arm/meson.build
 @@ -15,6 +15,7 @@ test_arm_timeouts = {
@@ -26,7 +26,7 @@ index 8000d2f2f8..c032f81e98 100644
    'aspeed_gb200nvl_bmc' : 480,
    'aspeed_minerva' : 480,
    'aspeed_rainier' : 480,
-@@ -53,6 +54,7 @@ tests_arm_system_thorough = [
+@@ -56,6 +57,7 @@ tests_arm_system_thorough = [
    'aspeed_anacapa',
    'aspeed_bletchley',
    'aspeed_catalina',

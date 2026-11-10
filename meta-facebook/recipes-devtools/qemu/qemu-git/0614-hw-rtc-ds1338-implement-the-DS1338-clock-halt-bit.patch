@@ -1,7 +1,7 @@
-From a7c66893e6190a78fd70f1897dbf5334fea24678 Mon Sep 17 00:00:00 2001
+From 9ff4be629fdd32642b9808dc847810ff30c21a7d Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 16:02:39 +0200
-Subject: [PATCH 02/70] hw/rtc: ds1338: implement the DS1338 clock-halt bit
+Subject: [PATCH] hw/rtc: ds1338: implement the DS1338 clock-halt bit
 
 Bit 7 of the seconds register disables the oscillator, and the guest is
 expected to clear it before trusting the time. The bit was masked away
@@ -83,16 +83,16 @@ index 862e03bd32..79bcff4599 100644
          };
 +        uint8_t mask = valid[s->ptr];
 +        bool halt = s->osc_stopped;
- 
--        s->nvram[s->ptr] = data & valid[s->ptr];
--        ds1338_resync_from_regs(s);
++
 +        if (s->ptr == 0) {
 +            mask |= k->ch_mask;
 +            if (k->ch_mask) {
 +                halt = data & k->ch_mask;
 +            }
 +        }
-+
+ 
+-        s->nvram[s->ptr] = data & valid[s->ptr];
+-        ds1338_resync_from_regs(s);
 +        if (halt && !s->osc_stopped) {
 +            /* CH set: freeze the counters before the register is stored. */
 +            ds1338_capture_current_time(s);

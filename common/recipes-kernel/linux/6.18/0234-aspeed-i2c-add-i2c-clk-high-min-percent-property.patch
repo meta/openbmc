@@ -1,4 +1,4 @@
-From ef44d821740ce772b186d688d2abca3709bd0a48 Mon Sep 17 00:00:00 2001
+From 98aaa356aa29ddbc3ea3ec4d03f93c932dca9eef Mon Sep 17 00:00:00 2001
 From: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
 Date: Tue, 26 May 2026 10:01:20 +0800
 Subject: [PATCH] aspeed: i2c: add i2c-clk-high-min-percent property
@@ -188,5 +188,5 @@ index b87d881caef1..772bd9fc48ee 100644
  	i2c_bus->adap.owner = THIS_MODULE;
  	i2c_bus->adap.algo = &i2c_ast2600_algorithm;
 -- 
-2.53.0
+2.53.0-Meta
 

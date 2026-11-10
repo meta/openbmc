@@ -1,8 +1,8 @@
-From e6d9f16c15b1fc9f4578719fd40a57783a685c25 Mon Sep 17 00:00:00 2001
+From 0543c097cc40fde3bd450e3693287fedd80eaa36 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 18:49:56 +0200
-Subject: [PATCH 09/70] tests/qtest: ds1338: cover the reserved bits of the
- time registers
+Subject: [PATCH] tests/qtest: ds1338: cover the reserved bits of the time
+ registers
 
 Nothing pinned which bits of a time register survive a write.
 

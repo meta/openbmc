@@ -1,4 +1,4 @@
-From 7355f31c766c9d27f05f460a981cd4989f2471c1 Mon Sep 17 00:00:00 2001
+From faae581f5b7d38ecdaee49ba98ae6ded2a9c72f0 Mon Sep 17 00:00:00 2001
 From: Adrian Ambrozewicz <aambrozewicz@nvidia.com>
 Date: Sat, 24 Jan 2026 00:26:06 +0000
 Subject: [PATCH] net: usb: cdc_ether: add NCSI passthrough support
@@ -74,10 +74,10 @@ index da0f6a138f4f..3f59b9b2055a 100644
  	tristate "CDC EEM support"
  	depends on USB_USBNET
 diff --git a/drivers/net/usb/cdc_ether.c b/drivers/net/usb/cdc_ether.c
-index a032c1ded406..9aead69d25f7 100644
+index 05e625a461b4..57aa686e5bbb 100644
 --- a/drivers/net/usb/cdc_ether.c
 +++ b/drivers/net/usb/cdc_ether.c
-@@ -532,6 +532,165 @@ static const struct driver_info	cdc_info = {
+@@ -542,6 +542,165 @@ static const struct driver_info ami_bmc_info = {
  	.manage_power =	usbnet_manage_power,
  };
  
@@ -243,10 +243,10 @@ index a032c1ded406..9aead69d25f7 100644
  static const struct driver_info	zte_cdc_info = {
  	.description =	"ZTE CDC Ethernet Device",
  	.flags =	FLAG_ETHER | FLAG_POINTTOPOINT,
-@@ -940,7 +1099,33 @@ static const struct usb_device_id	products[] = {
+@@ -956,7 +1115,33 @@ static const struct usb_device_id	products[] = {
  				      USB_CDC_SUBCLASS_ETHERNET,
  				      USB_CDC_PROTO_NONE),
- 	.driver_info = (unsigned long)&wwan_info,
+ 	.driver_info = (unsigned long)&ami_bmc_info,
 -}, {
 +},
 +/*

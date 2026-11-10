@@ -1,4 +1,4 @@
-From 8b37ddd3fc20540aaeeb7abaa9c8c8bdb9cad60d Mon Sep 17 00:00:00 2001
+From 0270716a02523709fb59f11b3943b5dacddddb47 Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Fri, 23 Jan 2026 17:26:29 +0800
 Subject: [PATCH] gpio: aspeed-sgpio: Convert IRQ functions to use llops
@@ -84,5 +84,5 @@ index 04ac47819b5a..bf83e19a1bf0 100644
  
  	return 0;
 -- 
-2.52.0
+2.53.0-Meta
 

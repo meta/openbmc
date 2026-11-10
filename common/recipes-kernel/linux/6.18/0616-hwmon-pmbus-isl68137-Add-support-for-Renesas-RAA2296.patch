@@ -1,8 +1,8 @@
-From d47709f64f4cb5806698f2b60ed0eacb85528e13 Mon Sep 17 00:00:00 2001
+From 8e8da15932e065e1ad2edd8b093cb1b71dfab025 Mon Sep 17 00:00:00 2001
 From: Colin Huang <u8813345@gmail.com>
 Date: Mon, 15 Jun 2026 17:05:33 +0800
-Subject: [PATCH 2001/2003] hwmon: (pmbus/isl68137): Add support for Renesas
- RAA229639 and RAA229640
+Subject: [PATCH] hwmon: (pmbus/isl68137): Add support for Renesas RAA229639
+ and RAA229640
 
 Add support for the Renesas RAA229639 and RAA229640 PMBus
 voltage regulator devices.
@@ -21,7 +21,7 @@ Signed-off-by: Colin Huang <u8813345@gmail.com>
  1 file changed, 6 insertions(+)
 
 diff --git a/drivers/hwmon/pmbus/isl68137.c b/drivers/hwmon/pmbus/isl68137.c
-index ab54184b4..c72122639 100644
+index ab54184b4878..c7212263923e 100644
 --- a/drivers/hwmon/pmbus/isl68137.c
 +++ b/drivers/hwmon/pmbus/isl68137.c
 @@ -66,6 +66,8 @@ enum chips {
@@ -51,3 +51,6 @@ index ab54184b4..c72122639 100644
  	{ },
  };
  
+-- 
+2.53.0-Meta
+

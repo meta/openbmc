@@ -1,8 +1,7 @@
-From af326e70f21b19f50297dd5da7b27b5c5a6af66b Mon Sep 17 00:00:00 2001
+From 28fb5d83a5943a8cf9950f976cb167c9f44844a1 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 18:07:02 +0200
-Subject: [PATCH 51/70] tests/qtest: tmp421: cover temperature encoding and
- range
+Subject: [PATCH] tests/qtest: tmp421: cover temperature encoding and range
 
 Set a temperature over QMP and read it back through the two-byte and
 single-byte register paths, checking the fixed-point encoding and the

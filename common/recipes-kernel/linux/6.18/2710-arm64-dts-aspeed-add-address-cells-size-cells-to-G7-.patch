@@ -1,4 +1,4 @@
-From ce0ee4181845528c101af85ebb163d692d65b56c Mon Sep 17 00:00:00 2001
+From 8fc0450faab0caed36fff5de45e3535ecdccb65e Mon Sep 17 00:00:00 2001
 From: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
 Date: Mon, 22 Jun 2026 09:52:20 +0800
 Subject: [PATCH] arm64: dts: aspeed: add #address-cells/#size-cells to G7 MDIO

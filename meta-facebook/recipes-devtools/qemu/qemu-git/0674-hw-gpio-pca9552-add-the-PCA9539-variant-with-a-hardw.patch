@@ -1,8 +1,8 @@
-From 0dccc29b77225f156395cfbfdd9b87602276da42 Mon Sep 17 00:00:00 2001
+From b3675d796b4587a6c3ec62ef626fbf4a8b6159b4 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 6 Aug 2026 17:24:49 +0200
-Subject: [PATCH 62/70] hw/gpio: pca9552: add the PCA9539 variant with a
- hardware reset pin
+Subject: [PATCH] hw/gpio: pca9552: add the PCA9539 variant with a hardware
+ reset pin
 
 The PCA9539 is register-compatible with the PCA9535 and PCA9555 I/O
 expanders already handled here, differing only by an active-low
@@ -27,7 +27,7 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  2 files changed, 87 insertions(+), 3 deletions(-)
 
 diff --git a/hw/gpio/pca9552.c b/hw/gpio/pca9552.c
-index 93ef5bd9ad..b70e8bef61 100644
+index 48f808f239..c3f4046fd5 100644
 --- a/hw/gpio/pca9552.c
 +++ b/hw/gpio/pca9552.c
 @@ -5,12 +5,19 @@
@@ -50,7 +50,7 @@ index 93ef5bd9ad..b70e8bef61 100644
   */
  
  #include "qemu/osdep.h"
-@@ -44,6 +51,9 @@ struct PCA955xState {
+@@ -45,6 +52,9 @@ struct PCA955xState {
      qemu_irq gpio_out[PCA955X_PIN_COUNT_MAX];
      uint8_t ext_state[PCA955X_PIN_COUNT_MAX];
      char *description; /* For debugging purpose only */
@@ -60,7 +60,7 @@ index 93ef5bd9ad..b70e8bef61 100644
  };
  
  struct PCA955xClass {
-@@ -54,6 +64,7 @@ struct PCA955xClass {
+@@ -55,6 +65,7 @@ struct PCA955xClass {
      uint8_t pin_count;
      uint8_t max_reg;
      bool has_led_support;
@@ -68,7 +68,7 @@ index 93ef5bd9ad..b70e8bef61 100644
  };
  
  /*
-@@ -353,6 +364,12 @@ static int pca955x_send(I2CSlave *i2c, uint8_t data)
+@@ -354,6 +365,12 @@ static int pca955x_send(I2CSlave *i2c, uint8_t data)
  static int pca955x_event(I2CSlave *i2c, enum i2c_event event)
  {
      PCA955xState *s = PCA955X(i2c);
@@ -81,7 +81,7 @@ index 93ef5bd9ad..b70e8bef61 100644
  
      s->len = 0;
      return 0;
-@@ -506,6 +523,24 @@ static void pca955x_set_pin(Object *obj, Visitor *v, const char *name,
+@@ -507,6 +524,24 @@ static void pca955x_set_pin(Object *obj, Visitor *v, const char *name,
      pca955x_set_ext_state(s, pin, state != PCA9552_PIN_LOW);
  }
  
@@ -106,7 +106,7 @@ index 93ef5bd9ad..b70e8bef61 100644
  static const VMStateDescription pca9552_vmstate = {
      .name = "PCA9552",
      .version_id = 0,
-@@ -517,6 +552,10 @@ static const VMStateDescription pca9552_vmstate = {
+@@ -518,6 +553,10 @@ static const VMStateDescription pca9552_vmstate = {
          VMSTATE_UINT8_ARRAY(ext_state, PCA955xState, PCA955X_PIN_COUNT_MAX),
          VMSTATE_I2C_SLAVE(parent_obj, PCA955xState),
          VMSTATE_END_OF_LIST()
@@ -117,7 +117,7 @@ index 93ef5bd9ad..b70e8bef61 100644
      }
  };
  
-@@ -544,8 +583,6 @@ static void pca9535_reset_hold(Object *obj, ResetType type)
+@@ -545,8 +584,6 @@ static void pca9535_reset_hold(Object *obj, ResetType type)
  {
      PCA955xState *s = PCA955X(obj);
  
@@ -126,7 +126,7 @@ index 93ef5bd9ad..b70e8bef61 100644
      s->regs[PCA9535_OUTPUT0] = 0xFF;  /* All outputs high */
      s->regs[PCA9535_OUTPUT1] = 0xFF;  /* All outputs high */
      s->regs[PCA9535_POLARITY0] = 0x00; /* No polarity inversion */
-@@ -553,7 +590,15 @@ static void pca9535_reset_hold(Object *obj, ResetType type)
+@@ -554,7 +591,15 @@ static void pca9535_reset_hold(Object *obj, ResetType type)
      s->regs[PCA9535_CONFIG0] = 0xFF;  /* All pins as inputs */
      s->regs[PCA9535_CONFIG1] = 0xFF;  /* All pins as inputs */
  
@@ -143,7 +143,7 @@ index 93ef5bd9ad..b70e8bef61 100644
      pca955x_update_pin_input(s, true);
  
      s->pointer = 0xFF;
-@@ -604,6 +649,26 @@ static void pca955x_gpio_in_handler(void *opaque, int pin, int level)
+@@ -605,6 +650,26 @@ static void pca955x_gpio_in_handler(void *opaque, int pin, int level)
      pca955x_set_ext_state(s, pin, level);
  }
  
@@ -170,7 +170,7 @@ index 93ef5bd9ad..b70e8bef61 100644
  static void pca955x_realize(DeviceState *dev, Error **errp)
  {
      PCA955xClass *k = PCA955X_GET_CLASS(dev);
-@@ -615,6 +680,11 @@ static void pca955x_realize(DeviceState *dev, Error **errp)
+@@ -616,6 +681,11 @@ static void pca955x_realize(DeviceState *dev, Error **errp)
  
      qdev_init_gpio_out(dev, s->gpio_out, k->pin_count);
      qdev_init_gpio_in(dev, pca955x_gpio_in_handler, k->pin_count);
@@ -182,7 +182,7 @@ index 93ef5bd9ad..b70e8bef61 100644
  }
  
  static const Property pca955x_properties[] = {
-@@ -659,6 +729,14 @@ static void pca95x5_class_init(ObjectClass *oc, const void *data)
+@@ -660,6 +730,14 @@ static void pca95x5_class_init(ObjectClass *oc, const void *data)
      pc->has_led_support = false;
  }
  
@@ -197,7 +197,7 @@ index 93ef5bd9ad..b70e8bef61 100644
  static const TypeInfo pca955x_types[] = {
      {
          .name          = TYPE_PCA955X,
-@@ -683,6 +761,11 @@ static const TypeInfo pca955x_types[] = {
+@@ -684,6 +762,11 @@ static const TypeInfo pca955x_types[] = {
          .name          = TYPE_PCA9555,
          .parent        = TYPE_PCA955X,
          .class_init    = pca95x5_class_init,

@@ -1,8 +1,7 @@
-From a6130c46624efd211d2e03d5806a6492e0db9f3f Mon Sep 17 00:00:00 2001
+From 440c23b39364d20a55c4b823503bc1833d253adc Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Fri, 14 Aug 2026 17:19:15 +0200
-Subject: [PATCH 46/70] hw/sensor: tmp421: keep the measurement across a range
- change
+Subject: [PATCH] hw/sensor: tmp421: keep the measurement across a range change
 
 The model stored temperatures in their register form, which carries
 the extended-range offset. Leaving that range therefore reinterpreted

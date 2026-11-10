@@ -1,8 +1,7 @@
-From 904acaa4b469fcefa0affef37567d800c5da7465 Mon Sep 17 00:00:00 2001
+From da8539e77e07f51520b760cd742f98b3e036fb53 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 7 Sep 2026 09:54:59 +0200
-Subject: [PATCH 70/70] tests/functional/arm: bletchley: cover the board
- revision
+Subject: [PATCH] tests/functional/arm: bletchley: cover the board revision
 
 Boot the machine a second time with the other revision selected and
 check both revision-specific pieces: the hardware strap the board

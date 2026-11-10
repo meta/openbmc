@@ -1,8 +1,8 @@
-From 28399bd831a626236b7d0c2bd9c6afc5098ff88a Mon Sep 17 00:00:00 2001
+From 726b771e52fc6d5b50cb13f2af5e4e9f931d4e39 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Fri, 14 Aug 2026 18:30:30 +0200
-Subject: [PATCH 54/70] tests/qtest: tmp421: cover the register form of the
- migration stream
+Subject: [PATCH] tests/qtest: tmp421: cover the register form of the migration
+ stream
 
 A stream with no measurement subsection has the shape of every stream
 written before that subsection existed; loading one exercises the

@@ -1,4 +1,4 @@
-From fc6cb55fe0fb4d864540d2941b4982d0f7a8acbf Mon Sep 17 00:00:00 2001
+From 2e9302fe8f69c08eba51ce56366f378ade615844 Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Tue, 7 Jan 2025 13:35:34 +0800
 Subject: [PATCH] iio: adc: aspeed: Disable the last channel by default

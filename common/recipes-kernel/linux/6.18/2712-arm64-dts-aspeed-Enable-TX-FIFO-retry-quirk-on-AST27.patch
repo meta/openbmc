@@ -1,4 +1,4 @@
-From 3c010984af804e990bdf9804888d0884a1a1af77 Mon Sep 17 00:00:00 2001
+From 02f56c8bb9a695c8264f1f929eb4b3028dcef5a0 Mon Sep 17 00:00:00 2001
 From: Bianca Giocas <bgiocas@arista.com>
 Date: Thu, 16 Jul 2026 11:16:23 +0000
 Subject: [PATCH] arm64: dts: aspeed: Enable TX FIFO retry quirk on AST2700

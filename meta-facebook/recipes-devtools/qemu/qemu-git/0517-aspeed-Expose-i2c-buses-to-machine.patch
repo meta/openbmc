@@ -1,4 +1,4 @@
-From 943547f3929f66a24674d3e71b7ef6081d3ba6ce Mon Sep 17 00:00:00 2001
+From 9d236ebcffaef0e66d5023eaa4e1d4a753e21dc4 Mon Sep 17 00:00:00 2001
 From: Peter Delevoryas <peter@pjd.dev>
 Date: Wed, 17 Aug 2022 10:14:07 +0200
 Subject: [PATCH] aspeed: Expose i2c buses to machine
@@ -92,10 +92,10 @@ index 8dbd43651c..447156a5d0 100644
  }
  
 diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
-index 4be392199f..bcd88bce45 100644
+index 15154a3fe6..b346da0b34 100644
 --- a/hw/i2c/aspeed_i2c.c
 +++ b/hw/i2c/aspeed_i2c.c
-@@ -1663,7 +1663,12 @@ static void aspeed_i2c_bus_realize(DeviceState *dev, Error **errp)
+@@ -1664,7 +1664,12 @@ static void aspeed_i2c_bus_realize(DeviceState *dev, Error **errp)
  
      sysbus_init_irq(SYS_BUS_DEVICE(dev), &s->irq);
  
@@ -109,7 +109,7 @@ index 4be392199f..bcd88bce45 100644
      s->slave = i2c_slave_create_simple(s->bus, TYPE_ASPEED_I2C_BUS_SLAVE,
                                         0xff);
      ASPEED_I2C_BUS_SLAVE(s->slave)->bus = s;
-@@ -1682,6 +1687,7 @@ static const Property aspeed_i2c_bus_properties[] = {
+@@ -1683,6 +1688,7 @@ static const Property aspeed_i2c_bus_properties[] = {
      DEFINE_PROP_LINK("controller", AspeedI2CBus, controller, TYPE_ASPEED_I2C,
                       AspeedI2CState *),
      DEFINE_PROP_STRING("bus-name", AspeedI2CBus, name),
@@ -247,5 +247,5 @@ index 0000000000..b8fbd1bf9a
 +
 +#endif
 -- 
-2.52.0
+2.53.0-Meta
 

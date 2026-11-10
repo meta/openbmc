@@ -1,8 +1,8 @@
-From 9d97a30857fae74e35f607abc263d37cf42a10f0 Mon Sep 17 00:00:00 2001
+From 42d5fe19d83fb9c6b5e5ce27445219aa0be63086 Mon Sep 17 00:00:00 2001
 From: Colin Huang <u8813345@gmail.com>
 Date: Mon, 15 Jun 2026 17:03:25 +0800
-Subject: [PATCH 2000/2003] dt-bindings: hwmon: pmbus: isl68137: Add RAA229639
- and RAA229640
+Subject: [PATCH] dt-bindings: hwmon: pmbus: isl68137: Add RAA229639 and
+ RAA229640
 
 Add Device Tree compatible strings for Renesas RAA229639 and
 RAA229640 PMBus devices.
@@ -17,7 +17,7 @@ Signed-off-by: Colin Huang <u8813345@gmail.com>
  1 file changed, 2 insertions(+)
 
 diff --git a/Documentation/devicetree/bindings/hwmon/pmbus/isil,isl68137.yaml b/Documentation/devicetree/bindings/hwmon/pmbus/isil,isl68137.yaml
-index ae23a0537..3f5f49c61 100644
+index ae23a05375cb..3f5f49c61481 100644
 --- a/Documentation/devicetree/bindings/hwmon/pmbus/isil,isl68137.yaml
 +++ b/Documentation/devicetree/bindings/hwmon/pmbus/isil,isl68137.yaml
 @@ -59,6 +59,8 @@ properties:
@@ -29,3 +29,6 @@ index ae23a0537..3f5f49c61 100644
  
    reg:
      maxItems: 1
+-- 
+2.53.0-Meta
+

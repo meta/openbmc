@@ -1,4 +1,4 @@
-From 1ccaf01c01d5c6641fdde7fef19745da927c7695 Mon Sep 17 00:00:00 2001
+From b6cb51396e2b899730345fd7547dfa8ca19d7673 Mon Sep 17 00:00:00 2001
 From: Alan Tsai <alan-tsai@quantatw.com>
 Date: Thu, 3 Sep 2026 14:28:59 +0800
 Subject: [PATCH] aspeed: i2c: fix AST2700 target buffer mode NULL dereference
@@ -64,5 +64,5 @@ index 772bd9fc48ee..da7ab72e428e 100644
  		sirq_log = readl(i2c_bus->reg_base + AST2700_I2CC_SIRQ_LOG);
  		target_rx_len = AST2600_I2C_GET_RX_DMA_LEN(readl(i2c_bus->reg_base +
 -- 
-2.25.1
+2.53.0-Meta
 

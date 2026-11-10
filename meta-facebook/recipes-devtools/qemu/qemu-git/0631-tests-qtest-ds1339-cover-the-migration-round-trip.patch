@@ -1,7 +1,7 @@
-From ab43923279a990679848cb506c26590a21fa438a Mon Sep 17 00:00:00 2001
+From 1fd69c407fe06f0df5e9a2997c7f5bcccfb99640 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 17:16:33 +0200
-Subject: [PATCH 19/70] tests/qtest: ds1339: cover the migration round trip
+Subject: [PATCH] tests/qtest: ds1339: cover the migration round trip
 
 Nothing covered the migration of the register file or the oscillator
 state, so a dropped field or a wrong version gate would have gone

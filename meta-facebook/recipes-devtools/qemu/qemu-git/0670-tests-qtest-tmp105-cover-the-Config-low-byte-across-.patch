@@ -1,7 +1,7 @@
-From c6a8e6d9fe9114843702e062ac14b3703d12b825 Mon Sep 17 00:00:00 2001
+From fe1ac1dba11f8d0522720fd9e99c80dff38372f1 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Fri, 4 Sep 2026 14:21:18 +0200
-Subject: [PATCH 58/70] tests/qtest: tmp105: cover the Config low byte across a
+Subject: [PATCH] tests/qtest: tmp105: cover the Config low byte across a
  migration
 
 The byte rides in an optional subsection, so a dropped field or a wrong

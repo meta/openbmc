@@ -1,7 +1,7 @@
-From 2883df58953e22a38b1ce330bc562616942330b4 Mon Sep 17 00:00:00 2001
+From e264bf086c4b68cd07fe8acab19d4f24f0e36476 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 3 Aug 2026 15:24:04 +0200
-Subject: [PATCH 37/70] hw/arm: minerva: populate EEPROM data
+Subject: [PATCH] hw/arm: minerva: populate EEPROM data
 
 The board carries 31 FRU EEPROMs: three on the management module
 itself, one per fan controller board, and the rest on the compute and

@@ -1,4 +1,4 @@
-From 806cd3c90ea6a9640a94967361c3396cb8f3523a Mon Sep 17 00:00:00 2001
+From 7e78ad9a691ad986474858f2df477846e1f31678 Mon Sep 17 00:00:00 2001
 From: Zinc Lim <zinclim@meta.com>
 Date: Fri, 28 Aug 2026 11:58:40 -0700
 Subject: [PATCH] hw/i2c/aspeed_i2c: model AST2700 I2CC_SIRQ_LOG target address
@@ -23,10 +23,10 @@ addr1 only, and no hit on target reads (I2C_START_RECV unimplemented).
  2 files changed, 44 insertions(+)
 
 diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
-index cb1e15bebc..41035cfbc0 100644
+index 3322f2c3e6..e00991b069 100644
 --- a/hw/i2c/aspeed_i2c.c
 +++ b/hw/i2c/aspeed_i2c.c
-@@ -173,6 +173,16 @@ static uint64_t aspeed_i2c_bus_new_read(AspeedI2CBus *bus, hwaddr offset,
+@@ -174,6 +174,16 @@ static uint64_t aspeed_i2c_bus_new_read(AspeedI2CBus *bus, hwaddr offset,
          /* Remember what the target ISR sampled; see the write handler. */
          bus->slave_intr_sts_seen = value;
          break;
@@ -43,7 +43,7 @@ index cb1e15bebc..41035cfbc0 100644
      case A_I2CC_DMA_ADDR:
          value = extract64(bus->dma_dram_offset, 0, 32);
          break;
-@@ -1628,6 +1638,28 @@ static void aspeed_i2c_bus_slave_buff_rx_store(AspeedI2CBus *bus, uint8_t data)
+@@ -1629,6 +1639,28 @@ static void aspeed_i2c_bus_slave_buff_rx_store(AspeedI2CBus *bus, uint8_t data)
      i2c_ack(bus->bus);
  }
  
@@ -72,7 +72,7 @@ index cb1e15bebc..41035cfbc0 100644
  static int aspeed_i2c_bus_new_slave_event(AspeedI2CBus *bus,
                                            enum i2c_event event)
  {
-@@ -1637,6 +1669,7 @@ static int aspeed_i2c_bus_new_slave_event(AspeedI2CBus *bus,
+@@ -1638,6 +1670,7 @@ static int aspeed_i2c_bus_new_slave_event(AspeedI2CBus *bus,
  
      switch (event) {
      case I2C_START_SEND_ASYNC:
@@ -80,7 +80,7 @@ index cb1e15bebc..41035cfbc0 100644
          if (rx_dma) {
              aspeed_i2c_bus_slave_dma_rx_start(bus);
          } else if (ARRAY_FIELD_EX32(bus->regs, I2CS_CMD, PKT_MODE_EN)) {
-@@ -2008,6 +2041,7 @@ static void aspeed_2700_i2c_class_init(ObjectClass *klass, const void *data)
+@@ -2010,6 +2043,7 @@ static void aspeed_2700_i2c_class_init(ObjectClass *klass, const void *data)
      aic->bus_pool_base = aspeed_2500_i2c_bus_pool_base;
      aic->has_dma = true;
      aic->mem_size = 0x2000;
@@ -117,5 +117,5 @@ index ece92897e0..1a35579423 100644
      bool check_sram;
      bool has_dma;
 -- 
-2.52.0
+2.53.0-Meta
 

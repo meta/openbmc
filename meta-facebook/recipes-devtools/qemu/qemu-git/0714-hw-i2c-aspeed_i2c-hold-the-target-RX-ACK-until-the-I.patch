@@ -1,4 +1,4 @@
-From ba96549f242cb190835ef863755f397fa40addbc Mon Sep 17 00:00:00 2001
+From 68f346b66da3b50b359a98e348c8976bbc09ed6e Mon Sep 17 00:00:00 2001
 From: Zinc Lim <zinclim@meta.com>
 Date: Thu, 1 Oct 2026 18:30:00 -0700
 Subject: [PATCH] hw/i2c/aspeed_i2c: hold the target RX ACK until the ISR acks
@@ -43,10 +43,10 @@ Signed-off-by: Zinc Lim <zinclim@meta.com>
  2 files changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
-index 7ecbc215fd..ffdbe998e6 100644
+index ef974c8472..c50f64975e 100644
 --- a/hw/i2c/aspeed_i2c.c
 +++ b/hw/i2c/aspeed_i2c.c
-@@ -1002,7 +1002,16 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+@@ -1003,7 +1003,16 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
              }
              if (ARRAY_FIELD_EX32(bus->regs, I2CS_INTR_STS, WAIT_RX_DMA)) {
                  ARRAY_FIELD_DP32(bus->regs, I2CS_INTR_STS, WAIT_RX_DMA, 0);
@@ -64,7 +64,7 @@ index 7ecbc215fd..ffdbe998e6 100644
              }
          }
          break;
-@@ -1052,6 +1061,10 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+@@ -1053,6 +1062,10 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
              qemu_irq_lower(aic->bus_get_irq(bus));
          }
          aspeed_i2c_bus_raise_interrupt(bus);
@@ -75,7 +75,7 @@ index 7ecbc215fd..ffdbe998e6 100644
          break;
      case A_I2CS_DMA_LEN_STS:
          bus->regs[R_I2CS_DMA_LEN_STS] = 0;
-@@ -1870,6 +1883,7 @@ static void aspeed_i2c_bus_reset_hold(Object *obj, ResetType type)
+@@ -1871,6 +1884,7 @@ static void aspeed_i2c_bus_reset_hold(Object *obj, ResetType type)
      memset(s->regs, 0, sizeof(s->regs));
      s->pending_intr_sts = 0;
      s->slave_intr_sts_seen = UINT32_MAX;

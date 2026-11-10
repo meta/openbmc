@@ -1,7 +1,7 @@
-From cc7988b956db34273e4fc5a64bf4c31a8da5387e Mon Sep 17 00:00:00 2001
+From dfc4bae008f98c4b04f92d06a52593ab8cd8acfc Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 18:07:53 +0200
-Subject: [PATCH 52/70] tests/qtest: tmp421: cover per-variant channels and
+Subject: [PATCH] tests/qtest: tmp421: cover per-variant channels and
  enablement
 
 Check that each variant exposes only its own temperature properties,

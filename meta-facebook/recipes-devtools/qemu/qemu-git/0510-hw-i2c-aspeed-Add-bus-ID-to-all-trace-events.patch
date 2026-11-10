@@ -1,4 +1,4 @@
-From 63c8a6fc21a15d5c62ffe651760ed77225b4ed82 Mon Sep 17 00:00:00 2001
+From df107c444414ce95b7b573d45badc3bc0b1720d9 Mon Sep 17 00:00:00 2001
 From: Peter Delevoryas <peter@pjd.dev>
 Date: Wed, 24 Aug 2022 00:48:44 -0700
 Subject: [PATCH] hw/i2c/aspeed: Add bus ID to all trace events
@@ -10,10 +10,10 @@ Signed-off-by: Peter Delevoryas <peter@pjd.dev>
  2 files changed, 18 insertions(+), 14 deletions(-)
 
 diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
-index a2ab6fa1ab..f4bba51228 100644
+index 2344e70a4f..539f916d61 100644
 --- a/hw/i2c/aspeed_i2c.c
 +++ b/hw/i2c/aspeed_i2c.c
-@@ -63,7 +63,8 @@ static inline void aspeed_i2c_bus_raise_interrupt(AspeedI2CBus *bus)
+@@ -64,7 +64,8 @@ static inline void aspeed_i2c_bus_raise_interrupt(AspeedI2CBus *bus)
                 SHARED_ARRAY_FIELD_EX32(bus->regs, reg_intr_sts, ABNORMAL) ?
                                                 "abnormal"  : "");
  
@@ -23,7 +23,7 @@ index a2ab6fa1ab..f4bba51228 100644
      }
  
      raise_irq = bus->regs[reg_intr_sts] & intr_ctrl_mask ;
-@@ -325,7 +326,8 @@ static int aspeed_i2c_bus_send_dma_pool(AspeedI2CBus *bus)
+@@ -326,7 +327,8 @@ static int aspeed_i2c_bus_send_dma_pool(AspeedI2CBus *bus)
      ARRAY_FIELD_DP32(bus->regs, I2CM_DMA_LEN_STS, TX_LEN, 0);
      for (i = 0; bus->regs[reg_dma_len] &&
                  offset + i < ASPEED_I2C_BUS_POOL_SIZE; i++) {
@@ -33,7 +33,7 @@ index a2ab6fa1ab..f4bba51228 100644
                                    pool_base[offset + i]);
          ret = i2c_send(bus->bus, pool_base[offset + i]);
          bus->regs[reg_dma_len]--;
-@@ -372,7 +374,8 @@ static void aspeed_i2c_bus_recv_dma_pool(AspeedI2CBus *bus)
+@@ -373,7 +375,8 @@ static void aspeed_i2c_bus_recv_dma_pool(AspeedI2CBus *bus)
      for (i = 0; bus->regs[reg_dma_len] &&
                  offset + i < ASPEED_I2C_BUS_POOL_SIZE; i++) {
          pool_base[offset + i] = i2c_recv(bus->bus);
@@ -43,7 +43,7 @@ index a2ab6fa1ab..f4bba51228 100644
                                    pool_base[offset + i]);
          if (i == 0) {
              aspeed_i2c_bus_latch_rx_byte(bus, pool_base[offset]);
-@@ -399,7 +402,7 @@ static int aspeed_i2c_bus_send(AspeedI2CBus *bus)
+@@ -400,7 +403,7 @@ static int aspeed_i2c_bus_send(AspeedI2CBus *bus)
          for (i = 0; i < pool_tx_count; i++) {
              uint8_t *pool_base = aic->bus_pool_base(bus);
  
@@ -52,7 +52,7 @@ index a2ab6fa1ab..f4bba51228 100644
                                        pool_base[i]);
              ret = i2c_send(bus->bus, pool_base[i]);
              if (ret) {
-@@ -424,7 +427,7 @@ static int aspeed_i2c_bus_send(AspeedI2CBus *bus)
+@@ -425,7 +428,7 @@ static int aspeed_i2c_bus_send(AspeedI2CBus *bus)
              if (ret) {
                  break;
              }
@@ -61,7 +61,7 @@ index a2ab6fa1ab..f4bba51228 100644
                                        bus->regs[reg_dma_len], data);
              ret = i2c_send(bus->bus, data);
              if (ret) {
-@@ -439,7 +442,7 @@ static int aspeed_i2c_bus_send(AspeedI2CBus *bus)
+@@ -440,7 +443,7 @@ static int aspeed_i2c_bus_send(AspeedI2CBus *bus)
          }
          SHARED_ARRAY_FIELD_DP32(bus->regs, reg_cmd, TX_DMA_EN, 0);
      } else {
@@ -70,7 +70,7 @@ index a2ab6fa1ab..f4bba51228 100644
                                    bus->regs[reg_byte_buf]);
          ret = i2c_send(bus->bus, bus->regs[reg_byte_buf]);
      }
-@@ -469,7 +472,7 @@ static void aspeed_i2c_bus_recv(AspeedI2CBus *bus)
+@@ -470,7 +473,7 @@ static void aspeed_i2c_bus_recv(AspeedI2CBus *bus)
  
          for (i = 0; i < pool_rx_count; i++) {
              pool_base[i] = i2c_recv(bus->bus);
@@ -79,7 +79,7 @@ index a2ab6fa1ab..f4bba51228 100644
                                        pool_base[i]);
              if (i == 0) {
                  aspeed_i2c_bus_latch_rx_byte(bus, pool_base[0]);
-@@ -495,7 +498,7 @@ static void aspeed_i2c_bus_recv(AspeedI2CBus *bus)
+@@ -496,7 +499,7 @@ static void aspeed_i2c_bus_recv(AspeedI2CBus *bus)
              MemTxResult result;
  
              data = i2c_recv(bus->bus);
@@ -88,7 +88,7 @@ index a2ab6fa1ab..f4bba51228 100644
                                        bus->regs[reg_dma_len], data);
  
              result = address_space_write(&s->dram_as, bus->dma_dram_offset,
-@@ -523,7 +526,8 @@ static void aspeed_i2c_bus_recv(AspeedI2CBus *bus)
+@@ -524,7 +527,8 @@ static void aspeed_i2c_bus_recv(AspeedI2CBus *bus)
          SHARED_ARRAY_FIELD_DP32(bus->regs, reg_cmd, RX_DMA_EN, 0);
      } else {
          data = i2c_recv(bus->bus);
@@ -98,7 +98,7 @@ index a2ab6fa1ab..f4bba51228 100644
          aspeed_i2c_bus_latch_rx_byte(bus, data);
      }
  }
-@@ -621,7 +625,7 @@ static void aspeed_i2c_bus_cmd_dump(AspeedI2CBus *bus)
+@@ -622,7 +626,7 @@ static void aspeed_i2c_bus_cmd_dump(AspeedI2CBus *bus)
      SHARED_ARRAY_FIELD_EX32(bus->regs, reg_cmd, M_S_RX_CMD_LAST) ? "last|" : "",
      SHARED_ARRAY_FIELD_EX32(bus->regs, reg_cmd, M_STOP_CMD) ? "stop|" : "");
  
@@ -129,5 +129,5 @@ index 5337e922b5..cdee7ad05c 100644
  
  # mpc_i2c.c
 -- 
-2.54.0
+2.53.0-Meta
 

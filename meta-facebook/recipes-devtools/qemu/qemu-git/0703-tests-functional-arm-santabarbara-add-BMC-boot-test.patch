@@ -1,4 +1,4 @@
-From 07ea5cb2a08b58cc4c12b7b7903b725f196cda72 Mon Sep 17 00:00:00 2001
+From 59f6f9ad1f689d74a155a61e9435fbb724b3095c Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 6 Aug 2026 15:54:34 +0200
 Subject: [PATCH] tests/functional/arm: santabarbara: add BMC boot test
@@ -15,7 +15,7 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  create mode 100644 tests/functional/arm/test_aspeed_santabarbara.py
 
 diff --git a/tests/functional/arm/meson.build b/tests/functional/arm/meson.build
-index e82274b723..8e015b2266 100644
+index f1d0672f30..20751e0b36 100644
 --- a/tests/functional/arm/meson.build
 +++ b/tests/functional/arm/meson.build
 @@ -20,6 +20,7 @@ test_arm_timeouts = {
@@ -26,7 +26,7 @@ index e82274b723..8e015b2266 100644
    'bpim2u' : 500,
    'collie' : 180,
    'cubieboard' : 360,
-@@ -59,6 +60,7 @@ tests_arm_system_thorough = [
+@@ -62,6 +63,7 @@ tests_arm_system_thorough = [
    'aspeed_minerva',
    'aspeed_rainier',
    'aspeed_sanmiguel',
@@ -119,5 +119,5 @@ index 0000000000..05abf77e63
 +if __name__ == '__main__':
 +    AspeedTest.main()
 -- 
-2.54.0
+2.53.0-Meta
 

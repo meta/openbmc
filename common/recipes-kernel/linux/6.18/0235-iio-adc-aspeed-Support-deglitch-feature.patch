@@ -1,4 +1,4 @@
-From 7b0ca651b2988d62e7d26261fd804eb490545a58 Mon Sep 17 00:00:00 2001
+From d83092011f84e1d9e2a1c49de72f4fd0157e7cfd Mon Sep 17 00:00:00 2001
 From: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
 Date: Mon, 29 Jun 2026 11:40:26 +0800
 Subject: [PATCH] iio: adc: aspeed: Support deglitch feature.

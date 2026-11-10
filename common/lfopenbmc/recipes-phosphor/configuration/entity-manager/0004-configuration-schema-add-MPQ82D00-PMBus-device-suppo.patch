@@ -1,4 +1,4 @@
-From 340592f000bf26e7b732d4106cd3596e6d78cc49 Mon Sep 17 00:00:00 2001
+From cabc284c4e854cbf0a8c5e47b76de9b5f5dd8c0c Mon Sep 17 00:00:00 2001
 From: Angela Cheng <angelaptcheng@gmail.com>
 Date: Fri, 21 Aug 2026 02:31:47 +0000
 Subject: [PATCH] configuration: schema: add MPQ82D00 PMBus device support
@@ -18,7 +18,7 @@ The corresponding kernel driver was added in: https://github.com/facebookexterna
  2 files changed, 2 insertions(+)
 
 diff --git a/schemas/firmware.json b/schemas/firmware.json
-index c921811..38affda 100644
+index 412154d..0da6031 100644
 --- a/schemas/firmware.json
 +++ b/schemas/firmware.json
 @@ -55,6 +55,7 @@
@@ -30,10 +30,10 @@ index c921811..38affda 100644
                          "RAA22XGen2Firmware",
                          "RAA22XGen3p5Firmware",
 diff --git a/schemas/legacy.json b/schemas/legacy.json
-index cc4afec..c193f5b 100644
+index 49970ff..caecd99 100644
 --- a/schemas/legacy.json
 +++ b/schemas/legacy.json
-@@ -1033,6 +1033,7 @@
+@@ -1037,6 +1037,7 @@
                          "MP9941",
                          "MP9945",
                          "MP29612",

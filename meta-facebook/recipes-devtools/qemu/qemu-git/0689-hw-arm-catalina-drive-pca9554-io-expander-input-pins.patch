@@ -1,4 +1,4 @@
-From f4d7c6badd567c8e783a5fef6560c5f9180ebcbf Mon Sep 17 00:00:00 2001
+From 94c78b1e2e006e432a040c91e5dfb9467623d835 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot via <qemu-arm@nongnu.org>
 Date: Fri, 31 Jul 2026 12:45:23 +0200
 Subject: [PATCH] hw/arm: catalina: drive pca9554 io expander input pins
@@ -22,10 +22,10 @@ Signed-off-by: Cédric Le Goater <clg@redhat.com>
  1 file changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/hw/arm/aspeed_ast2600_catalina.c b/hw/arm/aspeed_ast2600_catalina.c
-index ad2953dfea..ec25ae7968 100644
+index 13dca7a846..5421b3edff 100644
 --- a/hw/arm/aspeed_ast2600_catalina.c
 +++ b/hw/arm/aspeed_ast2600_catalina.c
-@@ -544,9 +544,16 @@ static void catalina_bmc_i2c_init(AspeedMachineState *bmc)
+@@ -543,9 +543,16 @@ static void catalina_bmc_i2c_init(AspeedMachineState *bmc)
      i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 5), TYPE_TMP75, 0x4f);
  
      /* i2c1mux0ch6 */
@@ -46,5 +46,5 @@ index ad2953dfea..ec25ae7968 100644
      i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 6),
                              TYPE_PCA9555, 0x25);
 -- 
-2.54.0
+2.53.0-Meta
 

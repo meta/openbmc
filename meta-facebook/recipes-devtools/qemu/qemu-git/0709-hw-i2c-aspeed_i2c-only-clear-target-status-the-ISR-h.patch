@@ -1,4 +1,4 @@
-From 1f9c2df20b00297731ba810d15adf1dd992bd4f3 Mon Sep 17 00:00:00 2001
+From e73ca22ea2d36804cc351d2d403fe4b86129736c Mon Sep 17 00:00:00 2001
 From: Zinc Lim <zinclim@meta.com>
 Date: Thu, 20 Aug 2026 19:02:02 -0700
 Subject: [PATCH] hw/i2c/aspeed_i2c: only clear target status the ISR has seen
@@ -44,10 +44,10 @@ Signed-off-by: Zinc Lim <zinclim@meta.com>
  2 files changed, 41 insertions(+), 6 deletions(-)
 
 diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
-index ec91d51ea3..cb1e15bebc 100644
+index aa3f8fa5d8..3322f2c3e6 100644
 --- a/hw/i2c/aspeed_i2c.c
 +++ b/hw/i2c/aspeed_i2c.c
-@@ -164,11 +164,15 @@ static uint64_t aspeed_i2c_bus_new_read(AspeedI2CBus *bus, hwaddr offset,
+@@ -165,11 +165,15 @@ static uint64_t aspeed_i2c_bus_new_read(AspeedI2CBus *bus, hwaddr offset,
      case A_I2CS_CMD:
      case A_I2CS_INTR_CTRL:
      case A_I2CS_DMA_LEN_STS:
@@ -64,7 +64,7 @@ index ec91d51ea3..cb1e15bebc 100644
      case A_I2CC_DMA_ADDR:
          value = extract64(bus->dma_dram_offset, 0, 32);
          break;
-@@ -758,6 +762,8 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+@@ -759,6 +763,8 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
      bool w1t;
      uint32_t old_intr;
      uint32_t cmd_intr;
@@ -73,7 +73,7 @@ index ec91d51ea3..cb1e15bebc 100644
  
      trace_aspeed_i2c_bus_write(bus->id, offset, size, value);
  
-@@ -939,15 +945,34 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+@@ -940,15 +946,34 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
          break;
  
      case A_I2CS_INTR_STS:
@@ -113,7 +113,7 @@ index ec91d51ea3..cb1e15bebc 100644
              }
          } else {
              /* Same invariant on the explicit write-to-clear path. */
-@@ -1740,6 +1765,7 @@ static void aspeed_i2c_bus_reset_hold(Object *obj, ResetType type)
+@@ -1741,6 +1766,7 @@ static void aspeed_i2c_bus_reset_hold(Object *obj, ResetType type)
  
      memset(s->regs, 0, sizeof(s->regs));
      s->pending_intr_sts = 0;
@@ -149,5 +149,5 @@ index 3d5bf4aeb3..ece92897e0 100644
  
  struct AspeedI2CState {
 -- 
-2.52.0
+2.53.0-Meta
 

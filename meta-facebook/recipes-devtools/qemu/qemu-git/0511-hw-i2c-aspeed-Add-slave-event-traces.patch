@@ -1,4 +1,4 @@
-From 60dbfb56025f2d39b2f98880293a0354dda3804e Mon Sep 17 00:00:00 2001
+From f202385515fe4776131bdf66e2e9081384da18b0 Mon Sep 17 00:00:00 2001
 From: Peter Delevoryas <peter@pjd.dev>
 Date: Wed, 24 Aug 2022 01:53:43 -0700
 Subject: [PATCH] hw/i2c/aspeed: Add slave event traces
@@ -10,10 +10,10 @@ Signed-off-by: Peter Delevoryas <peter@pjd.dev>
  2 files changed, 15 insertions(+)
 
 diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
-index f4bba51228..2a3fbb00a1 100644
+index 539f916d61..a896c23b28 100644
 --- a/hw/i2c/aspeed_i2c.c
 +++ b/hw/i2c/aspeed_i2c.c
-@@ -1498,11 +1498,20 @@ static void aspeed_i2c_class_init(ObjectClass *klass, const void *data)
+@@ -1499,11 +1499,20 @@ static void aspeed_i2c_class_init(ObjectClass *klass, const void *data)
      dc->desc = "Aspeed I2C Controller";
  }
  
@@ -34,7 +34,7 @@ index f4bba51228..2a3fbb00a1 100644
      switch (event) {
      case I2C_START_SEND_ASYNC:
          if (!SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CS_CMD, RX_DMA_EN)) {
-@@ -1548,6 +1557,8 @@ static int aspeed_i2c_bus_slave_event(I2CSlave *slave, enum i2c_event event)
+@@ -1549,6 +1558,8 @@ static int aspeed_i2c_bus_slave_event(I2CSlave *slave, enum i2c_event event)
          return aspeed_i2c_bus_new_slave_event(bus, event);
      }
  
@@ -43,7 +43,7 @@ index f4bba51228..2a3fbb00a1 100644
      switch (event) {
      case I2C_START_SEND_ASYNC:
          /* Bit[0] == 0 indicates "send". */
-@@ -1568,6 +1579,8 @@ static int aspeed_i2c_bus_slave_event(I2CSlave *slave, enum i2c_event event)
+@@ -1569,6 +1580,8 @@ static int aspeed_i2c_bus_slave_event(I2CSlave *slave, enum i2c_event event)
          break;
  
      default:
@@ -66,5 +66,5 @@ index cdee7ad05c..8de645838b 100644
  
  # mpc_i2c.c
 -- 
-2.54.0
+2.53.0-Meta
 

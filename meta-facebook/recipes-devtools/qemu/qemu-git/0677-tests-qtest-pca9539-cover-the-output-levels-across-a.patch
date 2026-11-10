@@ -1,7 +1,7 @@
-From da53483bb92b0edd544475effe96a0157f3b87b1 Mon Sep 17 00:00:00 2001
+From bc52437f8e52d1092401a0881ab1fb91e96dd49a Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Mon, 7 Sep 2026 11:03:14 +0200
-Subject: [PATCH 65/70] tests/qtest: pca9539: cover the output levels across a
+Subject: [PATCH] tests/qtest: pca9539: cover the output levels across a
  migration
 
 Check the destination restates what it restored: a pin the source

@@ -1,4 +1,4 @@
-From c0366b3872ba8d719d3ff2d33aa067fe0c9be92c Mon Sep 17 00:00:00 2001
+From 538c889e236f6361ea1814c7a3d799175ef22169 Mon Sep 17 00:00:00 2001
 From: Tommy Huang <tommy_huang@aspeedtech.com>
 Date: Fri, 11 Sep 2026 10:37:17 +0800
 Subject: [PATCH] i2c: ast2600: reset more ISR status

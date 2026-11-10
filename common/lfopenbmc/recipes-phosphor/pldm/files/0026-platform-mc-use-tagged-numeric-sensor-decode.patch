@@ -1,4 +1,4 @@
-From 5fc888a956a3e0b19d8642501b97846c7a2b5797 Mon Sep 17 00:00:00 2001
+From 9525535124f841c1347658f9b939bdae24163ca9 Mon Sep 17 00:00:00 2001
 From: Abhishek R <abhishek.ramireddygarireddy@arm.com>
 Date: Thu, 6 Aug 2026 14:48:45 +0000
 Subject: [PATCH] platform-mc: use tagged numeric sensor decode
@@ -18,10 +18,10 @@ Change-Id: Ib94ab8dbf6406357b9f0c70b6112b6d814b2c81c
  1 file changed, 52 insertions(+), 5 deletions(-)
 
 diff --git a/platform-mc/event_manager.cpp b/platform-mc/event_manager.cpp
-index c517712..39ffb9e 100644
+index 9ae7a7a..ff4f7b9 100644
 --- a/platform-mc/event_manager.cpp
 +++ b/platform-mc/event_manager.cpp
-@@ -20,6 +20,45 @@ namespace pldm
+@@ -23,6 +23,45 @@ namespace pldm
  {
  namespace platform_mc
  {
@@ -67,7 +67,7 @@ index c517712..39ffb9e 100644
  int EventManager::handlePlatformEvent(
      pldm_tid_t tid, uint16_t eventId, uint8_t eventClass,
      const uint8_t* eventData, size_t eventDataSize)
-@@ -215,11 +254,10 @@ int EventManager::processNumericSensorEvent(pldm_tid_t tid, uint16_t sensorId,
+@@ -218,11 +257,10 @@ int EventManager::processNumericSensorEvent(pldm_tid_t tid, uint16_t sensorId,
  {
      uint8_t eventState = 0;
      uint8_t previousEventState = 0;
@@ -82,7 +82,7 @@ index c517712..39ffb9e 100644
      if (rc)
      {
          lg2::error(
-@@ -228,7 +266,16 @@ int EventManager::processNumericSensorEvent(pldm_tid_t tid, uint16_t sensorId,
+@@ -231,7 +269,16 @@ int EventManager::processNumericSensorEvent(pldm_tid_t tid, uint16_t sensorId,
          return rc;
      }
  

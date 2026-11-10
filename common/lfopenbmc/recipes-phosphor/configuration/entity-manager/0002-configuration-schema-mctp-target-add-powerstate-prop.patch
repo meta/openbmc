@@ -1,4 +1,4 @@
-From c4bb58dec8d2cb47eaea69adb19aa1e5a09025e0 Mon Sep 17 00:00:00 2001
+From 674e513a52e84fb2a0521220ce8a0681e5f69ba6 Mon Sep 17 00:00:00 2001
 From: Henry Wu <Henry_Wu@quantatw.com>
 Date: Thu, 19 Mar 2026 16:20:37 +0800
 Subject: [PATCH] configuration: schema: mctp target add powerstate property
@@ -18,10 +18,10 @@ Signed-off-by: Henry Wu <Henry_Wu@quantatw.com>
  1 file changed, 6 insertions(+)
 
 diff --git a/schemas/mctp.json b/schemas/mctp.json
-index 76d1b04..8496eae 100644
+index bade5d6..c0c05e0 100644
 --- a/schemas/mctp.json
 +++ b/schemas/mctp.json
-@@ -34,6 +34,9 @@
+@@ -37,6 +37,9 @@
                      },
                      "type": "array"
                  },
@@ -29,9 +29,9 @@ index 76d1b04..8496eae 100644
 +                    "$ref": "legacy.json#/$defs/Types/PowerState"
 +                },
                  "Type": {
+                     "x-dbus-type": "string",
                      "type": "string",
-                     "enum": ["MCTPI2CTarget"]
-@@ -75,6 +78,9 @@
+@@ -82,6 +85,9 @@
                      },
                      "type": "array"
                  },
@@ -39,8 +39,8 @@ index 76d1b04..8496eae 100644
 +                    "$ref": "legacy.json#/$defs/Types/PowerState"
 +                },
                  "Type": {
+                     "x-dbus-type": "string",
                      "type": "string",
-                     "enum": ["MCTPI3CTarget"]
 -- 
-2.52.0
+2.53.0-Meta
 

@@ -1,4 +1,4 @@
-From e2451f37def9693fdd09ab04c04752097b48c4c8 Mon Sep 17 00:00:00 2001
+From 373fbc1987a842e258d78e25e8d0c68b77cbf159 Mon Sep 17 00:00:00 2001
 From: Pete O_o <pmb@meta.com>
 Date: Wed, 21 Oct 2026 15:26:58 -0700
 Subject: [PATCH] MetricReportDefinition: accept PortMetrics properties
@@ -277,17 +277,17 @@ index 476c74e1..daca866b 100644
  {
      BMCWEB_ROUTE(app, "/redfish/v1/Chassis/<str>/NetworkAdapters/")
 diff --git a/test/meson.build b/test/meson.build
-index b6fe4f96..c3674e41 100644
+index 64c694ec..7a7493ac 100644
 --- a/test/meson.build
 +++ b/test/meson.build
-@@ -67,6 +67,7 @@ srcfiles_unittest = files(
+@@ -68,6 +68,7 @@ srcfiles_unittest = files(
      'redfish-core/lib/memory_test.cpp',
      'redfish-core/lib/metadata_test.cpp',
      'redfish-core/lib/metric_report_definition_test.cpp',
 +    'redfish-core/lib/network_adapter_test.cpp',
      'redfish-core/lib/openbmc_managers_test.cpp',
+     'redfish-core/lib/pcie_slots_test.cpp',
      'redfish-core/lib/pcie_test.cpp',
-     'redfish-core/lib/power_subsystem_test.cpp',
 diff --git a/test/redfish-core/include/utils/telemetry_utils_test.cpp b/test/redfish-core/include/utils/telemetry_utils_test.cpp
 index d910a1f8..6779172a 100644
 --- a/test/redfish-core/include/utils/telemetry_utils_test.cpp

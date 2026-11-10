@@ -1,4 +1,4 @@
-From 53da17b663d0945a9c4cdbaab8456df282093d44 Mon Sep 17 00:00:00 2001
+From 55feb40519f69fe31a80d9af35b28e82838aaafb Mon Sep 17 00:00:00 2001
 From: Peter Delevoryas <peter@pjd.dev>
 Date: Wed, 24 Aug 2022 01:55:12 -0700
 Subject: [PATCH] hw/i2c/aspeed: Fix bus derivation for slave events
@@ -14,10 +14,10 @@ Signed-off-by: Peter Delevoryas <peter@pjd.dev>
  2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
-index 2a3fbb00a1..98b672163d 100644
+index a896c23b28..57a2d84615 100644
 --- a/hw/i2c/aspeed_i2c.c
 +++ b/hw/i2c/aspeed_i2c.c
-@@ -1545,8 +1545,7 @@ static int aspeed_i2c_bus_new_slave_event(AspeedI2CBus *bus,
+@@ -1546,8 +1546,7 @@ static int aspeed_i2c_bus_new_slave_event(AspeedI2CBus *bus,
  
  static int aspeed_i2c_bus_slave_event(I2CSlave *slave, enum i2c_event event)
  {
@@ -27,7 +27,7 @@ index 2a3fbb00a1..98b672163d 100644
      uint32_t reg_intr_sts = aspeed_i2c_bus_intr_sts_offset(bus);
      uint32_t reg_byte_buf = aspeed_i2c_bus_byte_buf_offset(bus);
      uint32_t reg_dev_addr = aspeed_i2c_bus_dev_addr_offset(bus);
-@@ -1604,8 +1603,7 @@ static void aspeed_i2c_bus_new_slave_send_async(AspeedI2CBus *bus, uint8_t data)
+@@ -1605,8 +1604,7 @@ static void aspeed_i2c_bus_new_slave_send_async(AspeedI2CBus *bus, uint8_t data)
  
  static void aspeed_i2c_bus_slave_send_async(I2CSlave *slave, uint8_t data)
  {
@@ -37,7 +37,7 @@ index 2a3fbb00a1..98b672163d 100644
      uint32_t reg_intr_sts = aspeed_i2c_bus_intr_sts_offset(bus);
      uint32_t reg_byte_buf = aspeed_i2c_bus_byte_buf_offset(bus);
  
-@@ -1668,6 +1666,7 @@ static void aspeed_i2c_bus_realize(DeviceState *dev, Error **errp)
+@@ -1669,6 +1667,7 @@ static void aspeed_i2c_bus_realize(DeviceState *dev, Error **errp)
      s->bus = i2c_init_bus(dev, s->name);
      s->slave = i2c_slave_create_simple(s->bus, TYPE_ASPEED_I2C_BUS_SLAVE,
                                         0xff);
@@ -58,5 +58,5 @@ index 6ca703a105..1d22b5aa22 100644
  
  struct AspeedI2CClass {
 -- 
-2.54.0
+2.53.0-Meta
 

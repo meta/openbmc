@@ -1,8 +1,7 @@
-From e510529dcc234ee04ede14216eeda5c8e42b95e5 Mon Sep 17 00:00:00 2001
+From 3a64976aa8c725c7657d0ef82bafcc64794e219a Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 10:51:26 +0200
-Subject: [PATCH 06/70] tests/qtest: ds1338: cover the power-on register
- defaults
+Subject: [PATCH] tests/qtest: ds1338: cover the power-on register defaults
 
 Nothing pinned the reset value of the control register, which is how it
 sat at zero rather than at its documented power-on state.

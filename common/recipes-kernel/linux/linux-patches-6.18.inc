@@ -60,19 +60,19 @@ SRC_URI:append = " \
     file://0225-i3c-master-ast2600-Fix-missing-of_node-for-virtual-I.patch \
     file://0226-i3c-dw-Improve-IBI-queue-handling-when-encountering-.patch \
     file://0227-i3c-master-dw-i3c-master-Fix-race-condition-in-halt-.patch \
-    file://0232-gpio-aspeed-sgpio-Create-llops-to-handle-hardware-ac.patch \
-    file://0233-gpio-aspeed-sgpio-Convert-IRQ-functions-to-use-llops.patch \
-    file://0234-gpio-aspeed-sgpio-Support-G7-Aspeed-sgpiom-controlle.patch \
-    file://0235-iio-adc-aspeed-Add-AST2700-ADC-support.patch \
-    file://0236-iio-adc-aspeed-Disable-the-last-channel-by-default.patch \
-    file://0237-net-ftgmac100-add-support-for-AST2700.patch \
-    file://0238-aspeed-i2c-add-i2c-clk-high-min-percent-property.patch \
-    file://0239-iio-adc-aspeed-Support-deglitch-feature.patch \
-    file://0240-dt-bindings-iio-adc-ti-ads112c04-Add-binding-for-ADS.patch \
-    file://0241-iio-adc-ti-ads112c04-Add-support-for-TI-ADS112C04.patch \
-    file://0242-ipmi-ssif_bmc-Prevent-pending-response-from-being-lo.patch \
-    file://0243-aspeed-i2c-fix-AST2700-target-buffer-mode-NULL-deref.patch \
-    file://0244-i2c-ast2600-reset-more-ISR-status.patch \
+    file://0228-gpio-aspeed-sgpio-Create-llops-to-handle-hardware-ac.patch \
+    file://0229-gpio-aspeed-sgpio-Convert-IRQ-functions-to-use-llops.patch \
+    file://0230-gpio-aspeed-sgpio-Support-G7-Aspeed-sgpiom-controlle.patch \
+    file://0231-iio-adc-aspeed-Add-AST2700-ADC-support.patch \
+    file://0232-iio-adc-aspeed-Disable-the-last-channel-by-default.patch \
+    file://0233-net-ftgmac100-add-support-for-AST2700.patch \
+    file://0234-aspeed-i2c-add-i2c-clk-high-min-percent-property.patch \
+    file://0235-iio-adc-aspeed-Support-deglitch-feature.patch \
+    file://0236-dt-bindings-iio-adc-ti-ads112c04-Add-binding-for-ADS.patch \
+    file://0237-iio-adc-ti-ads112c04-Add-support-for-TI-ADS112C04.patch \
+    file://0238-ipmi-ssif_bmc-Prevent-pending-response-from-being-lo.patch \
+    file://0239-aspeed-i2c-fix-AST2700-target-buffer-mode-NULL-deref.patch \
+    file://0240-i2c-ast2600-reset-more-ISR-status.patch \
 "
 
 #
@@ -154,9 +154,9 @@ SRC_URI:append = " \
     file://2707-arm64-dts-aspeed-add-peripheral-nodes-for-G7-platfor.patch \
     file://2708-pinctrl-aspeed-Fix-GPIO-mux-value-for-ADC-capable-ba.patch \
     file://2709-usb-host-ehci-platform-add-ASPEED-AST2700-support.patch \
-    file://2710-arm64-dts-aspeed-add-EHCI-and-MDIO-nodes-for-G7-plat.patch \
+    file://2710-arm64-dts-aspeed-add-address-cells-size-cells-to-G7-.patch \
     file://2711-usb-gadget-aspeed-vhub-Add-AST2700-support.patch \
-    file://2712-arm64-dts-aspeed-Add-AST2700-VHUBA0-node.patch \
+    file://2712-arm64-dts-aspeed-Enable-TX-FIFO-retry-quirk-on-AST27.patch \
     file://2713-spi-aspeed-Add-AST2700-TX-RX-controller.patch \
     file://2714-arm64-dts-aspeed-Add-AST2700-128MB-flash-layout.patch \
     file://2715-pinctrl-aspeed-Split-TRST-out-of-the-AST2700-SoC1-JT.patch \

@@ -1,4 +1,4 @@
-From d17e647ac76f28311a1a7f164e1a1a256790fb84 Mon Sep 17 00:00:00 2001
+From 7f14421511496ccf5a71c2692458cff09c2e4f38 Mon Sep 17 00:00:00 2001
 From: Hao Wu <wuhaotsh@google.com>
 Date: Tue, 5 Apr 2022 15:36:35 -0700
 Subject: [PATCH] hw/intc: Add a property to allow GIC to reset into non secure
@@ -16,10 +16,10 @@ Signed-off-by: Peter Delevoryas <pdel@fb.com>
  1 file changed, 2 insertions(+)
 
 diff --git a/hw/intc/arm_gic_common.c b/hw/intc/arm_gic_common.c
-index 304d89cf56..4be20fe430 100644
+index fec5662d69..b8b59a3f52 100644
 --- a/hw/intc/arm_gic_common.c
 +++ b/hw/intc/arm_gic_common.c
-@@ -361,6 +361,8 @@ static const Property arm_gic_common_properties[] = {
+@@ -371,6 +371,8 @@ static const Property arm_gic_common_properties[] = {
      /* True if the GIC should implement the virtualization extensions */
      DEFINE_PROP_BOOL("has-virtualization-extensions", GICState, virt_extn, 0),
      DEFINE_PROP_UINT32("num-priority-bits", GICState, n_prio_bits, 8),

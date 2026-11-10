@@ -1,4 +1,4 @@
-From b5383770d6c59f1d84cdf2694d22df7adfe9a085 Mon Sep 17 00:00:00 2001
+From 271313ca67f2c64c421c9b4c7f4f3112c4f856d6 Mon Sep 17 00:00:00 2001
 From: Zinc Lim <zinclim@meta.com>
 Date: Fri, 28 Aug 2026 11:59:33 -0700
 Subject: [PATCH] hw/i2c/aspeed_i2c: fix AST2700 target buffer-mode receive
@@ -32,10 +32,10 @@ RX_BUFF_EN, offset 0x10 and POOL_CTRL. AST1700 reuses
  1 file changed, 87 insertions(+), 16 deletions(-)
 
 diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
-index 41035cfbc0..7ecbc215fd 100644
+index e00991b069..ef974c8472 100644
 --- a/hw/i2c/aspeed_i2c.c
 +++ b/hw/i2c/aspeed_i2c.c
-@@ -330,6 +330,54 @@ static bool aspeed_i2c_bus_dma_to_pool(AspeedI2CBus *bus)
+@@ -331,6 +331,54 @@ static bool aspeed_i2c_bus_dma_to_pool(AspeedI2CBus *bus)
             !ARRAY_FIELD_EX32(bus->regs, I2CC_VERSION_CTRL, FUNC_CFG_DMA_EN);
  }
  
@@ -90,7 +90,7 @@ index 41035cfbc0..7ecbc215fd 100644
  static int aspeed_i2c_bus_send_dma_pool(AspeedI2CBus *bus)
  {
      AspeedI2CClass *aic = ASPEED_I2C_GET_CLASS(bus->controller);
-@@ -940,9 +988,18 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+@@ -941,9 +989,18 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
          i2c_slave_set_address(bus->slave,
              SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CS_DEV_ADDR,
                                      SLAVE_DEV_ADDR1));
@@ -111,7 +111,7 @@ index 41035cfbc0..7ecbc215fd 100644
              if (ARRAY_FIELD_EX32(bus->regs, I2CS_INTR_STS, WAIT_RX_DMA)) {
                  ARRAY_FIELD_DP32(bus->regs, I2CS_INTR_STS, WAIT_RX_DMA, 0);
                  i2c_ack(bus->bus);
-@@ -970,8 +1027,9 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+@@ -971,8 +1028,9 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
                  FIELD_EX32(value, I2CS_INTR_STS, PKT_CMD_DONE) && !late) {
                  /*
                   * Keeps WAIT_RX_DMA: it gates the bus ACK withheld in
@@ -123,7 +123,7 @@ index 41035cfbc0..7ecbc215fd 100644
                   */
                  bus->regs[R_I2CS_INTR_STS] &= ASPEED_I2CS_PKT_ACK_KEEP;
                  /*
-@@ -1591,11 +1649,11 @@ static void aspeed_i2c_bus_slave_dma_rx_store(AspeedI2CBus *bus, uint8_t data)
+@@ -1592,11 +1650,11 @@ static void aspeed_i2c_bus_slave_dma_rx_store(AspeedI2CBus *bus, uint8_t data)
  
  /*
   * The buffer mode target pool is armed one chunk at a time, so withhold the
@@ -137,7 +137,7 @@ index 41035cfbc0..7ecbc215fd 100644
      ARRAY_FIELD_DP32(bus->regs, I2CS_INTR_STS, WAIT_RX_DMA, 1);
      ARRAY_FIELD_DP32(bus->regs, I2CS_INTR_STS, PKT_CMD_DONE, 1);
      aspeed_i2c_bus_raise_slave_interrupt(bus);
-@@ -1603,7 +1661,12 @@ static void aspeed_i2c_bus_slave_buff_rx_wait(AspeedI2CBus *bus)
+@@ -1604,7 +1662,12 @@ static void aspeed_i2c_bus_slave_buff_rx_wait(AspeedI2CBus *bus)
  
  static void aspeed_i2c_bus_slave_buff_rx_start(AspeedI2CBus *bus)
  {
@@ -150,7 +150,7 @@ index 41035cfbc0..7ecbc215fd 100644
      ARRAY_FIELD_DP32(bus->regs, I2CS_INTR_STS, SLAVE_ADDR_RX_MATCH, 1);
      aspeed_i2c_bus_slave_buff_rx_wait(bus);
  }
-@@ -1611,21 +1674,29 @@ static void aspeed_i2c_bus_slave_buff_rx_start(AspeedI2CBus *bus)
+@@ -1612,21 +1675,29 @@ static void aspeed_i2c_bus_slave_buff_rx_start(AspeedI2CBus *bus)
  static void aspeed_i2c_bus_slave_buff_rx_store(AspeedI2CBus *bus, uint8_t data)
  {
      AspeedI2CClass *aic = ASPEED_I2C_GET_CLASS(bus->controller);
@@ -187,7 +187,7 @@ index 41035cfbc0..7ecbc215fd 100644
      trace_aspeed_i2c_bus_recv(bus->id, "SBUF", count, size, data);
  
      if (count == size) {
-@@ -1663,7 +1734,7 @@ static void aspeed_i2c_bus_slave_log_addr_hit(AspeedI2CBus *bus)
+@@ -1664,7 +1735,7 @@ static void aspeed_i2c_bus_slave_log_addr_hit(AspeedI2CBus *bus)
  static int aspeed_i2c_bus_new_slave_event(AspeedI2CBus *bus,
                                            enum i2c_event event)
  {
@@ -196,7 +196,7 @@ index 41035cfbc0..7ecbc215fd 100644
  
      trace_aspeed_i2c_bus_new_slave_event(bus->id, I2C_EVENT[event]);
  
-@@ -1691,7 +1762,7 @@ static int aspeed_i2c_bus_new_slave_event(AspeedI2CBus *bus,
+@@ -1692,7 +1763,7 @@ static int aspeed_i2c_bus_new_slave_event(AspeedI2CBus *bus,
               * No SLAVE_ADDR_RX_MATCH: buffer mode reported the match with
               * the arming interrupt and only decodes a STOP without one.
               */
@@ -205,7 +205,7 @@ index 41035cfbc0..7ecbc215fd 100644
              ARRAY_FIELD_DP32(bus->regs, I2CS_INTR_STS, WAIT_RX_DMA, 0);
              if (SHARED_ARRAY_FIELD_EX32(bus->regs, R_I2CC_POOL_CTRL,
                                          RX_COUNT)) {
-@@ -1757,7 +1828,7 @@ static int aspeed_i2c_bus_slave_event(I2CSlave *slave, enum i2c_event event)
+@@ -1758,7 +1829,7 @@ static int aspeed_i2c_bus_slave_event(I2CSlave *slave, enum i2c_event event)
  
  static void aspeed_i2c_bus_new_slave_send_async(AspeedI2CBus *bus, uint8_t data)
  {
@@ -215,5 +215,5 @@ index 41035cfbc0..7ecbc215fd 100644
      } else {
          aspeed_i2c_bus_slave_buff_rx_store(bus, data);
 -- 
-2.52.0
+2.53.0-Meta
 

@@ -1,7 +1,7 @@
-From a09e3858bdec513b51a920556913c3c676b40968 Mon Sep 17 00:00:00 2001
+From bded353119a2cf1fff4a87d9ffbb1226540eddf3 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 22 Jul 2026 17:31:44 +0200
-Subject: [PATCH 33/70] tests/qtest: ina238: cover the operating modes
+Subject: [PATCH] tests/qtest: ina238: cover the operating modes
 
 Add coverage for the ADC_CONFIG MODE field: shutdown modes perform no
 conversion and leave the measurement registers and CNVRF untouched,

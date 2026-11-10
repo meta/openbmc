@@ -1,4 +1,4 @@
-From cf72be2ac24cdbd0da0aef854971f7d76224e85f Mon Sep 17 00:00:00 2001
+From e93addfbd17d0b16936044877b7b7269e6275508 Mon Sep 17 00:00:00 2001
 From: Zinc Lim <zinclim@meta.com>
 Date: Wed, 19 Aug 2026 23:00:38 -0700
 Subject: [PATCH] hw/i2c/aspeed_i2c: only raise the target IRQ for enabled
@@ -48,10 +48,10 @@ Signed-off-by: Zinc Lim <zinclim@meta.com>
  1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
-index 725c253a47..022b47ed36 100644
+index 90ca216098..aa3f8fa5d8 100644
 --- a/hw/i2c/aspeed_i2c.c
 +++ b/hw/i2c/aspeed_i2c.c
-@@ -83,8 +83,10 @@ static inline void aspeed_i2c_bus_raise_interrupt(AspeedI2CBus *bus)
+@@ -84,8 +84,10 @@ static inline void aspeed_i2c_bus_raise_interrupt(AspeedI2CBus *bus)
  static inline void aspeed_i2c_bus_raise_slave_interrupt(AspeedI2CBus *bus)
  {
      AspeedI2CClass *aic = ASPEED_I2C_GET_CLASS(bus->controller);
@@ -63,7 +63,7 @@ index 725c253a47..022b47ed36 100644
          return;
      }
  
-@@ -933,6 +935,7 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
+@@ -934,6 +936,7 @@ static void aspeed_i2c_bus_new_write(AspeedI2CBus *bus, hwaddr offset,
          break;
      case A_I2CS_INTR_CTRL:
          bus->regs[R_I2CS_INTR_CTRL] = value;
@@ -72,5 +72,5 @@ index 725c253a47..022b47ed36 100644
  
      case A_I2CS_INTR_STS:
 -- 
-2.54.0
+2.53.0-Meta
 

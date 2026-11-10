@@ -1,4 +1,4 @@
-From e26853e5c380c161023902517331d5391d93efe8 Mon Sep 17 00:00:00 2001
+From 81f475822d4808c88d670b258a776ddb2b958814 Mon Sep 17 00:00:00 2001
 From: Peter Yin <peter.yin@quantatw.com>
 Date: Wed, 10 Dec 2025 14:41:23 +0800
 Subject: [PATCH] configuration: schema: extend MCTP target members
@@ -36,11 +36,11 @@ Signed-off-by: Peter Yin <peter.yin@quantatw.com>
  1 file changed, 40 insertions(+), 2 deletions(-)
 
 diff --git a/schemas/mctp.json b/schemas/mctp.json
-index e213e8d..76d1b04 100644
+index 522d8ac..bade5d6 100644
 --- a/schemas/mctp.json
 +++ b/schemas/mctp.json
-@@ -11,16 +11,35 @@
-                     "description": "The bus index to which the device is attached",
+@@ -13,18 +13,37 @@
+                     "x-dbus-type": "uint64",
                      "type": ["string", "number"]
                  },
 +                "Inventory": {
@@ -49,6 +49,7 @@ index e213e8d..76d1b04 100644
 +                },
                  "Name": {
                      "description": "A recognisable name for the device",
+                     "x-dbus-type": "string",
                      "type": "string"
                  },
 +                "PLDMSensors": {
@@ -67,6 +68,7 @@ index e213e8d..76d1b04 100644
 +                    "type": "array"
 +                },
                  "Type": {
+                     "x-dbus-type": "string",
                      "type": "string",
                      "enum": ["MCTPI2CTarget"]
                  }
@@ -76,8 +78,8 @@ index e213e8d..76d1b04 100644
              "type": "object"
          },
          "MCTPI3CTarget": {
-@@ -33,16 +52,35 @@
-                     "description": "The bus index to which the device is attached",
+@@ -39,18 +58,37 @@
+                     "x-dbus-type": "uint64",
                      "type": ["string", "number"]
                  },
 +                "Inventory": {
@@ -86,6 +88,7 @@ index e213e8d..76d1b04 100644
 +                },
                  "Name": {
                      "description": "A recognisable name for the device",
+                     "x-dbus-type": "string",
                      "type": "string"
                  },
 +                "PLDMSensors": {
@@ -104,6 +107,7 @@ index e213e8d..76d1b04 100644
 +                    "type": "array"
 +                },
                  "Type": {
+                     "x-dbus-type": "string",
                      "type": "string",
                      "enum": ["MCTPI3CTarget"]
                  }
@@ -114,5 +118,5 @@ index e213e8d..76d1b04 100644
          }
      }
 -- 
-2.52.0
+2.53.0-Meta
 

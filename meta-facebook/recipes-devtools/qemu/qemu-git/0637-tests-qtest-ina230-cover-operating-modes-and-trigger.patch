@@ -1,8 +1,8 @@
-From a8f755bcfe6771e18c392b6960bbe43fa1e741f2 Mon Sep 17 00:00:00 2001
+From 2fb85b446a324c6b7dbe8c02c8288b92daf89a4e Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 22 Jul 2026 17:27:57 +0200
-Subject: [PATCH 25/70] tests/qtest: ina230: cover operating modes and
- triggered conversions
+Subject: [PATCH] tests/qtest: ina230: cover operating modes and triggered
+ conversions
 
 Add coverage for the MODE field: power-down retains the last results,
 the shunt/bus channel-enable bits gate which registers track new inputs,

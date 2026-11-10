@@ -1,4 +1,4 @@
-From 8bf869bcede2f9d43682677cb5e95ef84aa80ffe Mon Sep 17 00:00:00 2001
+From 772be823f3106e426e94ee775f1be2f912885810 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Tue, 13 Oct 2026 03:07:55 -0700
 Subject: [PATCH] tests/functional/arm: bletchley: expect the FRU MAC of the

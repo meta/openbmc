@@ -1,4 +1,4 @@
-From 5021597ef4eff134ddfeb7405a208a3f8b72863a Mon Sep 17 00:00:00 2001
+From b0ff3196236dc874ff05bf6e6aa407701f8dc965 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Fri, 7 Aug 2026 18:18:01 +0200
 Subject: [PATCH] tests/functional/arm: ventura: add BMC boot test
@@ -20,7 +20,7 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  create mode 100644 tests/functional/arm/test_aspeed_ventura.py
 
 diff --git a/tests/functional/arm/meson.build b/tests/functional/arm/meson.build
-index 91b2410013..5992812953 100644
+index 2360f58955..6a04b1ba9c 100644
 --- a/tests/functional/arm/meson.build
 +++ b/tests/functional/arm/meson.build
 @@ -22,6 +22,7 @@ test_arm_timeouts = {
@@ -31,7 +31,7 @@ index 91b2410013..5992812953 100644
    'aspeed_yosemite5' : 480,
    'bpim2u' : 500,
    'collie' : 180,
-@@ -64,6 +65,7 @@ tests_arm_system_thorough = [
+@@ -67,6 +68,7 @@ tests_arm_system_thorough = [
    'aspeed_rainier',
    'aspeed_sanmiguel',
    'aspeed_santabarbara',
@@ -88,5 +88,5 @@ index 0000000000..01b800f200
 +if __name__ == '__main__':
 +    AspeedTest.main()
 -- 
-2.54.0
+2.53.0-Meta
 

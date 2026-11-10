@@ -1,7 +1,7 @@
-From a0aa830ac23e12f05272f8a52a29ad658524ec3b Mon Sep 17 00:00:00 2001
+From 1f5ea62bbcdee3138de874e1dd7b9f1c465d446a Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 17:16:03 +0200
-Subject: [PATCH 18/70] tests/qtest: ds1339: cover persist-on-reset
+Subject: [PATCH] tests/qtest: ds1339: cover persist-on-reset
 
 The property was untested on this variant.
 

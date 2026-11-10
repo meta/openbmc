@@ -1,8 +1,8 @@
-From f50a7e3654a443086c3c6405b90517451149b91b Mon Sep 17 00:00:00 2001
+From 6639a6b9618b4e392273366de79ec1de6b753bab Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 18:01:09 +0200
-Subject: [PATCH 44/70] hw/sensor: tmp421: implement register write masks,
- one-shot and N-factor
+Subject: [PATCH] hw/sensor: tmp421: implement register write masks, one-shot
+ and N-factor
 
 Mask out reserved and absent-channel bits on writes to the two
 configuration registers and the conversion rate, accept the one-shot

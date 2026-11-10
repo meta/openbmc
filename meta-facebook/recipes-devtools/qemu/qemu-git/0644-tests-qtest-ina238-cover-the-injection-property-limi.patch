@@ -1,8 +1,7 @@
-From 0a4270c7962ebda65baf48572fc178fc0fb4ced5 Mon Sep 17 00:00:00 2001
+From 591fd53692f00737c6ab1c81c2cfe895d4585f81 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Tue, 21 Jul 2026 15:29:01 +0200
-Subject: [PATCH 32/70] tests/qtest: ina238: cover the injection-property
- limits
+Subject: [PATCH] tests/qtest: ina238: cover the injection-property limits
 
 Verify that the extremes of the shunt-voltage, bus-voltage and
 die-temperature injection ranges round-trip through the QOM property

@@ -28,6 +28,7 @@ SRC_URI:append = " \
     file://1005-i2c-aspeed-Acknowledge-Tx-ack-late-when-in-SLAVE_REA.patch \
     file://1006-ARM-dts-aspeed-fblite-r1-enable-MDIO3.patch \
     file://1007-ARM-dts-aspeed-fblite-r1-add-FPGA-on-SPI1-CS0.patch \
+    file://1008-ARM-dts-aspeed-fblite-r1-add-BIOS-flash-on-SPI1-CS1.patch \
 "
 
 # The host CPU's SB-RMI (rev 0x10) only answers 1-byte register addresses.

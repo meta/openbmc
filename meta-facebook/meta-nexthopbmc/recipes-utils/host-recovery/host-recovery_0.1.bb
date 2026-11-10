@@ -23,11 +23,15 @@ LIC_FILES_CHKSUM = "file://fpga_update.sh;beginline=5;endline=18;md5=0b1ee7d6f84
 
 S = "${UNPACKDIR}"
 LOCAL_URI = " \
+    file://bios_update.sh \
+    file://DmiPatch.py \
     file://fpga_update.sh \
     file://fpga_utils.py \
 "
 
 HOSTRECOVERY_UTILS_FILES = " \
+    bios_update.sh \
+    DmiPatch.py \
     fpga_update.sh \
     fpga_utils.py \
 "
@@ -40,9 +44,11 @@ do_install() {
   done
 }
 
+# python3-json: DmiPatch.py (used by bios_update.sh) imports json.
 RDEPENDS:${PN} += " \
     bash \
     python3-core \
+    python3-json \
     python3-logging \
 "
 

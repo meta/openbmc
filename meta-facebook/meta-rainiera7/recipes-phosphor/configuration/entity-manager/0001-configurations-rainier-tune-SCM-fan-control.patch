@@ -1,0 +1,105 @@
+From 1497f263c8000950d94fb348b4dd16d882adfc68 Mon Sep 17 00:00:00 2001
+From: Neil Cheng <Neil.Cheng@quantatw.com>
+Date: Tue, 3 Nov 2026 08:33:40 +0800
+Subject: [PATCH] configurations: rainier: tune SCM fan control
+
+Update motherboard CPU PID settings and stepwise fan curves per the
+thermal team's FSC table v4.
+
+Upstream-Status: Submitted [https://gerrit.openbmc.org/c/openbmc/entity-manager/+/96671]
+
+Change-Id: Ic4951e06587f09f438197593d1664b0e5e7a6866
+Signed-off-by: Neil Cheng <Neil.Cheng@quantatw.com>
+---
+ configurations/meta/rainier/rainier_scm_2600.json | 10 ++++++----
+ configurations/meta/rainier/rainier_scm_2700.json | 10 ++++++----
+ 2 files changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/configurations/meta/rainier/rainier_scm_2600.json b/configurations/meta/rainier/rainier_scm_2600.json
+index fa8e6af..5e2a758 100644
+--- a/configurations/meta/rainier/rainier_scm_2600.json
++++ b/configurations/meta/rainier/rainier_scm_2600.json
+@@ -238,19 +238,19 @@
+             "DCoefficient": 0.0,
+             "FFGainCoefficient": 0.0,
+             "FFOffCoefficient": 0.0,
+-            "ICoefficient": -0.035,
++            "ICoefficient": -0.03,
+             "ILimitMax": 100,
+             "ILimitMin": -50,
+             "Inputs": [
+                 "MB_CPU_TEMP_C"
+             ],
+             "Name": "PID_MB_CPU",
+-            "NegativeHysteresis": 2.0,
++            "NegativeHysteresis": 5.0,
+             "OutLimitMax": 100,
+             "OutLimitMin": 0,
+-            "PCoefficient": -5.0,
++            "PCoefficient": -7.0,
+             "PositiveHysteresis": 0.0,
+-            "SetPoint": 85.0,
++            "SetPoint": 80.0,
+             "SlewNeg": 0.0,
+             "SlewPos": 0.0,
+             "Type": "Pid",
+@@ -460,6 +460,7 @@
+                 26.0,
+                 30.0,
+                 34.0,
++                38.0,
+                 95.0
+             ],
+             "PositiveHysteresis": 0.0,
+@@ -468,6 +469,7 @@
+                 67.0,
+                 69.0,
+                 71.0,
++                76.0,
+                 91.0
+             ],
+             "Type": "Stepwise",
+diff --git a/configurations/meta/rainier/rainier_scm_2700.json b/configurations/meta/rainier/rainier_scm_2700.json
+index 415698f..ab8ca3f 100644
+--- a/configurations/meta/rainier/rainier_scm_2700.json
++++ b/configurations/meta/rainier/rainier_scm_2700.json
+@@ -304,19 +304,19 @@
+             "DCoefficient": 0.0,
+             "FFGainCoefficient": 0.0,
+             "FFOffCoefficient": 0.0,
+-            "ICoefficient": -0.035,
++            "ICoefficient": -0.03,
+             "ILimitMax": 100,
+             "ILimitMin": -50,
+             "Inputs": [
+                 "MB_CPU_TEMP_C"
+             ],
+             "Name": "PID_MB_CPU",
+-            "NegativeHysteresis": 2.0,
++            "NegativeHysteresis": 5.0,
+             "OutLimitMax": 100,
+             "OutLimitMin": 0,
+-            "PCoefficient": -5.0,
++            "PCoefficient": -7.0,
+             "PositiveHysteresis": 0.0,
+-            "SetPoint": 85.0,
++            "SetPoint": 80.0,
+             "SlewNeg": 0.0,
+             "SlewPos": 0.0,
+             "Type": "Pid",
+@@ -526,6 +526,7 @@
+                 26.0,
+                 30.0,
+                 34.0,
++                38.0,
+                 95.0
+             ],
+             "PositiveHysteresis": 0.0,
+@@ -534,6 +535,7 @@
+                 67.0,
+                 69.0,
+                 71.0,
++                76.0,
+                 91.0
+             ],
+             "Type": "Stepwise",

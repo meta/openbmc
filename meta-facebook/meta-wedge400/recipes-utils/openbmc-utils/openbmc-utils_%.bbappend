@@ -27,6 +27,7 @@ LOCAL_URI += " \
     file://fcmcpld_update.sh \
     file://feutil \
     file://fpga_ver.sh \
+    file://oob-status.sh \
     file://power-on.sh \
     file://presence_util.sh \
     file://pwrcpld_update.sh \
@@ -62,6 +63,7 @@ OPENBMC_UTILS_FILES += " \
     fcmcpld_update.sh \
     feutil \
     fpga_ver.sh \
+    oob-status.sh \
     presence_util.sh \
     pwrcpld_update.sh \
     rebind-driver.sh \

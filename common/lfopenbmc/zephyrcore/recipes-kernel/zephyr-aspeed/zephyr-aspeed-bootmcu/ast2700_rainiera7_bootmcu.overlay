@@ -5,3 +5,12 @@
 &sdrammc {
 	ecc-enable;
 };
+
+/* Host does not use eDAF; only BMC drives the SPIx controllers */
+&edaf_bridge0 {
+	status = "disabled";
+};
+
+&edaf_bridge1 {
+	status = "disabled";
+};

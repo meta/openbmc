@@ -1,0 +1,79 @@
+From 41e071e53abc5886f41a2ede0c4f47d84f6eb91c Mon Sep 17 00:00:00 2001
+From: Cosmo Chou <cosmo.chou@quantatw.com>
+Date: Tue, 10 Nov 2026 15:31:41 +0800
+Subject: [PATCH] mcu-runtime: spi: Set eDAF mode only when the bridge is
+ enabled
+
+hspi_init() unconditionally sets SPIR54[27] and SPIR54[24] on SPI0 and
+SPI1 for eDAF byte write support [1]. The same commit notes that
+SPIR54[27] must be cleared when eDAF is disabled and the BMC accesses
+the flash, otherwise user mode commands behave as normal mode. With it
+set, Linux spi-nor reads the SPI0 JEDEC ID as all 0xff.
+
+Set SPIR54[27:24] to 4'b1001 only for a controller whose eDAF bridge is
+enabled in the devicetree, and clear it otherwise.
+
+[1] https://github.com/AspeedTech-BMC/aspeed-zephyr-project/commit/70752f3aa749c59b984a6c905dced0d6cf21d9fb
+
+Upstream-Status: Submitted [ASPEED, email to Chin-Ting Kuo, 2026-11-10]
+Signed-off-by: Cosmo Chou <cosmo.chou@quantatw.com>
+---
+ apps/mcu-runtime/src/spi.c | 24 +++++++++++++++---------
+ 1 file changed, 15 insertions(+), 9 deletions(-)
+
+diff --git a/apps/mcu-runtime/src/spi.c b/apps/mcu-runtime/src/spi.c
+index a7f8cab33568..77251a53c28b 100644
+--- a/apps/mcu-runtime/src/spi.c
++++ b/apps/mcu-runtime/src/spi.c
+@@ -15,6 +15,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <strings.h>
++#include <zephyr/devicetree.h>
+ #include <zephyr/logging/log.h>
+ 
+ #include <zephyr/drivers/flash.h>
+@@ -43,6 +44,7 @@
+ #define   SPI_CS_TO_DIS			BIT(26)
+ #define   SPI_UNALGNED_ACCESS		BIT(24)
+ #define   SPI_CS_CONTINUOUS		BIT(16)
++#define   SPI_MODE_SEL_MASK		GENMASK(27, 24)
+ 
+ LOG_MODULE_REGISTER(ast_spi, CONFIG_SOC_FMC_LOG_LEVEL);
+ 
+@@ -125,19 +127,23 @@ static int spi_copy(struct ast_loader *loader, uint32_t *dest, uint32_t src, uin
+         return 0;
+ }
+ 
+-static void hspi_init(void)
++static void hspi_set_mode(uint32_t base, bool edaf)
+ {
+ 	uint32_t reg;
+ 
+-	reg = sys_read32(ASPEED_SPI0_REG_BASE + MISC_CTRL_REG);
+-	reg |= SPI_USER_CMD_MODE | SPI_UNALGNED_ACCESS;
+-	reg &= ~SPI_CS_CONTINUOUS;
+-	sys_write32(reg, ASPEED_SPI0_REG_BASE + MISC_CTRL_REG);
++	reg = sys_read32(base + MISC_CTRL_REG);
++	reg &= ~(SPI_MODE_SEL_MASK | SPI_CS_CONTINUOUS);
++	if (edaf)
++		reg |= SPI_USER_CMD_MODE | SPI_UNALGNED_ACCESS;
++	sys_write32(reg, base + MISC_CTRL_REG);
++}
+ 
+-	reg = sys_read32(ASPEED_SPI1_REG_BASE + MISC_CTRL_REG);
+-	reg |= SPI_USER_CMD_MODE | SPI_UNALGNED_ACCESS;
+-	reg &= ~SPI_CS_CONTINUOUS;
+-	sys_write32(reg, ASPEED_SPI1_REG_BASE + MISC_CTRL_REG);
++static void hspi_init(void)
++{
++	hspi_set_mode(ASPEED_SPI0_REG_BASE,
++		      DT_NODE_HAS_STATUS(DT_NODELABEL(edaf_bridge0), okay));
++	hspi_set_mode(ASPEED_SPI1_REG_BASE,
++		      DT_NODE_HAS_STATUS(DT_NODELABEL(edaf_bridge1), okay));
+ }
+ 
+ static int spi_init(struct ast_loader *loader)
+-- 
+2.53.0
+

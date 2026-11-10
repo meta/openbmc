@@ -106,6 +106,8 @@ SRC_URI:append = " \
     file://0614-hwmon-pmbus-ltc4286-Add-writable-shunt_resistor-sysf.patch \
     file://0615-dt-bindings-hwmon-pmbus-isl68137-Add-RAA229639-and-R.patch \
     file://0616-hwmon-pmbus-isl68137-Add-support-for-Renesas-RAA2296.patch \
+    file://0617-dt-bindings-hwmon-pmbus-Add-Infineon-tda38740-and-td.patch \
+    file://0618-hwmon-pmbus-tda38740-Add-driver-for-Infineon-TDA3874.patch \
 "
 
 #

@@ -14,3 +14,6 @@ IMAGE_INSTALL += "overlay-helper"
 
 # Ad-hoc sensors and Meta OEM metrics (bmc-oem-metric)
 IMAGE_INSTALL += "adhoc-sensor"
+
+# BMC Health Services: failed, restarting and boot-stuck service counts (bmc-oem-metric)
+IMAGE_INSTALL += "bmc-services-health"

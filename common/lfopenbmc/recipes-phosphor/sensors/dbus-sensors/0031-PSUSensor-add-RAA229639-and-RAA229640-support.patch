@@ -1,0 +1,35 @@
+From 70d01b1958ca1e005ee4d87e4f94dc554995dba3 Mon Sep 17 00:00:00 2001
+From: Colin Huang <colin.huang2@amd.com>
+Date: Tue, 18 Aug 2026 12:38:10 +0800
+Subject: [PATCH] PSUSensor: add RAA229639 and RAA229640 support
+
+Add device RAA229639/RAA229640 reading support for Anacapa project.
+
+The driver has been applied into staging git [1].
+and it's in process to  backport into openbmc [2].
+
+Reference:
+[1] https://lore.kernel.org/all/20260921-add-raa229639-and-raa229640-v3-0-b104ee8a70b2@gmail.com/
+[2] https://lore.kernel.org/openbmc/20260929-openbmc-add-raa229639-and-raa229640-v1-0-de693c0a6ecb@gmail.com/
+
+Gerrit: https://gerrit.openbmc.org/c/openbmc/dbus-sensors/+/95017
+
+Change-Id: I50548f850802bf23e4640db241d2d9e1fe1a1b5d
+Signed-off-by: Colin Huang <colin.huang2@amd.com>
+---
+ src/psu/PSUSensorMain.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/psu/PSUSensorMain.cpp b/src/psu/PSUSensorMain.cpp
+index 9ad91d3..d800a99 100644
+--- a/src/psu/PSUSensorMain.cpp
++++ b/src/psu/PSUSensorMain.cpp
+@@ -154,6 +154,8 @@ static constexpr auto sensorTypes = std::to_array<
+     {"RAA229001", I2CDeviceType{"raa229001", true}},
+     {"RAA229004", I2CDeviceType{"raa229004", true}},
+     {"RAA229126", I2CDeviceType{"raa229126", true}},
++    {"RAA229639", I2CDeviceType{"raa229639", true}},
++    {"RAA229640", I2CDeviceType{"raa229640", true}},
+     {"RTQ6056", I2CDeviceType{"rtq6056", false}},
+     {"SBRMI", I2CDeviceType{"sbrmi", true}},
+     {"smpro_hwmon", I2CDeviceType{"smpro", false}},

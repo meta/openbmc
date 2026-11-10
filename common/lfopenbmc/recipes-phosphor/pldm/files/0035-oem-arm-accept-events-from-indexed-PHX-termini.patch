@@ -1,0 +1,61 @@
+From 4b21c0abd2a750496461004befb65fae09af35db Mon Sep 17 00:00:00 2001
+From: Manoj Kumar Prabakaran <manojkumar.prabakaran@arm.com>
+Date: Tue, 20 Oct 2026 00:01:27 +0530
+Subject: [PATCH] oem: arm: accept events from indexed PHX termini
+
+Match the PHX terminus prefix so events from PHX, PHX0, and PHX1 reach the
+Arm OEM event handler. This also accepts hyphenated indexed names such as
+PHX-0 and PHX-1.
+
+Upstream-Status: Submitted [https://gerrit.openbmc.org/c/openbmc/pldm/+/96167]
+
+Change-Id: Ib5d8a236ca5b1bdb8532efec3400b81bc137b8be
+Signed-off-by: Manoj Kumar Prabakaran <manojkumar.prabakaran@arm.com>
+---
+ oem/arm/event/oem_event_manager.cpp | 4 ++--
+ oem/arm/event/oem_event_manager.hpp | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/oem/arm/event/oem_event_manager.cpp b/oem/arm/event/oem_event_manager.cpp
+index 42c2dfb75..82e971150 100644
+--- a/oem/arm/event/oem_event_manager.cpp
++++ b/oem/arm/event/oem_event_manager.cpp
+@@ -94,7 +94,7 @@ int OemEventManager::handleSensorEvent(
+     if (!isPhxTerminus(tid))
+     {
+         lg2::info("Ignoring Arm OEM sensor event from terminus {TID}; "
+-                  "Arm OEM handles only sensor events from the PHX terminus",
++                  "Arm OEM handles only PHX-prefixed sensor events",
+                   "TID", tid);
+         return PLDM_SUCCESS;
+     }
+@@ -126,7 +126,7 @@ bool OemEventManager::isPhxTerminus(pldm_tid_t tid) const
+     lg2::debug("Resolved Arm terminus {TID} to name {NAME}", "TID", tid, "NAME",
+                terminusName.value());
+ 
+-    return terminusName.value() == bootProgressTerminusName;
++    return terminusName.value().starts_with(bootProgressTerminusName);
+ }
+ 
+ int OemEventManager::decodeSensorEvent(pldm_tid_t tid, const uint8_t* eventData,
+diff --git a/oem/arm/event/oem_event_manager.hpp b/oem/arm/event/oem_event_manager.hpp
+index 8c0790025..1f60ccbda 100644
+--- a/oem/arm/event/oem_event_manager.hpp
++++ b/oem/arm/event/oem_event_manager.hpp
+@@ -47,11 +47,11 @@ class OemEventManager
+                           size_t eventDataOffset);
+ 
+   private:
+-    /** @brief Check whether a terminus is the PHX terminus
++    /** @brief Check whether a terminus name starts with PHX
+      *
+      *  @param[in] tid - Terminus ID
+      *
+-     *  @return true if the terminus name is PHX, false otherwise
++     *  @return true for a PHX-prefixed name, false otherwise
+      */
+     bool isPhxTerminus(pldm_tid_t tid) const;
+ 
+-- 
+2.34.1
+

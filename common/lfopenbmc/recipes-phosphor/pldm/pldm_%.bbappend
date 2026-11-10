@@ -40,6 +40,7 @@ SRC_URI:append:openbmc-fb-lf = " \
     file://0032-platform-mc-drop-stale-discovery-work-on-endpoint-re.patch \
     file://0033-platform-mc-cper-submit-events-for-processing.patch \
     file://0034-platform-mc-Add-option-to-control-terminus-D-Bus-obj.patch \
+    file://0035-oem-arm-accept-events-from-indexed-PHX-termini.patch \
 "
 
 # ARM crashlog support, PLDM file transfer dependencies, and compatibility fixes

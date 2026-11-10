@@ -11,4 +11,4 @@ SRC_URI:append:openbmc-fb-lf = " \
     file://0001-dsp-platform-Add-tagged-numeric-sensor-decode-API.patch \
 "
 
-SRC_URI:append = "${@' file://0002-bindings-cpp-bypass-vendor-defined-initial-descripto.patch' if d.getVar('MACHINE') in ['catalina', 'clemente', 'harma', 'minerva', 'rainiera7', 'santabarbara', 'ventura', 'yosemite5a7'] else ''}"
+SRC_URI:append = "${@' file://0002-bindings-cpp-bypass-vendor-defined-initial-descripto.patch' if d.getVar('MACHINE') in ['catalina', 'clemente', 'harma', 'minerva', 'rainiera7', 'santabarbara', 'sanmiguel', 'ventura', 'ventura2', 'ventura2a7', 'yosemite5a7'] else ''}"

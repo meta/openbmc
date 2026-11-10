@@ -24,6 +24,17 @@ lib_dep = declare_dependency(
     dependencies: [phosphor_logging_dep],
 )
 
+sdbusplus_dep = dependency('sdbusplus')
+systemd_dep = dependency('libsystemd')
+
+executable(
+    'bmc-services-health',
+    ['main.cpp', 'systemd_dbus.cpp'],
+    dependencies: [lib_dep, sdbusplus_dep, systemd_dep],
+    install: true,
+    install_dir: get_option('bindir'),
+)
+
 if get_option('tests').allowed()
     subdir('test')
 endif

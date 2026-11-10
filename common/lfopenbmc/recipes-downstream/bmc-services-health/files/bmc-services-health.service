@@ -1,0 +1,17 @@
+[Unit]
+Description=BMC services health metrics (failed, restarting and boot-stuck units)
+# Deliberately no After=mapper-wait@...: it must run while boot is stuck.
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/bmc-services-health
+Restart=always
+RestartSec=5
+WatchdogSec=180
+# No RuntimeDirectory=: even with RuntimeDirectoryPreserve=restart, systemd
+# deletes /run/bmc-services-health on stop, losing the restart state.
+# KillMode stays the default (control-group), so a watchdog abort also kills a
+# hung bmc-oem-metric child.
+
+[Install]
+WantedBy=multi-user.target

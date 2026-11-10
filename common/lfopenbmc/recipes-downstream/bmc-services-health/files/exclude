@@ -1,0 +1,7 @@
+# Unit-name globs that bmc-services-health leaves out of failed_services and
+# service_restarts_total; matching failures still show as failed_services_excluded.
+# Image default. Add per-BMC exclusions in /etc/bmc-services-health/exclude.
+#
+# systemd-coredump runs once per crash and fails when rwfs is full, which the
+# rwfs alarm already covers; the crash itself shows in the crashing unit's restarts.
+systemd-coredump@*.service

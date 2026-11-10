@@ -15,11 +15,11 @@
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 
-SUMMARY = "nexthopbmc CPLD drivers"
+SUMMARY = "nexthopbmc FPGA drivers"
 LICENSE = "GPL-2.0-or-later"
 LIC_FILES_CHKSUM = "file://COPYING;md5=12f884d2ae1ff87c09e5b7ccc2c4ca7e"
 
-inherit module kernel_extra_headers_export
+inherit module
 
 PR = "r0"
 PV = "0.1"
@@ -27,9 +27,6 @@ PV = "0.1"
 S = "${UNPACKDIR}"
 LOCAL_URI = " \
     file://Makefile \
-    file://pwrcpld.c \
+    file://nh_fpga_reg.c \
     file://COPYING \
     "
-
-DEPENDS += "kernel-module-i2c-dev-sysfs"
-RDEPENDS:${PN} += "kernel-module-i2c-dev-sysfs"

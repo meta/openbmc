@@ -7,7 +7,7 @@ if not gtest_dep.found()
 endif
 
 # ptest-meson installs test/test-* (classes/ptest-meson.bbclass)
-foreach name : ['services_health']
+foreach name : ['services_health', 'checks', 'metric_writer']
     test(
         name,
         executable(

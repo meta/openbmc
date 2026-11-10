@@ -1,0 +1,33 @@
+From 5e1123cd67f0f8e9c7b58331e3e432937399ce14 Mon Sep 17 00:00:00 2001
+From: Colin Huang <colin.huang2@amd.com>
+Date: Thu, 29 Oct 2026 13:20:52 +0800
+Subject: [PATCH] ARM: dts: aspeed: anacapa: Rename FM_CPU0_PWRGD to
+ host0-ready
+
+phosphor-state-manager uses the "host0-ready" GPIO line to determine
+whether the host is running. The current "FM_CPU0_PWRGD" line name is
+not recognized for this purpose.
+
+Rename the GPIO line to "host0-ready" so that phosphor-state-manager
+can correctly determine the host state.
+
+Lore: https://lore.kernel.org/r/20261029-anacapa-devlop-phase-devicetree-v10-0-26ee3cf9d9d0@gmail.com
+
+Signed-off-by: Colin Huang <colin.huang2@amd.com>
+---
+ arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
+index 84206ba49..0475b9fcd 100644
+--- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
++++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
+@@ -1334,7 +1334,7 @@ &sgpiom0 {
+ 	/* P0-P7 line 240-255 */
+ 	"CPU0_SLP_S5_N_R", "NFC_VEN",
+ 	"CPU0_SLP_S3_N_R", "",
+-	"FM_CPU0_PWRGD", "",
++	"host0-ready", "",
+ 	"PWRGD_RMC", "",
+ 	"FM_RST_CPU0_RESET_N", "RBB_CPLD_RISCV_RST",
+ 	"FM_PWRGD_CPU0_PWROK", "LBB_CPLD_RISCV_RST",

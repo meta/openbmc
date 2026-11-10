@@ -27,7 +27,7 @@ PV = "0.1"
 S = "${UNPACKDIR}"
 LOCAL_URI = " \
     file://Makefile \
-    file://pwrcpld.c \
+    file://mcbcpld.c \
     file://COPYING \
     "
 

@@ -1,9 +1,30 @@
-From 31258df35c285dfa83e98faa605bb4013f7b02d8 Mon Sep 17 00:00:00 2001
+From 1d54014989a583732724d87f1c9cf6e5e77d7c3b Mon Sep 17 00:00:00 2001
 From: Freddie Jheng <Freddie.Jheng@quantatw.com>
-Date: Fri, 2 Oct 2026 14:20:56 +0800
+Date: Mon, 9 Nov 2026 10:59:37 +0800
 Subject: [PATCH] Add support for MTIA CPERs
 
-Support MTIA CPER entries
+MTIA (Meta Training and Inference Accelerator) devices report errors
+to the BMC as CPER records with an OEM section (GUID
+c8f67ddf-e784-471d-a05f-7c70a7a11ad6). Add a parser, generator, JSON
+schema and example for this section.
+
+The section is a fixed 120-byte record, published as a single "mtia"
+JSON object:
+- version and recordSize of the record.
+- pcieDeviceId: the PCIe identity of the reporting device, decoded into
+  vendor ID, device ID and the function, device, bus, segment and slot
+  numbers. Published only when validation bit 0 is set.
+- deviceSerial: the device serial number. Published only when
+  validation bit 1 is set.
+- bootTimer: the event time since boot, in nanoseconds.
+- eventId and severity of the event.
+- scope, chipId, platformId, skuId, chipletId and moduleId: identify
+  where the event was generated, published as hex strings.
+- detailFormatId: the format of the event detail payload, published as
+  a hex string.
+- eventDetailRaw: the event detail payload, published as-is in base64.
+  Only the first detailLength bytes are published. detailLength itself
+  is not published, since it is implied by the payload length.
 
 Change-Id: Ib41661a9944796b2c26664a6172a3a9a5bc4039a
 Signed-off-by: Freddie Jheng <Freddie.Jheng@quantatw.com>
@@ -11,22 +32,22 @@ Signed-off-by: Freddie Jheng <Freddie.Jheng@quantatw.com>
  Cper.c                                        |   7 +
  cper-utils.c                                  |  17 ++
  examples/mtia.cperhex                         |  11 +
- examples/mtia.json                            |  91 ++++++++
- generator/sections/gen-section-mtia.c         |  63 ++++++
+ examples/mtia.json                            |  93 +++++++
+ generator/sections/gen-section-mtia.c         |  72 +++++
  generator/sections/gen-section.c              |   1 +
- include/libcper/Cper.h                        |  28 +++
+ include/libcper/Cper.h                        |  42 +++
  include/libcper/cper-utils.h                  |   3 +
  .../libcper/generator/sections/gen-section.h  |   2 +
  include/libcper/sections/cper-section-mtia.h  |  20 ++
  meson.build                                   |   2 +
- sections/cper-section-mtia.c                  | 197 ++++++++++++++++++
+ sections/cper-section-mtia.c                  | 260 ++++++++++++++++++
  sections/cper-section.c                       |   3 +
  specification/json/cper-json-full-log.json    |   3 +
  specification/json/cper-json-section-log.json |   3 +
- specification/json/sections/cper-mtia.json    | 145 +++++++++++++
- tests/ir-tests.c                              |  13 ++
+ specification/json/sections/cper-mtia.json    | 160 +++++++++++
+ tests/ir-tests.c                              |  13 +
  tests/test-utils.c                            |   2 +-
- 18 files changed, 610 insertions(+), 1 deletion(-)
+ 18 files changed, 713 insertions(+), 1 deletion(-)
  create mode 100644 examples/mtia.cperhex
  create mode 100644 examples/mtia.json
  create mode 100644 generator/sections/gen-section-mtia.c
@@ -79,28 +100,28 @@ index 613f526..6e66b76 100644
  	json_object_object_add(register_ir, field_name,
 diff --git a/examples/mtia.cperhex b/examples/mtia.cperhex
 new file mode 100644
-index 0000000..2d8efcf
+index 0000000..8b99ee2
 --- /dev/null
 +++ b/examples/mtia.cperhex
 @@ -0,0 +1,11 @@
-+435045520000ffffffff0100020000000300000040010000120011001906
-+157700000000000000000000000000000000000000000000000000000000
++435045520000ffffffff0100020000000300000040010000410009001010
++414000000000000000000000000000000000000000000000000000000000
 +000000000000000000000000000000000000000000000000000000000000
-+00000000000067458b6b0000000004000000000000000000000000000000
-+0000000000000000c80000007800000012e20300c7000000df7df6c884e7
-+1d47a05f7c70a7a11ad699c08d566c15bfdd82a1a6533daca4a201000000
-+3a6d4f343d5a764d445e6276553b65275272730000017800010000000000
-+00002565d5cf61d221c1161f834500000000000000000000000000000000
-+da2c20b41d535ff8b705014f9a858474ef42d31500000000000000000000
-+0000189b8756291f7962ad0944d4e18a5cec7b5cbb14b6ea1a7686332934
-+c02b4bce77c3fdef7bc5f60b0413c43db7bc1f3d
++000000000000966183700000000004000000000000000000000000000000
++0000000000000000c80000007800000056270300b2000000df7df6c884e7
++1d47a05f7c70a7a11ad64cde22337af558cd2f125c557342e83f02000000
++757c64672b2e2a345d315e56523538682e78430000017800010000000000
++000025d2352ac93c530a4218a30000000000000000000000000000000000
++ca4007221002d7adb70c000a6cc4df34f900171b00000000000000000000
++00008b3853a14c6ef9f650b623fd12294b1a6c6591c11c4bf61580cf3b00
++0000000000000000000000000000000000000000
 \ No newline at end of file
 diff --git a/examples/mtia.json b/examples/mtia.json
 new file mode 100644
-index 0000000..fa46601
+index 0000000..d8e9a68
 --- /dev/null
 +++ b/examples/mtia.json
-@@ -0,0 +1,91 @@
+@@ -0,0 +1,93 @@
 +{
 +    "header": {
 +        "revision": {
@@ -113,7 +134,7 @@ index 0000000..fa46601
 +            "name": "Corrected"
 +        },
 +        "recordLength": 320,
-+        "timestamp": "7715-06-19T11:00:12+00:00",
++        "timestamp": "4041-10-10T09:00:41+00:00",
 +        "timestampIsPrecise": false,
 +        "platformID": "00000000-0000-0000-0000-000000000000",
 +        "creatorID": "00000000-0000-0000-0000-000000000000",
@@ -121,7 +142,7 @@ index 0000000..fa46601
 +            "guid": "00000000-0000-0000-0000-000000000000",
 +            "type": "Unknown"
 +        },
-+        "recordID": 1804289383,
++        "recordID": 1887658390,
 +        "flags": {
 +            "value": 4,
 +            "name": "HW_ERROR_FLAGS_SIMULATED"
@@ -133,71 +154,73 @@ index 0000000..fa46601
 +            "sectionOffset": 200,
 +            "sectionLength": 120,
 +            "revision": {
-+                "major": 226,
-+                "minor": 18
++                "major": 39,
++                "minor": 86
 +            },
 +            "flags": {
-+                "primary": true,
++                "primary": false,
 +                "containmentWarning": true,
-+                "reset": true,
++                "reset": false,
 +                "errorThresholdExceeded": false,
-+                "resourceNotAccessible": false,
-+                "latentError": false,
-+                "propagated": true,
++                "resourceNotAccessible": true,
++                "latentError": true,
++                "propagated": false,
 +                "overflow": true
 +            },
 +            "sectionType": {
 +                "data": "c8f67ddf-e784-471d-a05f-7c70a7a11ad6",
 +                "type": "MTIA"
 +            },
-+            "fruID": "568dc099-156c-ddbf-82a1-a6533daca4a2",
-+            "fruText": ":mO4=ZvMD^bvU;e'Rrs",
++            "fruID": "3322de4c-f57a-cd58-2f12-5c557342e83f",
++            "fruText": "u|dg+.*4]1^VR58h.xC",
 +            "severity": {
-+                "code": 1,
-+                "name": "Fatal"
++                "code": 2,
++                "name": "Corrected"
 +            }
 +        }
 +    ],
 +    "sections": [
 +        {
-+            "message": "An MTIA Error (severity Warning, event 1463) occurred",
++            "message": "An MTIA Error (severity Info, event 3255) occurred",
 +            "mtia": {
-+                "sectionHeader": {
-+                    "version": {
-+                        "major": 1,
-+                        "minor": 0
-+                    },
-+                    "recordSize": 120,
-+                    "deviceId": "2565d5cf61d221c1161f8345"
++                "version": {
++                    "major": 1,
++                    "minor": 0
 +                },
-+                "eventRecordCommon": {
-+                    "timestamp": 17897114831234804954,
-+                    "eventId": 1463,
-+                    "severity": {
-+                        "raw": 1,
-+                        "value": "Warning"
-+                    },
-+                    "scope": 79,
-+                    "deviceId": 154,
-+                    "platformId": 133,
-+                    "skuId": 132,
-+                    "chipletId": 116,
-+                    "moduleId": 239,
-+                    "flags": "0x42",
-+                    "detailFormatId": 211,
-+                    "detailLength": 21
++                "recordSize": 120,
++                "pcieDeviceId": {
++                    "vendorId": 53797,
++                    "deviceId": 10805,
++                    "functionNumber": 201,
++                    "deviceNumber": 60,
++                    "busNumber": 83,
++                    "segmentNumber": 16906,
++                    "slotNumber": 5219
 +                },
-+                "eventDetailRaw": "189b8756291f7962ad0944d4e18a5cec7b5cbb14b6ea1a7686332934c02b4bce77c3fdef7bc5f60b0413c43db7bc1f3d"
++                "bootTimer": 12526483156867956938,
++                "eventId": 3255,
++                "severity": {
++                    "raw": 0,
++                    "value": "Info"
++                },
++                "scope": "0x0A",
++                "chipId": "0x6C",
++                "platformId": "0xC4",
++                "skuId": "0xDF",
++                "chipletId": "0x34",
++                "moduleId": "0xF9",
++                "detailFormatId": "0x17",
++                "eventDetailRaw": "izhToUxu+fZQtiP9EilLGmxlkcEcS/YVgM87"
 +            }
 +        }
 +    ]
 +}
 diff --git a/generator/sections/gen-section-mtia.c b/generator/sections/gen-section-mtia.c
 new file mode 100644
-index 0000000..8594445
+index 0000000..89ee289
 --- /dev/null
 +++ b/generator/sections/gen-section-mtia.c
-@@ -0,0 +1,63 @@
+@@ -0,0 +1,72 @@
 +/**
 + * Functions for generating pseudo-random CPER MTIA (Meta Training and Inference
 + * Accelerator) OEM error sections.
@@ -234,14 +257,18 @@ index 0000000..8594445
 +	//Fields gated by an unset validation bit are not published, so they
 +	//must be zero to round-trip.
 +	if (!(mtia_error->ValidationBits & 0x1)) {
-+		memset(mtia_error->DeviceId, 0, sizeof(mtia_error->DeviceId));
++		memset(&mtia_error->PcieDeviceId, 0,
++		       sizeof(mtia_error->PcieDeviceId));
 +	}
 +	if (!(mtia_error->ValidationBits & 0x2)) {
 +		memset(mtia_error->DeviceSerial, 0,
 +		       sizeof(mtia_error->DeviceSerial));
 +	}
 +
-+	//Reserved fields must round-trip as zero.
++	//Unpublished fields (flags and reserved fields) must round-trip as zero.
++	mtia_error->Flags = 0;
++	mtia_error->PcieDeviceId.Slot.Resv1 = 0;
++	mtia_error->PcieDeviceId.Reserved = 0;
 +	mtia_error->Reserved1 = 0;
 +	memset(mtia_error->Reserved2, 0, sizeof(mtia_error->Reserved2));
 +
@@ -255,8 +282,13 @@ index 0000000..8594445
 +	//EventId is a 12-bit identifier.
 +	mtia_error->EventId &= 0x0FFF;
 +
-+	//DetailLength must not exceed the EventDetailRaw payload size.
-+	mtia_error->DetailLength %= sizeof(mtia_error->EventDetailRaw) + 1;
++	//DetailLength is 1 to the EventDetailRaw payload size. Bytes after it are
++	//not published, so they must round-trip as zero.
++	mtia_error->DetailLength =
++		mtia_error->DetailLength % sizeof(mtia_error->EventDetailRaw) +
++		1;
++	memset(mtia_error->EventDetailRaw + mtia_error->DetailLength, 0,
++	       sizeof(mtia_error->EventDetailRaw) - mtia_error->DetailLength);
 +
 +	*location = section;
 +	return size;
@@ -274,13 +306,27 @@ index 5324aad..f72566c 100644
  const size_t generator_definitions_len =
  	sizeof(generator_definitions) / sizeof(CPER_GENERATOR_DEFINITION);
 diff --git a/include/libcper/Cper.h b/include/libcper/Cper.h
-index efb018c..ce5b2b1 100644
+index efb018c..b0c4235 100644
 --- a/include/libcper/Cper.h
 +++ b/include/libcper/Cper.h
-@@ -1437,6 +1437,34 @@ typedef struct {
+@@ -1437,6 +1437,48 @@ typedef struct {
  
  extern EFI_GUID gEfiAmpereErrorSectionGuid;
  
++///
++/// MTIA PCIe Device Identifier
++///
++typedef struct {
++	UINT16 VendorId;
++	UINT16 DeviceId;
++	UINT8 Function;
++	UINT8 Device;
++	UINT8 Bus;
++	UINT16 Segment;
++	EFI_GENERIC_ERROR_PCI_SLOT Slot;
++	UINT8 Reserved;
++} __attribute__((packed)) EFI_MTIA_PCIE_DEVICE_ID;
++
 +///
 +/// MTIA Error Record Section
 +///
@@ -288,7 +334,7 @@ index efb018c..ce5b2b1 100644
 +	UINT16 Version;
 +	UINT16 RecordSize;
 +	UINT64 ValidationBits;
-+	UINT8 DeviceId[12];
++	EFI_MTIA_PCIE_DEVICE_ID PcieDeviceId;
 +	UINT8 DeviceSerial[15];
 +	UINT8 Reserved1;
 +	UINT64 Timestamp;
@@ -387,10 +433,10 @@ index 222ad03..3644473 100644
      'generator/sections/gen-section-pci-bus.c',
 diff --git a/sections/cper-section-mtia.c b/sections/cper-section-mtia.c
 new file mode 100644
-index 0000000..8a07fe3
+index 0000000..2c02ed4
 --- /dev/null
 +++ b/sections/cper-section-mtia.c
-@@ -0,0 +1,197 @@
+@@ -0,0 +1,260 @@
 +/**
 + * Describes functions for converting MTIA (Meta Training and Inference
 + * Accelerator) OEM CPER sections from binary and JSON format into an
@@ -403,9 +449,47 @@ index 0000000..8a07fe3
 +#include <string.h>
 +#include <json.h>
 +#include <libcper/Cper.h>
++#include <libcper/base64.h>
 +#include <libcper/cper-utils.h>
 +#include <libcper/sections/cper-section-mtia.h>
 +#include <libcper/log.h>
++
++/**
++ * MTIA CPER Section Binary Structure Layout:
++ *
++ * The MTIA CPER section is a fixed 120-byte record. All published fields
++ * are keys of a single "mtia" JSON object; arrows show each field's key.
++ * Fields without an arrow are not published.
++ *
++ * ┌─────────────────────────────────────────────────────────────────────────┐
++ * │ EFI_MTIA_ERROR_DATA                                         (120 bytes) │
++ * ├─────────────────────────────────────────────────────────────────────────┤
++ * │  Offset  Field                                                          │
++ * ├─────────────────────────────────────────────────────────────────────────┤
++ * │       0  UINT16  Version                      ← "version"               │
++ * │       2  UINT16  RecordSize                   ← "recordSize"            │
++ * │       4  UINT64  ValidationBits                                         │
++ * │      12  EFI_MTIA_PCIE_DEVICE_ID PcieDeviceId ← "pcieDeviceId" (bit 0)  │
++ * │      24  UINT8   DeviceSerial[15]             ← "deviceSerial" (bit 1)  │
++ * │      39  UINT8   Reserved1                                              │
++ * │      40  UINT64  Timestamp                    ← "bootTimer"             │
++ * │      48  UINT16  EventId                      ← "eventId"               │
++ * │      50  UINT8   Severity                     ← "severity"              │
++ * │      51  UINT8   Scope                        ← "scope"                 │
++ * │      52  UINT8   ChipId                       ← "chipId"                │
++ * │      53  UINT8   PlatformId                   ← "platformId"            │
++ * │      54  UINT8   SkuId                        ← "skuId"                 │
++ * │      55  UINT8   ChipletId                    ← "chipletId"             │
++ * │      56  UINT8   ModuleId                     ← "moduleId"              │
++ * │      57  UINT8   Flags                                                  │
++ * │      58  UINT8   DetailFormatId               ← "detailFormatId"        │
++ * │      59  UINT8   DetailLength                                           │
++ * │      60  UINT8   Reserved2[12]                                          │
++ * │      72  UINT8   EventDetailRaw[48]           ← "eventDetailRaw"        │
++ * └─────────────────────────────────────────────────────────────────────────┘
++ *
++ * Only the first DetailLength bytes of EventDetailRaw are published.
++ **/
 +
 +//Distinct from the CPER_SEVERITY_TYPES, so kept local to the MTIA section.
 +static const char *MTIA_SEVERITY_NAMES[] = { "Info", "Warning", "Recoverable",
@@ -452,6 +536,15 @@ index 0000000..8a07fe3
 +		*desc_string = NULL;
 +		return NULL;
 +	}
++	if (record->DetailLength > sizeof(record->EventDetailRaw)) {
++		cper_print_log(
++			"Error: MTIA detailLength (%u) exceeds eventDetailRaw size (%zu)\n",
++			(unsigned int)record->DetailLength,
++			sizeof(record->EventDetailRaw));
++		free(*desc_string);
++		*desc_string = NULL;
++		return NULL;
++	}
 +
 +	int outstr_len =
 +		snprintf(*desc_string, SECTION_DESC_STRING_SIZE,
@@ -469,49 +562,50 @@ index 0000000..8a07fe3
 +	ValidationTypes ui64Type = { UINT_64T,
 +				     .value.ui64 = record->ValidationBits };
 +
-+	//MTIA section header.
-+	json_object *header_ir = json_object_new_object();
-+	json_object_object_add(header_ir, "version",
++	json_object_object_add(section_ir, "version",
 +			       revision_to_ir(record->Version));
-+	add_int(header_ir, "recordSize", record->RecordSize);
++	add_int(section_ir, "recordSize", record->RecordSize);
++
 +	if (isvalid_prop_to_ir(&ui64Type, 0)) {
-+		add_bytes_hex(header_ir, "deviceId", record->DeviceId,
-+			      sizeof(record->DeviceId));
++		json_object *pcie_ir = json_object_new_object();
++		add_int(pcie_ir, "vendorId", record->PcieDeviceId.VendorId);
++		add_int(pcie_ir, "deviceId", record->PcieDeviceId.DeviceId);
++		add_int(pcie_ir, "functionNumber",
++			record->PcieDeviceId.Function);
++		add_int(pcie_ir, "deviceNumber", record->PcieDeviceId.Device);
++		add_int(pcie_ir, "busNumber", record->PcieDeviceId.Bus);
++		add_int(pcie_ir, "segmentNumber", record->PcieDeviceId.Segment);
++		add_int(pcie_ir, "slotNumber",
++			record->PcieDeviceId.Slot.Number);
++		json_object_object_add(section_ir, "pcieDeviceId", pcie_ir);
 +	}
 +	if (isvalid_prop_to_ir(&ui64Type, 1)) {
-+		add_bytes_hex(header_ir, "deviceSerial", record->DeviceSerial,
++		add_bytes_hex(section_ir, "deviceSerial", record->DeviceSerial,
 +			      sizeof(record->DeviceSerial));
 +	}
-+	json_object_object_add(section_ir, "sectionHeader", header_ir);
 +
-+	//Event record common.
-+	json_object *event_ir = json_object_new_object();
-+	//Raw boot-relative mtimer counter value.
-+	add_uint(event_ir, "timestamp", record->Timestamp);
-+	add_int(event_ir, "eventId", record->EventId);
++	//Event time since boot, in nanoseconds.
++	add_uint(section_ir, "bootTimer", record->Timestamp);
++	add_int(section_ir, "eventId", record->EventId);
 +	add_dict(
-+		event_ir, "severity", record->Severity, MTIA_SEVERITY_NAMES,
++		section_ir, "severity", record->Severity, MTIA_SEVERITY_NAMES,
 +		(sizeof(MTIA_SEVERITY_NAMES) / sizeof(MTIA_SEVERITY_NAMES[0])));
-+	add_int(event_ir, "scope", record->Scope);
-+	add_int(event_ir, "deviceId", record->ChipId);
-+	add_int(event_ir, "platformId", record->PlatformId);
-+	add_int(event_ir, "skuId", record->SkuId);
-+	add_int(event_ir, "chipletId", record->ChipletId);
-+	add_int(event_ir, "moduleId", record->ModuleId);
-+	add_int_hex_8(event_ir, "flags", record->Flags);
-+	add_int(event_ir, "detailFormatId", record->DetailFormatId);
-+	add_int(event_ir, "detailLength", record->DetailLength);
-+	if (record->DetailLength > sizeof(record->EventDetailRaw)) {
-+		cper_print_log(
-+			"Warning: MTIA detailLength (%u) exceeds eventDetailRaw size (%zu)\n",
-+			(unsigned int)record->DetailLength,
-+			sizeof(record->EventDetailRaw));
-+	}
-+	json_object_object_add(section_ir, "eventRecordCommon", event_ir);
++	add_int_hex_8(section_ir, "scope", record->Scope);
++	add_int_hex_8(section_ir, "chipId", record->ChipId);
++	add_int_hex_8(section_ir, "platformId", record->PlatformId);
++	add_int_hex_8(section_ir, "skuId", record->SkuId);
++	add_int_hex_8(section_ir, "chipletId", record->ChipletId);
++	add_int_hex_8(section_ir, "moduleId", record->ModuleId);
++	add_int_hex_8(section_ir, "detailFormatId", record->DetailFormatId);
 +
-+	//Event detail raw.
-+	add_bytes_hex(section_ir, "eventDetailRaw", record->EventDetailRaw,
-+		      sizeof(record->EventDetailRaw));
++	//Only the first DetailLength bytes of EventDetailRaw are published.
++	if (record->DetailLength > 0) {
++		add_binary_base64(section_ir, "eventDetailRaw",
++				  record->EventDetailRaw, record->DetailLength);
++	} else {
++		json_object_object_add(section_ir, "eventDetailRaw",
++				       json_object_new_string(""));
++	}
 +
 +	return section_ir;
 +}
@@ -525,10 +619,7 @@ index 0000000..8a07fe3
 +	ValidationTypes ui64Type = { UINT_64T, .value.ui64 = 0 };
 +	json_object *obj = NULL;
 +
-+	//MTIA section header.
-+	json_object *header_ir =
-+		json_object_object_get(section, "sectionHeader");
-+	json_object *version = json_object_object_get(header_ir, "version");
++	json_object *version = json_object_object_get(section, "version");
 +	int minor =
 +		json_object_get_int(json_object_object_get(version, "minor"));
 +	int major =
@@ -536,53 +627,71 @@ index 0000000..8a07fe3
 +	section_cper->Version =
 +		(UINT16)(((major & 0xFF) << 8) | (minor & 0xFF));
 +	section_cper->RecordSize = (UINT16)json_object_get_uint64(
-+		json_object_object_get(header_ir, "recordSize"));
-+	if (json_object_object_get_ex(header_ir, "deviceId", &obj)) {
-+		get_bytes_hex_checked(header_ir, "deviceId",
-+				      section_cper->DeviceId,
-+				      sizeof(section_cper->DeviceId));
++		json_object_object_get(section, "recordSize"));
++
++	if (json_object_object_get_ex(section, "pcieDeviceId", &obj)) {
++		EFI_MTIA_PCIE_DEVICE_ID *pcie = &section_cper->PcieDeviceId;
++		pcie->VendorId = (UINT16)json_object_get_uint64(
++			json_object_object_get(obj, "vendorId"));
++		pcie->DeviceId = (UINT16)json_object_get_uint64(
++			json_object_object_get(obj, "deviceId"));
++		pcie->Function = (UINT8)json_object_get_uint64(
++			json_object_object_get(obj, "functionNumber"));
++		pcie->Device = (UINT8)json_object_get_uint64(
++			json_object_object_get(obj, "deviceNumber"));
++		pcie->Bus = (UINT8)json_object_get_uint64(
++			json_object_object_get(obj, "busNumber"));
++		pcie->Segment = (UINT16)json_object_get_uint64(
++			json_object_object_get(obj, "segmentNumber"));
++		pcie->Slot.Number = (UINT16)json_object_get_uint64(
++			json_object_object_get(obj, "slotNumber"));
 +		add_to_valid_bitfield(&ui64Type, 0);
 +	}
-+	if (json_object_object_get_ex(header_ir, "deviceSerial", &obj)) {
-+		get_bytes_hex_checked(header_ir, "deviceSerial",
++	if (json_object_object_get_ex(section, "deviceSerial", &obj)) {
++		get_bytes_hex_checked(section, "deviceSerial",
 +				      section_cper->DeviceSerial,
 +				      sizeof(section_cper->DeviceSerial));
 +		add_to_valid_bitfield(&ui64Type, 1);
 +	}
 +	section_cper->ValidationBits = ui64Type.value.ui64;
 +
-+	//Event record common.
-+	json_object *event_ir =
-+		json_object_object_get(section, "eventRecordCommon");
 +	section_cper->Timestamp = json_object_get_uint64(
-+		json_object_object_get(event_ir, "timestamp"));
++		json_object_object_get(section, "bootTimer"));
 +	section_cper->EventId = (UINT16)json_object_get_uint64(
-+		json_object_object_get(event_ir, "eventId"));
++		json_object_object_get(section, "eventId"));
 +	section_cper->Severity =
 +		(UINT8)json_object_get_uint64(json_object_object_get(
-+			json_object_object_get(event_ir, "severity"), "raw"));
-+	section_cper->Scope = (UINT8)json_object_get_uint64(
-+		json_object_object_get(event_ir, "scope"));
-+	section_cper->ChipId = (UINT8)json_object_get_uint64(
-+		json_object_object_get(event_ir, "deviceId"));
-+	section_cper->PlatformId = (UINT8)json_object_get_uint64(
-+		json_object_object_get(event_ir, "platformId"));
-+	section_cper->SkuId = (UINT8)json_object_get_uint64(
-+		json_object_object_get(event_ir, "skuId"));
-+	section_cper->ChipletId = (UINT8)json_object_get_uint64(
-+		json_object_object_get(event_ir, "chipletId"));
-+	section_cper->ModuleId = (UINT8)json_object_get_uint64(
-+		json_object_object_get(event_ir, "moduleId"));
-+	get_value_hex_8(event_ir, "flags", &section_cper->Flags);
-+	section_cper->DetailFormatId = (UINT8)json_object_get_uint64(
-+		json_object_object_get(event_ir, "detailFormatId"));
-+	section_cper->DetailLength = (UINT8)json_object_get_uint64(
-+		json_object_object_get(event_ir, "detailLength"));
++			json_object_object_get(section, "severity"), "raw"));
++	get_value_hex_8(section, "scope", &section_cper->Scope);
++	get_value_hex_8(section, "chipId", &section_cper->ChipId);
++	get_value_hex_8(section, "platformId", &section_cper->PlatformId);
++	get_value_hex_8(section, "skuId", &section_cper->SkuId);
++	get_value_hex_8(section, "chipletId", &section_cper->ChipletId);
++	get_value_hex_8(section, "moduleId", &section_cper->ModuleId);
++	get_value_hex_8(section, "detailFormatId",
++			&section_cper->DetailFormatId);
 +
-+	//Event detail raw.
-+	get_bytes_hex_checked(section, "eventDetailRaw",
-+			      section_cper->EventDetailRaw,
-+			      sizeof(section_cper->EventDetailRaw));
++	json_object *encoded =
++		json_object_object_get(section, "eventDetailRaw");
++	int32_t decoded_len = 0;
++	UINT8 *decoded = base64_decode(json_object_get_string(encoded),
++				       json_object_get_string_len(encoded),
++				       &decoded_len);
++	if (decoded == NULL) {
++		cper_print_log("Error: Could not decode MTIA eventDetailRaw\n");
++	} else {
++		//DetailLength is the length of the published payload.
++		if (decoded_len <=
++		    (int32_t)sizeof(section_cper->EventDetailRaw)) {
++			memcpy(section_cper->EventDetailRaw, decoded,
++			       decoded_len);
++			section_cper->DetailLength = (UINT8)decoded_len;
++		} else {
++			cper_print_log(
++				"Error: MTIA eventDetailRaw is too long\n");
++		}
++		free(decoded);
++	}
 +
 +	fwrite(section_cper, sizeof(EFI_MTIA_ERROR_DATA), 1, out);
 +	fflush(out);
@@ -639,152 +748,167 @@ index e447181..ca5b6a8 100644
                  }
 diff --git a/specification/json/sections/cper-mtia.json b/specification/json/sections/cper-mtia.json
 new file mode 100644
-index 0000000..e3726a8
+index 0000000..dc78cac
 --- /dev/null
 +++ b/specification/json/sections/cper-mtia.json
-@@ -0,0 +1,145 @@
+@@ -0,0 +1,160 @@
 +{
 +    "$schema": "https://json-schema.org/draft/2020-12/schema",
 +    "type": "object",
 +    "description": "MTIA (Meta Training and Inference Accelerator) OEM Error Section",
-+    "required": ["sectionHeader", "eventRecordCommon", "eventDetailRaw"],
++    "required": [
++        "version",
++        "recordSize",
++        "bootTimer",
++        "eventId",
++        "severity",
++        "scope",
++        "chipId",
++        "platformId",
++        "skuId",
++        "chipletId",
++        "moduleId",
++        "detailFormatId",
++        "eventDetailRaw"
++    ],
 +    "additionalProperties": false,
 +    "properties": {
-+        "sectionHeader": {
++        "version": {
 +            "type": "object",
-+            "description": "MTIA section header (40 bytes).",
-+            "required": ["version", "recordSize"],
++            "description": "Major and minor version number of the MTIA section definition.",
++            "required": ["major", "minor"],
 +            "additionalProperties": false,
 +            "properties": {
-+                "version": {
-+                    "type": "object",
-+                    "description": "Major and minor version number of the MTIA section definition.",
-+                    "required": ["major", "minor"],
-+                    "additionalProperties": false,
-+                    "properties": {
-+                        "major": {
-+                            "type": "integer",
-+                            "minimum": 0
-+                        },
-+                        "minor": {
-+                            "type": "integer",
-+                            "minimum": 0
-+                        }
-+                    }
-+                },
-+                "recordSize": {
++                "major": {
 +                    "type": "integer",
-+                    "description": "Size of the MTIA error record in bytes.",
 +                    "minimum": 0
 +                },
-+                "deviceId": {
-+                    "type": "string",
-+                    "pattern": "^[0-9a-f]{24}$",
-+                    "description": "PCIe device identifier of the MTIA component. Present only when validation bit 0 is set."
-+                },
-+                "deviceSerial": {
-+                    "type": "string",
-+                    "pattern": "^[0-9a-f]{30}$",
-+                    "description": "ASIC serial number. Present only when validation bit 1 is set."
++                "minor": {
++                    "type": "integer",
++                    "minimum": 0
 +                }
 +            }
 +        },
-+        "eventRecordCommon": {
++        "recordSize": {
++            "type": "integer",
++            "description": "Size of the MTIA error record in bytes.",
++            "minimum": 0
++        },
++        "pcieDeviceId": {
 +            "type": "object",
-+            "description": "Event record common fields (32 bytes).",
++            "description": "PCIe device identifier of the MTIA component. Present only when validation bit 0 is set.",
 +            "required": [
-+                "timestamp",
-+                "eventId",
-+                "severity",
-+                "scope",
++                "vendorId",
 +                "deviceId",
-+                "platformId",
-+                "skuId",
-+                "chipletId",
-+                "moduleId",
-+                "flags",
-+                "detailFormatId",
-+                "detailLength"
++                "functionNumber",
++                "deviceNumber",
++                "busNumber",
++                "segmentNumber",
++                "slotNumber"
 +            ],
 +            "additionalProperties": false,
 +            "properties": {
-+                "timestamp": {
++                "vendorId": {
 +                    "type": "integer",
-+                    "description": "Raw boot-relative mtimer counter value.",
-+                    "minimum": 0
-+                },
-+                "eventId": {
-+                    "type": "integer",
-+                    "description": "12-bit event identifier.",
-+                    "minimum": 0
-+                },
-+                "severity": {
-+                    "type": "object",
-+                    "description": "Boot1 event severity bucket.",
-+                    "required": ["raw"],
-+                    "additionalProperties": false,
-+                    "properties": {
-+                        "raw": {
-+                            "type": "integer",
-+                            "minimum": 0
-+                        },
-+                        "value": {
-+                            "type": "string",
-+                            "enum": ["Info", "Warning", "Recoverable", "Fatal"]
-+                        }
-+                    }
-+                },
-+                "scope": {
-+                    "type": "integer",
-+                    "description": "Event scope (local/module/system).",
 +                    "minimum": 0
 +                },
 +                "deviceId": {
 +                    "type": "integer",
-+                    "description": "Chip identity.",
 +                    "minimum": 0
 +                },
-+                "platformId": {
++                "functionNumber": {
 +                    "type": "integer",
-+                    "description": "Platform identity.",
 +                    "minimum": 0
 +                },
-+                "skuId": {
++                "deviceNumber": {
 +                    "type": "integer",
-+                    "description": "SKU identity.",
 +                    "minimum": 0
 +                },
-+                "chipletId": {
++                "busNumber": {
 +                    "type": "integer",
-+                    "description": "Source chiplet identifier.",
 +                    "minimum": 0
 +                },
-+                "moduleId": {
++                "segmentNumber": {
 +                    "type": "integer",
-+                    "description": "Module identity.",
 +                    "minimum": 0
 +                },
-+                "flags": {
-+                    "type": "string",
-+                    "description": "System-defined flags.",
-+                    "pattern": "^0x[0-9A-Fa-f]+$"
-+                },
-+                "detailFormatId": {
++                "slotNumber": {
 +                    "type": "integer",
-+                    "description": "Discriminator for the eventDetailRaw schema.",
-+                    "minimum": 0
-+                },
-+                "detailLength": {
-+                    "type": "integer",
-+                    "description": "Bytes valid in the payload section.",
 +                    "minimum": 0
 +                }
 +            }
 +        },
++        "deviceSerial": {
++            "type": "string",
++            "description": "ASIC serial number. Present only when validation bit 1 is set.",
++            "pattern": "^[0-9a-f]{30}$"
++        },
++        "bootTimer": {
++            "type": "integer",
++            "description": "Event time since boot, in nanoseconds.",
++            "minimum": 0
++        },
++        "eventId": {
++            "type": "integer",
++            "description": "12-bit event identifier.",
++            "minimum": 0
++        },
++        "severity": {
++            "type": "object",
++            "description": "Boot1 event severity bucket.",
++            "required": ["raw"],
++            "additionalProperties": false,
++            "properties": {
++                "raw": {
++                    "type": "integer",
++                    "minimum": 0
++                },
++                "value": {
++                    "type": "string",
++                    "enum": ["Info", "Warning", "Recoverable", "Fatal"]
++                }
++            }
++        },
++        "scope": {
++            "type": "string",
++            "description": "Event scope.",
++            "pattern": "^0x[0-9A-F]{2}$"
++        },
++        "chipId": {
++            "type": "string",
++            "description": "Chip identifier.",
++            "pattern": "^0x[0-9A-F]{2}$"
++        },
++        "platformId": {
++            "type": "string",
++            "description": "Platform identifier.",
++            "pattern": "^0x[0-9A-F]{2}$"
++        },
++        "skuId": {
++            "type": "string",
++            "description": "SKU identifier.",
++            "pattern": "^0x[0-9A-F]{2}$"
++        },
++        "chipletId": {
++            "type": "string",
++            "description": "Source chiplet identifier.",
++            "pattern": "^0x[0-9A-F]{2}$"
++        },
++        "moduleId": {
++            "type": "string",
++            "description": "Module identity.",
++            "pattern": "^0x[0-9A-F]{2}$"
++        },
++        "detailFormatId": {
++            "type": "string",
++            "description": "Identifies the format of the eventDetailRaw payload.",
++            "pattern": "^0x[0-9A-F]{2}$"
++        },
 +        "eventDetailRaw": {
 +            "type": "string",
-+            "description": "Raw event detail bytes (48 bytes), lowercase hex.",
-+            "pattern": "^[0-9a-f]{96}$"
++            "description": "Event detail payload, up to 48 bytes, published as-is in base64.",
++            "maxLength": 64,
++            "pattern": "^[A-Za-z0-9+/]*={0,2}$"
 +        }
 +    }
 +}

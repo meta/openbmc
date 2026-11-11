@@ -40,8 +40,17 @@ SEQ_TIMEOUT=15 # in seconds
 # Standard Linux error code
 EBUSY_ERR=16       # Device or resource busy
 ETIME_ERR=62       # Timer expired
+ENODEV_ERR=19      # No such device (wrong SCM card for this chassis)
 
 WEUTIL_CMD="weutil -e"
+
+# The SCM card variant is identified by a signature register in the SCM FPGA,
+# which is reachable through the indirect address/data window on i2c-2. Only the
+# SCM card designed for the MORGAN800CCX chassis returns SCM_AMD_FPGA_SIGNATURE;
+# the MORGAN800CC SCM card does not.
+SCM_FPGA_I2C_BUS_NUM=2         # i2c-2 for System Controller Module FPGA
+SCM_FPGA_ID_REG_ADDR=0x10bc    # SCM variant signature register
+SCM_AMD_FPGA_SIGNATURE=0x14f00000
 
 lock_file_path_configure() {
     local lock_dir="/run/lock"
@@ -254,6 +263,12 @@ wait_for_status_on() {
 userver_power_on() {
     acquire_lock "${FUNCNAME[0]}"
 
+    # Refuse to power on if the SCM card is fitted into the wrong chassis.
+    if ! check_scm_chassis_compatibility; then
+        handle_error_and_cleanup "${FUNCNAME[0]}" \
+            "SCM card is not compatible with this chassis, aborting power-on" $ENODEV_ERR
+    fi
+
     handle_error_and_cleanup_if_busy "${FUNCNAME[0]}"
 
     # Power on CPU and Datapath
@@ -267,6 +282,68 @@ userver_power_on() {
     return 0
 }
 
+# Read a 32-bit register from the SCM FPGA through its indirect
+# address/data window (write the address, trigger, then read 4 data bytes).
+# Prints the value as "0xXXXXXXXX".
+scm_fpga_read32() {
+    local addr=$1
+
+    i2cset -f -y "$SCM_FPGA_I2C_BUS_NUM" 0x21 $(( addr        & 0xff ))
+    i2cset -f -y "$SCM_FPGA_I2C_BUS_NUM" 0x22 $(( (addr >> 8)  & 0xff ))
+    i2cset -f -y "$SCM_FPGA_I2C_BUS_NUM" 0x23 $(( (addr >> 16) & 0xff ))
+    i2cset -f -y "$SCM_FPGA_I2C_BUS_NUM" 0x24 $(( (addr >> 24) & 0xff ))
+    i2cset -f -y "$SCM_FPGA_I2C_BUS_NUM" 0x20 0x01
+
+    printf "0x%02x%02x%02x%02x\n" \
+        $(( $(i2cget -f -y "$SCM_FPGA_I2C_BUS_NUM" 0x28) )) \
+        $(( $(i2cget -f -y "$SCM_FPGA_I2C_BUS_NUM" 0x27) )) \
+        $(( $(i2cget -f -y "$SCM_FPGA_I2C_BUS_NUM" 0x26) )) \
+        $(( $(i2cget -f -y "$SCM_FPGA_I2C_BUS_NUM" 0x25) ))
+}
+
+# Return the chassis Product Name (from the chassis EEPROM), e.g.
+# "MORGAN800CCX" or "MORGAN800CC".
+chassis_product_name() {
+    weutil -e chassis_eeprom | awk -F': ' '/^Product Name:/ {print $2; exit}'
+}
+
+# Verify the fitted SCM card matches the chassis it is installed in.
+# Return 0 if compatible, non-zero (and log) if the SCM card is wrongly fitted.
+check_scm_chassis_compatibility() {
+    local product_name scm_sig scm_is_amd
+
+    product_name=$(chassis_product_name)
+    scm_sig=$(scm_fpga_read32 "$SCM_FPGA_ID_REG_ADDR")
+
+    if [ "$scm_sig" = "$SCM_AMD_FPGA_SIGNATURE" ]; then
+        scm_is_amd=1
+    else
+        scm_is_amd=0
+    fi
+
+    case "$product_name" in
+        MORGAN800CCX)
+            if [ "$scm_is_amd" -ne 1 ]; then
+                log_err_message "${FUNCNAME[0]}" \
+                    "SCM card mismatch: MORGAN800CCX chassis with non-AMD SCM card (FPGA sig=$scm_sig)"
+                return 1
+            fi
+            ;;
+        MORGAN800CC)
+            if [ "$scm_is_amd" -ne 0 ]; then
+                log_err_message "${FUNCNAME[0]}" \
+                    "SCM card mismatch: MORGAN800CC chassis with AMD SCM card (FPGA sig=$scm_sig)"
+                return 1
+            fi
+            ;;
+        *)
+            log_err_message "${FUNCNAME[0]}" \
+                "Unknown chassis Product Name '$product_name'; skipping SCM/chassis compatibility check"
+            ;;
+    esac
+
+    return 0
+}
 userver_power_off() {
     acquire_lock "${FUNCNAME[0]}"
 

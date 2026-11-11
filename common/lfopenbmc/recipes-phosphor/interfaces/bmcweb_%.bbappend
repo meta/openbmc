@@ -66,3 +66,11 @@ SRC_URI:append = " \
     file://0430-port-look-up-port-metrics-through-a-table.patch \
     file://0431-MetricReportDefinition-accept-PortMetrics-properties.patch \
 "
+
+# Carry Software.Update events into the update task's messages, so a task
+# reports what the update did as Redfish Update registry messages.
+SRC_URI:append = " \
+    file://0440-Add-firmware-update-events-to-task-messages.patch \
+    file://0441-Catch-update-events-committed-before-the-task-exists.patch \
+    file://0442-Add-ResetRequired-event-to-task-messages.patch \
+"

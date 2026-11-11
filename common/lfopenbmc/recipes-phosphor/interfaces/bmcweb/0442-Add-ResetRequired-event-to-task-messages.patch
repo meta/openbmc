@@ -1,0 +1,69 @@
+From 3e6d13c957cca0e9242adeb1a8361bd17d32b269 Mon Sep 17 00:00:00 2001
+From: Jagpal Singh Gill <paligill@gmail.com>
+Date: Fri, 5 Jun 2026 14:16:47 -0700
+Subject: [PATCH] Add ResetRequired event to task messages
+
+Add ResetRequired event handling from phosphor-logging to the update
+task messages. The reset action URI is currently empty and needs to
+be looked up from the inventory item association.
+
+Tested: In progress.
+
+Change-Id: I21b8c245829855d8a8569a8b5258864249a33886
+Signed-off-by: Jagpal Singh Gill <paligill@gmail.com>
+---
+ redfish-core/lib/update_service.hpp | 34 +++++++++++++++++++++++++++++
+ 1 file changed, 34 insertions(+)
+
+diff --git a/redfish-core/lib/update_service.hpp b/redfish-core/lib/update_service.hpp
+index 8df13203..7250b98f 100644
+--- a/redfish-core/lib/update_service.hpp
++++ b/redfish-core/lib/update_service.hpp
+@@ -245,6 +245,31 @@ inline std::string metadataValue(
+     return value != additionalData.end() ? value->second : std::string{};
+ }
+ 
++inline std::string dbusToRedfishResetType(const std::string& dbusResetType)
++{
++    if (dbusResetType.ends_with(".On"))
++    {
++        return "On";
++    }
++    if (dbusResetType.ends_with(".Off"))
++    {
++        return "GracefulShutdown";
++    }
++    if (dbusResetType.ends_with(".Reboot"))
++    {
++        return "PowerCycle";
++    }
++    if (dbusResetType.ends_with(".GracefulWarmReboot"))
++    {
++        return "GracefulRestart";
++    }
++    if (dbusResetType.ends_with(".ForceWarmReboot"))
++    {
++        return "ForceRestart";
++    }
++    return "";
++}
++
+ inline std::optional<nlohmann::json::object_t> updateEventToTaskMessage(
+     const std::string& messageType,
+     const std::unordered_map<std::string, std::string>& additionalData)
+@@ -298,6 +323,15 @@ inline std::optional<nlohmann::json::object_t> updateEventToTaskMessage(
+     {
+         return messages::updateSuccessful(targetUri.buffer(), imageId);
+     }
++    if (messageType == "xyz.openbmc_project.Software.Update.ResetRequired")
++    {
++        auto resetIt = additionalData.find("RESET_TYPE");
++        std::string resetType = dbusToRedfishResetType(
++            (resetIt != additionalData.end()) ? resetIt->second : "");
++        // TODO: look up inventory item URI from the target object path
++        boost::urls::url resetUri("");
++        return messages::resetRequired(resetUri, resetType);
++    }
+     return std::nullopt;
+ }
+ 

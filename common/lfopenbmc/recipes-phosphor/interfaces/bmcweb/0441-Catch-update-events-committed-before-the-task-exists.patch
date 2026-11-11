@@ -1,0 +1,204 @@
+From 246b9ba45178f560306cf81d943d98f3d2e9e108 Mon Sep 17 00:00:00 2001
+From: Jagpal Singh Gill <paligill@gmail.com>
+Date: Mon, 26 Oct 2026 15:11:54 -0700
+Subject: [PATCH] Catch update events committed before the task exists
+
+StartUpdate replies with the object the task tracks, so the task, and
+the match reporting its events, were created once the call returned.
+The update commits its first event before that, so TargetDetermined was
+regularly lost.
+
+Install the match before calling StartUpdate, against the object the
+call is made on, which is the same object the events name. Hold the
+events that arrive until createTask() reports the task, and send them
+to it then.
+
+Tested: In progress.
+
+Change-Id: Ib857c78c282664268851f1f3f2d3a41c89b19dab
+Signed-off-by: Jagpal Singh Gill <paligill@gmail.com>
+---
+ redfish-core/lib/update_service.hpp | 113 +++++++++++++++++++++-------
+ 1 file changed, 87 insertions(+), 26 deletions(-)
+
+diff --git a/redfish-core/lib/update_service.hpp b/redfish-core/lib/update_service.hpp
+index 7330c25f..8df13203 100644
+--- a/redfish-core/lib/update_service.hpp
++++ b/redfish-core/lib/update_service.hpp
+@@ -149,6 +149,27 @@ constexpr const char* loggingMatchStr =
+     "interface='org.freedesktop.DBus.ObjectManager',type='signal',"
+     "member='InterfacesAdded',path='/xyz/openbmc_project/logging'";
+ 
++/**
++ * @brief Collects the update events of one target for its task
++ *
++ * The match is installed before StartUpdate is called, so it is watching by
++ * the time the update commits its first event. Events are held until
++ * createTask() reports the task they belong to, and go straight to it from
++ * then on.
++ */
++struct UpdateLogCollector
++{
++    /* @brief Most events held while waiting for the task */
++    static constexpr size_t maxEntries = 16;
++
++    sdbusplus::object_path target;
++    std::vector<std::pair<std::string, dbus::utility::DBusInterfacesMap>>
++        pending;
++
++    /* Owns the match this collector is reached from, so it outlives it */
++    task::TaskData* taskData = nullptr;
++};
++
+ struct MemoryFileDescriptor
+ {
+     int fd = -1;
+@@ -304,22 +325,42 @@ inline void processLogEntry(
+         taskData.messages.emplace_back(std::move(*msg));
+     }
+ }
+-/**
+- * @brief Convert an update event into a message of the task it belongs to
+- *
+- * @param[in] swObjPath - Software object the task reports against
+- * @param[in] taskData - The task
+- * @param[in] m - The InterfacesAdded signal of the logging service
+- */
+-inline void handleLogEvent(const sdbusplus::object_path& swObjPath,
+-                           const std::shared_ptr<task::TaskData>& taskData,
+-                           sdbusplus::message_t& m)
++inline void collectUpdateLogEntry(
++    const std::shared_ptr<UpdateLogCollector>& collector,
++    sdbusplus::message_t& m)
+ {
+     sdbusplus::object_path logEntryPath;
+     dbus::utility::DBusInterfacesMap interfacesProperties;
+     m.read(logEntryPath, interfacesProperties);
+ 
+-    processLogEntry(swObjPath, *taskData, interfacesProperties);
++    if (collector->taskData)
++    {
++        processLogEntry(collector->target, *collector->taskData,
++                        interfacesProperties);
++        return;
++    }
++
++    if (collector->pending.size() < UpdateLogCollector::maxEntries)
++    {
++        collector->pending.emplace_back(logEntryPath.str,
++                                        std::move(interfacesProperties));
++    }
++}
++
++/**
++ * @brief Watch for the update events of a target
++ *
++ * @param[in] collector - Collects the events until the task exists
++ *
++ * @return The match, to be kept alive for as long as the task reports
++ */
++inline auto watchUpdateLogEntries(
++    const std::shared_ptr<UpdateLogCollector>& collector)
++    -> std::unique_ptr<sdbusplus::match>
++{
++    return std::make_unique<sdbusplus::match>(
++        static_cast<sdbusplus::bus_t&>(*crow::connections::systemBus),
++        loggingMatchStr, std::bind_front(collectUpdateLogEntry, collector));
+ }
+ inline bool handleCreateTask(const boost::system::error_code& ec2,
+                              sdbusplus::message_t& msg,
+@@ -425,7 +466,8 @@ inline bool handleCreateTask(const boost::system::error_code& ec2,
+ inline void createTask(const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
+                        task::Payload&& payload,
+                        const sdbusplus::object_path& objPath,
+-                       const sdbusplus::object_path& targetPath)
++                       const std::shared_ptr<UpdateLogCollector>& collector,
++                       std::unique_ptr<sdbusplus::match> loggingMatch)
+ {
+     std::shared_ptr<task::TaskData> task = task::TaskData::createTask(
+         std::bind_front(handleCreateTask),
+@@ -436,11 +478,19 @@ inline void createTask(const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
+     task->payload.emplace(std::move(payload));
+     task->populateResp(asyncResp->res);
+ 
+-    if (!targetPath.str.empty())
++    if (collector)
+     {
+-        task->loggingMatch = std::make_unique<sdbusplus::match>(
+-            static_cast<sdbusplus::bus_t&>(*crow::connections::systemBus),
+-            loggingMatchStr, std::bind_front(handleLogEvent, targetPath, task));
++        // Report the events that arrived while the task was being created,
++        // and send the ones after it straight to the task. The task keeps
++        // the match alive.
++        collector->taskData = task.get();
++        for (const auto& [logEntryPath, interfacesProperties] :
++             collector->pending)
++        {
++            processLogEntry(collector->target, *task, interfacesProperties);
++        }
++        collector->pending.clear();
++        task->loggingMatch = std::move(loggingMatch);
+     }
+ }
+ 
+@@ -504,7 +554,8 @@ inline void softwareInterfaceAdded(
+                     activateImage(objPath.str, objInfo[0].first);
+                     if (asyncResp)
+                     {
+-                        createTask(asyncResp, std::move(payload), objPath, {});
++                        createTask(asyncResp, std::move(payload), objPath,
++                                   nullptr, nullptr);
+                     }
+                     fwUpdateInProgress = false;
+                 });
+@@ -1035,8 +1086,10 @@ inline std::optional<MultiPartUpdate> extractMultipartUpdateParameters(
+ 
+ inline void handleStartUpdate(
+     const std::shared_ptr<bmcweb::AsyncResp>& asyncResp, task::Payload payload,
+-    const std::string& objectPath, const boost::system::error_code& ec,
+-    const sdbusplus::object_path& retPath)
++    const std::string& objectPath,
++    const std::shared_ptr<UpdateLogCollector>& collector,
++    std::unique_ptr<sdbusplus::match> loggingMatch,
++    const boost::system::error_code& ec, const sdbusplus::object_path& retPath)
+ {
+     if (ec)
+     {
+@@ -1048,8 +1101,8 @@ inline void handleStartUpdate(
+ 
+     BMCWEB_LOG_INFO("Call to StartUpdate on {} Success, retPath = {}",
+                     objectPath, retPath.str);
+-    createTask(asyncResp, std::move(payload), retPath,
+-               sdbusplus::object_path(objectPath));
++    createTask(asyncResp, std::move(payload), retPath, collector,
++               std::move(loggingMatch));
+ }
+ 
+ inline void startUpdate(
+@@ -1057,13 +1110,21 @@ inline void startUpdate(
+     const MemoryFileDescriptor& memfd, const std::string& applyTime,
+     const std::string& objectPath, const std::string& serviceName)
+ {
++    // The object StartUpdate is called on is the one its events name, so
++    // watching can start before the call, ahead of the first event.
++    auto collector = std::make_shared<UpdateLogCollector>();
++    collector->target = sdbusplus::object_path(objectPath);
++    std::unique_ptr<sdbusplus::match> loggingMatch =
++        watchUpdateLogEntries(collector);
++
+     dbus::utility::async_method_call(
+         asyncResp,
+-        [asyncResp, payload = std::move(payload),
+-         objectPath](const boost::system::error_code& ec1,
+-                     const sdbusplus::object_path& retPath) mutable {
+-            handleStartUpdate(asyncResp, std::move(payload), objectPath, ec1,
+-                              retPath);
++        [asyncResp, payload = std::move(payload), objectPath, collector,
++         loggingMatch = std::move(loggingMatch)](
++            const boost::system::error_code& ec1,
++            const sdbusplus::object_path& retPath) mutable {
++            handleStartUpdate(asyncResp, std::move(payload), objectPath,
++                              collector, std::move(loggingMatch), ec1, retPath);
+         },
+         serviceName, objectPath, updateInterface, "StartUpdate",
+         sdbusplus::message::unix_fd(memfd.fd), applyTime);

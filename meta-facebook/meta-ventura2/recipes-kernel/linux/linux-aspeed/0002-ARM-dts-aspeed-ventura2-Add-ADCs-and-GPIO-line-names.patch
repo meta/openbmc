@@ -1,0 +1,120 @@
+From 54ce21cde740ac8c7c53c2e09f693d73f7988069 Mon Sep 17 00:00:00 2001
+From: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
+Date: Fri, 6 Nov 2026 11:01:50 +0800
+Subject: [PATCH 2/2] ARM: dts: aspeed: ventura2: Add ADCs and GPIO line names
+
+Backport the Ventura2 follow-up series submitted upstream:
+ - Add the three LTC2305 ADCs and expose the valve voltages through
+   iio-hwmon.
+ - Add the ADS1015 ADC on I2C bus 10.
+ - Name the COMe presence GPIO (PRSNT_COME_N).
+ - Name the USB-UART bridge reset GPIOs (RST_FT4232_{1,2,3}_BMC_N_R).
+ - Name the 88E1512 PHY reset GPIO (FPGA_RST_88E1512_PLD), used by
+   platform-init.
+
+lore link: https://lore.kernel.org/all/20261111-ventura2-dts-update-v2-0-bce5b5dafc1f@gmail.com/
+
+Signed-off-by: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
+---
+ .../aspeed/aspeed-bmc-facebook-ventura2.dts   | 43 +++++++++++++++++--
+ 1 file changed, 40 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-ventura2.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-ventura2.dts
+index eba4f8658..f2d8dc76b 100644
+--- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-ventura2.dts
++++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-ventura2.dts
+@@ -191,6 +191,7 @@ iio-hwmon {
+ 			<&adc0 0>, <&adc0 1>, <&adc0 2>, <&adc0 3>,
+ 			<&adc0 4>, <&adc0 5>, <&adc0 6>, <&adc0 7>,
+ 			<&adc1 2>,
++			<&adc_op_fb1 0>, <&adc_op_fb1 1>, <&adc_op_fb2 0>,
+ 			<&adc_op_fb1_evt 0>, <&adc_op_fb1_evt 1>,
+ 			<&adc_op_fb2_evt 0>;
+ 	};
+@@ -394,6 +395,12 @@ i2c0mux0ch2: i2c@2 {
+ 			reg = <2>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
++
++			adc@8 {
++				compatible = "lltc,ltc2305";
++				reg = <0x08>;
++				#io-channel-cells = <1>;
++			};
+ 		};
+ 
+ 		i2c0mux0ch3: i2c@3 {
+@@ -597,6 +604,18 @@ &i2c3 {
+ 
+ 	status = "okay";
+ 
++	adc_op_fb1: adc@8 {
++		compatible = "lltc,ltc2305";
++		reg = <0x08>;
++		#io-channel-cells = <1>;
++	};
++
++	adc_op_fb2: adc@9 {
++		compatible = "lltc,ltc2305";
++		reg = <0x09>;
++		#io-channel-cells = <1>;
++	};
++
+ 	dac@c {
+ 		compatible = "adi,ad5612";
+ 		reg = <0x0c>;
+@@ -620,6 +639,17 @@ gpio@23 {
+ 		reg = <0x23>;
+ 		#gpio-cells = <2>;
+ 		gpio-controller;
++
++		gpio-line-names =
++			"", "",
++			"", "",
++			"", "",
++			"", "",
++			"", "PRSNT_COME_N",
++			"", "",
++			"", "",
++			"", "";
++
+ 		interrupt-parent = <&io_expander7>;
+ 		interrupts = <6 IRQ_TYPE_LEVEL_LOW>;
+ 	};
+@@ -1934,8 +1964,8 @@ gpio@20 {
+ 
+ 		gpio-line-names =
+ 			"", "",
+-			"", "",
+-			"", "PRSNT_FANBP_0_PWR_N",
++			"RST_FT4232_1_BMC_N_R", "RST_FT4232_2_BMC_N_R",
++			"RST_FT4232_3_BMC_N_R", "PRSNT_FANBP_0_PWR_N",
+ 			"PRSNT_FANBP_0_SIG_N", "PRSNT_POE_PWR_N",
+ 			"PRSNT_POE_SIG_N", "",
+ 			"PWRGD_P3V3_ISO_POE_BMC_R", "",
+@@ -2415,6 +2445,13 @@ power-monitor@44 {
+ 		shunt-resistor-micro-ohms = <500>;
+ 	};
+ 
++	adc@48 {
++		compatible = "ti,ads1015";
++		reg = <0x48>;
++		#address-cells = <1>;
++		#size-cells = <0>;
++	};
++
+ 	gpio@64 {
+ 		compatible = "nxp,pca9555";
+ 		reg = <0x64>;
+@@ -2479,7 +2516,7 @@ gpio@67 {
+ 			"FPGA_TRAY39_PWRGD_BUF_R", "FPGA_TRAY40_PWRGD_BUF_R",
+ 			"FPGA_ISO_CARRIER_BOARD_PWR_OK", "FPGA_UART_MUX_SEL",
+ 			"", "",
+-			"", "",
++			"FPGA_RST_88E1512_PLD", "",
+ 			"", "";
+ 	};
+ 
+-- 
+2.34.1
+

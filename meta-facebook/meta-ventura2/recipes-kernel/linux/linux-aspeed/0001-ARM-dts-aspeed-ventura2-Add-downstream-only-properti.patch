@@ -1,0 +1,147 @@
+From 5d0917b8ac3ba99350422356137fcdf7c2d331ce Mon Sep 17 00:00:00 2001
+From: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
+Date: Fri, 6 Nov 2026 10:58:06 +0800
+Subject: [PATCH 1/2] ARM: dts: aspeed: ventura2: Add downstream-only
+ properties and nodes
+
+Add the devicetree settings that the upstream Ventura2 devicetree cannot
+carry:
+ - clock-frequency on i2c2/i2c3/i2c12 and i2c-clk-high-min-percent on
+   i2c10, read by the downstream AST2600 I2Cv2 driver. Without
+   clock-frequency these buses fall back to 100 kHz.
+ - ncsi-ctrl,start-redo-probe and ncsi-package on mac3, for the
+   downstream NC-SI patches.
+ - MAX31790 channel@2/@5 configured as TACH inputs.
+ - The generic "pmbus" power monitor at i2c10 0x69, which has no
+   upstream binding.
+ - The LTC2305 ADCs at i2c6 0x08/0x09 fitted on EVT boards, and their
+   iio-hwmon channels.
+ - MDIO0, used by platform-init through mdio-netlink.
+
+Upstream-Status: Inappropriate [needs downstream kernel patches:
+AST2600 I2Cv2 (0207), i2c duty cycle (0238), NCSI (0500/0501),
+max31790 TACH (0600); EVT-only hardware;
+no binding for generic pmbus; MDIO0 not accepted upstream]
+
+Signed-off-by: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
+---
+ .../aspeed/aspeed-bmc-facebook-ventura2.dts   | 48 +++++++++++++++++--
+ 1 file changed, 44 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-ventura2.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-ventura2.dts
+index f3dbdece3..eba4f8658 100644
+--- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-ventura2.dts
++++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-ventura2.dts
+@@ -190,7 +190,9 @@ iio-hwmon {
+ 		io-channels =
+ 			<&adc0 0>, <&adc0 1>, <&adc0 2>, <&adc0 3>,
+ 			<&adc0 4>, <&adc0 5>, <&adc0 6>, <&adc0 7>,
+-			<&adc1 2>;
++			<&adc1 2>,
++			<&adc_op_fb1_evt 0>, <&adc_op_fb1_evt 1>,
++			<&adc_op_fb2_evt 0>;
+ 	};
+ 
+ 	leds {
+@@ -461,6 +463,18 @@ i2c0mux0ch7: i2c@7 {
+ 			fan-controller@20 {
+ 				compatible = "maxim,max31790";
+ 				reg = <0x20>;
++				#address-cells = <1>;
++				#size-cells = <0>;
++
++				channel@2 {
++					reg = <2>;
++					sensor-type = "TACH";
++				};
++
++				channel@5 {
++					reg = <5>;
++					sensor-type = "TACH";
++				};
+ 			};
+ 
+ 			fanctl1: fan-controller@23 {
+@@ -573,13 +587,13 @@ i2c1mux0ch7: i2c@7 {
+ };
+ 
+ &i2c2 {
+-	bus-frequency = <400000>;
++	clock-frequency = <400000>;
+ 
+ 	status = "okay";
+ };
+ 
+ &i2c3 {
+-	bus-frequency = <400000>;
++	clock-frequency = <400000>;
+ 
+ 	status = "okay";
+ 
+@@ -1881,6 +1895,19 @@ eeprom@56 {
+ &i2c6 {
+ 	status = "okay";
+ 
++	/* LTC2305 placement on EVT boards; PVT boards use i2c3 0x08/0x09 */
++	adc_op_fb1_evt: adc@8 {
++		compatible = "lltc,ltc2305";
++		reg = <0x08>;
++		#io-channel-cells = <1>;
++	};
++
++	adc_op_fb2_evt: adc@9 {
++		compatible = "lltc,ltc2305";
++		reg = <0x09>;
++		#io-channel-cells = <1>;
++	};
++
+ 	dac@c {
+ 		compatible = "adi,ad5612";
+ 		reg = <0x0c>;
+@@ -2122,6 +2149,8 @@ eeprom@56 {
+ };
+ 
+ &i2c10 {
++	i2c-clk-high-min-percent = <50>;
++
+ 	status = "okay";
+ 
+ 	/*
+@@ -2453,6 +2482,11 @@ gpio@67 {
+ 			"", "",
+ 			"", "";
+ 	};
++
++	power-monitor@69 {
++		compatible = "pmbus";
++		reg = <0x69>;
++	};
+ };
+ 
+ &i2c11 {
+@@ -2516,7 +2550,7 @@ i2c11mux0ch7: i2c@7 {
+ };
+ 
+ &i2c12 {
+-	bus-frequency = <400000>;
++	clock-frequency = <400000>;
+ 
+ 	status = "okay";
+ };
+@@ -2683,7 +2717,13 @@ &mac3 {
+ 	pinctrl-0 = <&pinctrl_rmii4_default>;
+ 	pinctrl-names = "default";
+ 	use-ncsi;
++	ncsi-ctrl,start-redo-probe;
++	ncsi-package = <1>;
++
++	status = "okay";
++};
+ 
++&mdio0 {
+ 	status = "okay";
+ };
+ 
+-- 
+2.34.1
+

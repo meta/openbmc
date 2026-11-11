@@ -1,4 +1,4 @@
-From 7a7a8ebf01422af0fa6a8f04139026ffaaaab6cd Mon Sep 17 00:00:00 2001
+From 6debdf8acba828898d2cb48b7de48bd6edb6abb2 Mon Sep 17 00:00:00 2001
 From: Colin Huang <u8813345@gmail.com>
 Date: Tue, 16 Jun 2026 21:14:42 +0800
 Subject: [PATCH] hwmon: (pmbus/tda38740) Add driver for Infineon
@@ -20,10 +20,10 @@ Signed-off-by: Colin Huang <8813345@gmail.com>
  create mode 100644 drivers/hwmon/pmbus/tda38740.c
 
 diff --git a/drivers/hwmon/pmbus/Kconfig b/drivers/hwmon/pmbus/Kconfig
-index 2e5432dee..600081ff1 100644
+index b206d20dc602..28e8b83263ba 100644
 --- a/drivers/hwmon/pmbus/Kconfig
 +++ b/drivers/hwmon/pmbus/Kconfig
-@@ -619,6 +619,15 @@ config SENSORS_TDA38640_REGULATOR
+@@ -628,6 +628,15 @@ config SENSORS_TDA38640_REGULATOR
  	  If you say yes here you get regulator support for Infineon
  	  TDA38640 as regulator.
  
@@ -40,10 +40,10 @@ index 2e5432dee..600081ff1 100644
  	tristate "TI TPS25990"
  	help
 diff --git a/drivers/hwmon/pmbus/Makefile b/drivers/hwmon/pmbus/Makefile
-index f9974ad64..ca94be5f5 100644
+index 952aab665979..de9227bf52ba 100644
 --- a/drivers/hwmon/pmbus/Makefile
 +++ b/drivers/hwmon/pmbus/Makefile
-@@ -60,6 +60,7 @@ obj-$(CONFIG_SENSORS_PXE1610)	+= pxe1610.o
+@@ -61,6 +61,7 @@ obj-$(CONFIG_SENSORS_PXE1610)	+= pxe1610.o
  obj-$(CONFIG_SENSORS_Q54SJ108A2)	+= q54sj108a2.o
  obj-$(CONFIG_SENSORS_STPDDC60)	+= stpddc60.o
  obj-$(CONFIG_SENSORS_TDA38640)	+= tda38640.o
@@ -53,7 +53,7 @@ index f9974ad64..ca94be5f5 100644
  obj-$(CONFIG_SENSORS_TPS53679)	+= tps53679.o
 diff --git a/drivers/hwmon/pmbus/tda38740.c b/drivers/hwmon/pmbus/tda38740.c
 new file mode 100644
-index 000000000..4217a5a9e
+index 000000000000..4217a5a9ee66
 --- /dev/null
 +++ b/drivers/hwmon/pmbus/tda38740.c
 @@ -0,0 +1,98 @@
@@ -155,3 +155,6 @@ index 000000000..4217a5a9e
 +MODULE_DESCRIPTION("PMBus driver for Infineon TDA38725/TDA38740");
 +MODULE_LICENSE("GPL");
 +MODULE_IMPORT_NS("PMBUS");
+-- 
+2.53.0-Meta
+

@@ -1,4 +1,4 @@
-From 70d01b1958ca1e005ee4d87e4f94dc554995dba3 Mon Sep 17 00:00:00 2001
+From 3765ace41840b1cf8779c93862187257719b69de Mon Sep 17 00:00:00 2001
 From: Colin Huang <colin.huang2@amd.com>
 Date: Tue, 18 Aug 2026 12:38:10 +0800
 Subject: [PATCH] PSUSensor: add RAA229639 and RAA229640 support
@@ -21,10 +21,10 @@ Signed-off-by: Colin Huang <colin.huang2@amd.com>
  1 file changed, 2 insertions(+)
 
 diff --git a/src/psu/PSUSensorMain.cpp b/src/psu/PSUSensorMain.cpp
-index 9ad91d3..d800a99 100644
+index 5f2280b..a7810aa 100644
 --- a/src/psu/PSUSensorMain.cpp
 +++ b/src/psu/PSUSensorMain.cpp
-@@ -154,6 +154,8 @@ static constexpr auto sensorTypes = std::to_array<
+@@ -158,6 +158,8 @@ static constexpr auto sensorTypes = std::to_array<
      {"RAA229001", I2CDeviceType{"raa229001", true}},
      {"RAA229004", I2CDeviceType{"raa229004", true}},
      {"RAA229126", I2CDeviceType{"raa229126", true}},
@@ -33,3 +33,6 @@ index 9ad91d3..d800a99 100644
      {"RTQ6056", I2CDeviceType{"rtq6056", false}},
      {"SBRMI", I2CDeviceType{"sbrmi", true}},
      {"smpro_hwmon", I2CDeviceType{"smpro", false}},
+-- 
+2.53.0-Meta
+

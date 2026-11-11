@@ -1,8 +1,7 @@
-From 001834efd4a6dea9f4fba83e5559ed55e416c355 Mon Sep 17 00:00:00 2001
+From 07dba45a3b94f49be85077f94ce42ef6d60df8e9 Mon Sep 17 00:00:00 2001
 From: Colin Huang <u8813345@gmail.com>
 Date: Tue, 16 Jun 2026 21:35:23 +0800
-Subject: [PATCH 2002/2003] dt-bindings: hwmon: pmbus: Add Infineon tda38740
- and tda38725
+Subject: [PATCH] dt-bindings: hwmon: pmbus: Add Infineon tda38740 and tda38725
 
 Add devicetree bindings for the Infineon TDA38740 and TDA38725
 single-voltage synchronous buck regulators with PMBus interface.
@@ -19,7 +18,7 @@ Signed-off-by: Colin Huang <colin.huang2@amd.com>
 
 diff --git a/Documentation/devicetree/bindings/hwmon/pmbus/infineon,tda38740.yaml b/Documentation/devicetree/bindings/hwmon/pmbus/infineon,tda38740.yaml
 new file mode 100644
-index 000000000..02380c09c
+index 000000000000..02380c09c5f5
 --- /dev/null
 +++ b/Documentation/devicetree/bindings/hwmon/pmbus/infineon,tda38740.yaml
 @@ -0,0 +1,79 @@
@@ -102,3 +101,6 @@ index 000000000..02380c09c
 +        };
 +    };
 +
+-- 
+2.53.0-Meta
+

@@ -1,4 +1,4 @@
-From ddc95a72c5aac2d464000526d3b6fd424e0552b5 Mon Sep 17 00:00:00 2001
+From 1fb3b53e94bd6613bafe1df30f4a9835057b8927 Mon Sep 17 00:00:00 2001
 From: Bright Cheng <bright_cheng@wiwynn.com>
 Date: Mon, 26 Aug 2024 11:37:53 +0800
 Subject: [PATCH] Utils: support powerState for multi-node system
@@ -1013,10 +1013,10 @@ index 8599826..42d4800 100644
  
  struct PSUProperty
 diff --git a/src/psu/PSUSensorMain.cpp b/src/psu/PSUSensorMain.cpp
-index 5f2280b..83d6aab 100644
+index a7810aa..fd063be 100644
 --- a/src/psu/PSUSensorMain.cpp
 +++ b/src/psu/PSUSensorMain.cpp
-@@ -861,6 +861,7 @@ static void createSensorsCallback(
+@@ -863,6 +863,7 @@ static void createSensorsCallback(
          checkGroupEvent(directory.string(), groupEventPathList);
  
          PowerState readState = getPowerState(*baseConfig);
@@ -1024,7 +1024,7 @@ index 5f2280b..83d6aab 100644
  
          /* Check if there are more sensors in the same interface */
          int i = 1;
-@@ -1446,7 +1447,7 @@ static void createSensorsCallback(
+@@ -1448,7 +1449,7 @@ static void createSensorsCallback(
                      sensorName, std::move(sensorThresholds), *interfacePath,
                      readState, sensorUnits, factor, maxReading, minReading,
                      sensorOffset, labelHead, thresholdConfSize, pollRate,
@@ -1033,7 +1033,7 @@ index 5f2280b..83d6aab 100644
  
                  if (fwName != nullptr)
                  {
-@@ -1572,6 +1573,33 @@ void createSensors(
+@@ -1574,6 +1575,33 @@ void createSensors(
      getter->getConfiguration(types);
  }
  
@@ -1067,7 +1067,7 @@ index 5f2280b..83d6aab 100644
  int main()
  {
      boost::asio::io_context io;
-@@ -1584,12 +1612,10 @@ int main()
+@@ -1586,12 +1614,10 @@ int main()
      auto sensorsChanged =
          std::make_shared<boost::container::flat_set<std::string>>();
  

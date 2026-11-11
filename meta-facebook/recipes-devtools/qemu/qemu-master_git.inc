@@ -28,7 +28,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=a3b50d8b88dcc0eb3d7d39b760b9e821 \
 #   git ls-remote https://github.com/qemu/qemu.git refs/heads/master | cut -f1
 # This is normally updated by the daily yocto sync job when
 # --refresh-patches is enabled
-QEMU_REF ?= "723622bedb0b423de7d1c61ebbe6e7a71934949c"
+QEMU_REF ?= "29760efaf96bbe5928f8111881eddbf5ac06439e"
 
 # Use git protocol (required by BitBake QA)
 SRC_URI = "git://github.com/qemu/qemu.git;protocol=https;branch=master;lfs=0 \

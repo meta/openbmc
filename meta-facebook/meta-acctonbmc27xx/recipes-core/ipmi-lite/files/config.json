@@ -1,0 +1,47 @@
+{
+    "platform" : "acctonbmc27xx",
+    "configure" : [
+        {
+            "name" : "eth_intf_name" ,
+            "type": "string",
+            "val" : "eth0.4088"
+        },
+        {
+            "name" : "max_slot_num" ,
+            "type": "number",
+            "val" : 1
+        },
+        {
+            "name" : "sysfw_ver_server" ,
+            "type": "kv-access",
+            "comment" : "COMe BIOS version"
+        },
+        {
+            "name" : "server_boot_order",
+            "type" : "kv-access",
+            "comment" : "for kv-access, the value can be composed in run time."
+        },
+        {
+            "name" : "chassis_control",
+            "type" : "boolean",
+            "val" : true
+        },
+        {
+            "name" : "server_power_fs_path",
+            "type" : "string",
+            "val" : "/sys/bus/i2c/devices/12-0060/pwr_force_off"
+        },
+        {
+            "name" : "poss_pcie_config",
+            "type" : "boolean",
+            "val" : true,
+            "comment" : "for OEM command: CMD_OEM_GET_POSS_PCIE_CONFIG"
+        },
+        {
+            "name" : "server_cpu_ppin",
+            "type" : "boolean",
+            "val" : true,
+            "comment" : "set server cpu ppin info. to KV"
+        }
+    ]
+}

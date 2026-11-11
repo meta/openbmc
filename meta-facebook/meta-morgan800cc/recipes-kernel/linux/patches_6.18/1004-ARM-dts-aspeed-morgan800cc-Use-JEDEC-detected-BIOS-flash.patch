@@ -1,0 +1,52 @@
+From 35f1621874912e249b87d05de3e1cd726fdc3701 Mon Sep 17 00:00:00 2001
+From: Guhan <gubalasu@cisco.com>
+Date: Tue, 4 Aug 2026 14:35:15 +0000
+Subject: [PATCH] ARM: dts: aspeed: morgan800cc: Use JEDEC-detected BIOS flash
+ size and restore SPI clock
+
+Summary:
+- Change the bios partition size from a hardcoded 64MB to
+  MTDPART_SIZ_FULL (reg = <0x0 0x0>) so the partition always spans
+  the whole SPI-NOR device as detected by JEDEC ID at runtime,
+  independent of the flash part actually populated (32MB or 64MB).
+- Remove the spi-max-frequency = <10000000> override on spi1 flash@0
+  so it inherits the platform default of 50MHz. At 10MHz the ASPEED
+  SMC driver's timing calibration has no valid HCLK divider to test
+  and always falls back to the slow/uncalibrated read path, causing
+  full-flash reads to take roughly 4x longer than necessary.
+
+Test:
+- Booted with both 32MB and 64MB BIOS flash parts; "bios" MTD
+  partition matches the full detected device size in both cases.
+- Confirmed "No good frequency, using dumb slow" no longer appears
+  and the SPI controller calibrates a supported HCLK divider.
+
+Signed-off-by: Guhan <gubalasu@cisco.com>
+---
+ arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
+index 2da1a4ce5..a4d24393e 100644
+--- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
++++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
+@@ -107,7 +107,6 @@ flash@0 {
+ 		compatible = "jedec,spi-nor";
+ 		label = "spi1.0";
+ 		spi-rx-bus-width = <1>;
+-		spi-max-frequency = <10000000>;
+ 
+ 		partitions {
+ 			compatible = "fixed-partitions";
+@@ -115,7 +114,7 @@ partitions {
+ 			#size-cells = <1>;
+ 
+ 			bios@0 {
+-				reg = <0x0 0x4000000>;
++				reg = <0x0 0x0>;
+ 				label = "bios";
+ 			};
+ 		};
+-- 
+2.34.1
+

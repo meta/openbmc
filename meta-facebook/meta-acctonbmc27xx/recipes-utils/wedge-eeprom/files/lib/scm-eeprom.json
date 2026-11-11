@@ -1,0 +1,13 @@
+{
+  "platform" : "acctonbmc27xx",
+  "eeprom devices" : [
+    {
+      "name" : "chassis_eeprom",
+      "sysfs_path" : "/sys/bus/i2c/devices/i2c-6/6-0053/eeprom"
+    },
+    {
+      "name" : "scm_eeprom",
+      "sysfs_path" : "/sys/bus/i2c/devices/i2c-14/14-0056/eeprom"
+    }
+  ]
+}

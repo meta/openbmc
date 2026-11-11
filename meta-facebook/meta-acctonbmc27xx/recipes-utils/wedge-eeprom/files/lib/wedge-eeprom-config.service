@@ -1,0 +1,12 @@
+[Unit]
+Description=Update Wedge Eeprom Config
+After=setup_board.service
+
+[Service]
+ExecStart=/usr/local/bin/wedge-eeprom-config.sh
+SyslogIdentifier=wedge-eeprom-config.sh
+Type=oneshot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

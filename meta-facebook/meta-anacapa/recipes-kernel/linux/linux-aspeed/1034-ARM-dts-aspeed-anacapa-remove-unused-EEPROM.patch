@@ -1,0 +1,36 @@
+From 305acadf3b4b91ee6fd1a97c9f4befda8ee9cc04 Mon Sep 17 00:00:00 2001
+From: Carl Lee <carl.lee@amd.com>
+Date: Wed, 11 Nov 2026 10:46:21 +0800
+Subject: [PATCH] ARM: dts: aspeed: anacapa: remove unused EEPROM
+
+Remove the unused HPM board ID FRU EEPROM (0x51) from
+the I2C mux channel 4 device tree node.
+
+The EEPROM is no longer needed in the Anacapa device tree.
+
+Lore: https://lore.kernel.org/all/20261110-arm-dts-aspeed-anacapa-remove-unused-eeprom-v1-1-e3b5d9cc1a03@amd.com/
+Signed-off-by: Carl Lee <carl.lee@amd.com>
+---
+ .../boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts    | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
+index 6dbf0624b..0a8758bf8 100644
+--- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
++++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
+@@ -1069,12 +1069,6 @@ i2c13mux0ch4: i2c@4 {
+ 			reg = <4>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-
+-			// HPM BRD ID FRU
+-			eeprom@51 {
+-				compatible = "atmel,24c256";
+-				reg = <0x51>;
+-			};
+ 		};
+ 		i2c13mux0ch5: i2c@5 {
+ 			reg = <5>;
+-- 
+2.34.1
+

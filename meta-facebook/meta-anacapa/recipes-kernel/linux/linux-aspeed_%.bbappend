@@ -36,4 +36,5 @@ SRC_URI:append = " \
     file://1031-jtag-increase-JTAG_MAX_XFER_DATA_LEN-to-0x1000000-2-.patch \
     file://1032-ARM-dts-aspeed-anacapa-Simplify-leakage-GPIO-line-na.patch \
     file://1033-ARM-dts-aspeed-anacapa-Rename-FM_CPU0_PWRGD-to-host0.patch \
+    file://1034-ARM-dts-aspeed-anacapa-remove-unused-EEPROM.patch \
 "

@@ -2,9 +2,6 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/linux-aspeed:"
 
 SRC_URI:append = " \
     file://1000-i2c-aspeed-Acknowledge-Tx-ack-late-when-in-SLAVE_REA.patch \
-    file://1001-ipmi-ssif_bmc-add-GPIO-based-alert-mechanism.patch \
-    file://1002-bindings-ipmi-ssif-bmc-Add-property-to-adjust-respon.patch \
-    file://1003-ipmi-ssif_bmc-Add-support-for-adjustable-response-ti.patch \
     file://1004-ARM-dts-aspeed-catalina-add-extra-ncsi-properties.patch \
     file://1005-ARM-dts-aspeed-catalina-add-ipmb-dev-node.patch \
     file://1006-ARM-dts-aspeed-catalina-add-max31790-nodes.patch \

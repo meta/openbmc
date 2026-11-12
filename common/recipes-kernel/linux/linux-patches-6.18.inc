@@ -73,6 +73,20 @@ SRC_URI:append = " \
     file://0238-ipmi-ssif_bmc-Prevent-pending-response-from-being-lo.patch \
     file://0239-aspeed-i2c-fix-AST2700-target-buffer-mode-NULL-deref.patch \
     file://0240-i2c-ast2600-reset-more-ISR-status.patch \
+    file://0241-ipmi-ssif_bmc-add-GPIO-based-alert-mechanism.patch \
+    file://0242-bindings-ipmi-ssif-bmc-Add-property-to-adjust-respon.patch \
+    file://0243-ipmi-ssif_bmc-Add-support-for-adjustable-response-ti.patch \
+"
+
+#
+# CP2112 HID USB to SMBus/I2C Bridge patches.
+#
+SRC_URI:append = " \
+    file://0300-dt-bindings-i2c-Add-CP2112-HID-USB-to-SMBus-Bridge.patch \
+    file://0301-HID-cp2112-Configure-I2C-Bus-Speed-from-Firmware.patch \
+    file://0302-Replace-cp2112-sync-xfer-with-async-workqueue.patch \
+    file://0303-Rate-limit-cp2112-GPIO-poll-error-log.patch \
+    file://0304-hid-cp2112-validate-data-length-byte.patch \
 "
 
 #

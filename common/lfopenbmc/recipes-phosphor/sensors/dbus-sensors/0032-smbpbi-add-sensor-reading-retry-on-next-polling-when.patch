@@ -1,0 +1,186 @@
+From 059ea385a5a14f0aea123076fa74c41473e9ad38 Mon Sep 17 00:00:00 2001
+From: Potin Lai <potin.lai@quantatw.com>
+Date: Sat, 17 Oct 2026 18:04:43 +0800
+Subject: [PATCH 1/1] smbpbi: add sensor reading retry on next polling when
+ over threshold
+
+HMC virtual EEPROM lacks proper protection to prevent the BMC from
+reading while an HMC update is in progress. This race condition can
+cause the BMC to read torn or corrupted data. If this transient wrong
+reading exceeds a threshold, it triggers a false threshold event log.
+
+Add a retry mechanism on the next polling cycle to double-confirm that
+the reading is actually over threshold before updating the sensor value:
+
+- While the retry count is below maxOverThresholdRetryCount, skip
+  updating the sensor value and retry on the next polling cycle.
+- Once the reading remains over threshold after reaching the retry
+  count, the condition is confirmed, the sensor value is updated, and
+  the threshold event log is recorded.
+- If the reading returns to normal at any point during retries, the
+  counter is reset and the erroneous reading is discarded without
+  asserting the threshold or emitting an event log.
+
+Change-Id: Ia609513f340952224c4074841241819000babe98
+Signed-off-by: Potin Lai <potin.lai@quantatw.com>
+---
+ src/smbpbi/SmbpbiSensor.cpp | 87 ++++++++++++++++++++++++++++++++++++-
+ src/smbpbi/SmbpbiSensor.hpp |  7 ++-
+ 2 files changed, 91 insertions(+), 3 deletions(-)
+
+diff --git a/src/smbpbi/SmbpbiSensor.cpp b/src/smbpbi/SmbpbiSensor.cpp
+index 3d97b741..c869be59 100644
+--- a/src/smbpbi/SmbpbiSensor.cpp
++++ b/src/smbpbi/SmbpbiSensor.cpp
+@@ -25,6 +25,7 @@
+ 
+ #include <array>
+ #include <chrono>
++#include <cmath>
+ #include <cstdint>
+ #include <cstring>
+ #include <functional>
+@@ -123,6 +124,52 @@ void SmbpbiSensor::checkThresholds()
+     thresholds::checkThresholds(this);
+ }
+ 
++bool SmbpbiSensor::isOverThreshold(double reading) const
++{
++    if (std::isnan(reading))
++    {
++        return false;
++    }
++
++    for (const auto& threshold : thresholds)
++    {
++        double hyst =
++            std::isnan(threshold.hysteresis) ? 0.0 : threshold.hysteresis;
++
++        // If the current confirmed value is already in the asserted state,
++        // this threshold is already active and logged.
++        if (!std::isnan(value))
++        {
++            if (threshold.direction == thresholds::Direction::HIGH &&
++                value >= (threshold.value - hyst))
++            {
++                continue;
++            }
++            if (threshold.direction == thresholds::Direction::LOW &&
++                value <= (threshold.value + hyst))
++            {
++                continue;
++            }
++        }
++
++        if (threshold.direction == thresholds::Direction::HIGH)
++        {
++            if (reading >= threshold.value)
++            {
++                return true;
++            }
++        }
++        else if (threshold.direction == thresholds::Direction::LOW)
++        {
++            if (reading <= threshold.value)
++            {
++                return true;
++            }
++        }
++    }
++    return false;
++}
++
+ double SmbpbiSensor::convert2Temp(const uint8_t* raw)
+ {
+     // Temp data is encoded in SMBPBI format. The 3 MSBs denote
+@@ -366,6 +413,7 @@ void SmbpbiSensor::waitReadCallback(const boost::system::error_code& ec)
+         lg2::error("Invalid read at offset: {OFFSET} with value: {VALUE}",
+                    "OFFSET", offset, "VALUE", temp);
+         incrementError();
++        overThresholdRetryCount = 0;
+     }
+     else if (outOfRange(temp))
+     {
+@@ -373,11 +421,46 @@ void SmbpbiSensor::waitReadCallback(const boost::system::error_code& ec)
+             "Reading out of range at offset: {OFFSET} with value: {VALUE}",
+             "OFFSET", offset, "VALUE", temp);
+         incrementError();
++        overThresholdRetryCount = 0;
+     }
+     else
+     {
+-        lg2::debug("Value update to {TEMP}", "TEMP", temp);
+-        updateValue(temp);
++        if (isOverThreshold(temp))
++        {
++            if (overThresholdRetryCount < maxOverThresholdRetryCount)
++            {
++                overThresholdRetryCount++;
++                lg2::warning(
++                    "Sensor {NAME} reading {VAL} is over threshold, retry {RETRY}/{MAX} on next polling",
++                    "NAME", name, "VAL", temp, "RETRY", overThresholdRetryCount,
++                    "MAX", maxOverThresholdRetryCount);
++            }
++            else
++            {
++                if (overThresholdRetryCount > 0)
++                {
++                    lg2::info(
++                        "Sensor {NAME} reading {VAL} confirmed over threshold after {RETRY} retries",
++                        "NAME", name, "VAL", temp, "RETRY",
++                        overThresholdRetryCount);
++                    overThresholdRetryCount = 0;
++                }
++                lg2::debug("Value update to {TEMP}", "TEMP", temp);
++                updateValue(temp);
++            }
++        }
++        else
++        {
++            if (overThresholdRetryCount > 0)
++            {
++                lg2::info(
++                    "Sensor {NAME} reading returned to normal ({VAL}), ignoring previous over-threshold reading",
++                    "NAME", name, "VAL", temp);
++                overThresholdRetryCount = 0;
++            }
++            lg2::debug("Value update to {TEMP}", "TEMP", temp);
++            updateValue(temp);
++        }
+     }
+     read();
+ }
+diff --git a/src/smbpbi/SmbpbiSensor.hpp b/src/smbpbi/SmbpbiSensor.hpp
+index 074fa8da..ecc083b2 100644
+--- a/src/smbpbi/SmbpbiSensor.hpp
++++ b/src/smbpbi/SmbpbiSensor.hpp
+@@ -22,6 +22,7 @@
+ #include <vector>
+ 
+ constexpr auto i2CReadLenValues = std::to_array<size_t>({4, 8, 8});
++constexpr size_t maxOverThresholdRetryCount = 1;
+ 
+ enum class I2C_READ_LEN_INDEX
+ {
+@@ -68,13 +69,17 @@ struct SmbpbiSensor : public Sensor
+     static double convert2Temp(const uint8_t* rawData);
+     static double convert2Power(const uint8_t* rawData);
+     void waitReadCallback(const boost::system::error_code& ec);
++    bool isOverThreshold(double reading) const;
++
++    size_t overThresholdRetryCount{0};
++
+     sdbusplus::asio::object_server& objectServer;
+     boost::asio::random_access_file inputDev;
+     boost::asio::steady_timer waitTimer;
+     size_t pollRateSecond;
+ };
+ 
+-bool checkInvalidReading(uint8_t* reading, int length)
++inline bool checkInvalidReading(uint8_t* reading, int length)
+ {
+     // there is no value updated from HMC if reading data is all 0xff
+     uint8_t* ptr = reading;
+-- 
+2.52.0
+

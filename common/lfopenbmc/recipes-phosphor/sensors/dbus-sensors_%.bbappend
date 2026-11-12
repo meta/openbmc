@@ -32,6 +32,7 @@ SRC_URI:append = " \
     file://0029-hwmontempsensor-add-support-for-KB9002.patch \
     file://0030-PSUSensor-add-TDA38725-and-TDA38740-support.patch \
     file://0031-PSUSensor-add-RAA229639-and-RAA229640-support.patch \
+    file://0032-smbpbi-add-sensor-reading-retry-on-next-polling-when.patch \
 "
 
 SRC_URI:append:mf-fb-liquid-cooled = " \

@@ -9,179 +9,1466 @@ Summary:
 2. Add additional PLDM sensor support.
 3. Update Thor3 NIC thresholds and sensor name to align with Mortaro.
 ---
- .../amd/vulcano_1O800_800g_ocp.json           | 156 +++++++++++++++++-
- configurations/broadcomm/800g_1p_ocp.json     |  21 ++-
- 2 files changed, 169 insertions(+), 8 deletions(-)
+ .../amd/vulcano_1O800_800g_ocp.json           | 1446 ++++++++++++++++++++++++++++---
+ configurations/broadcomm/800g_1p_ocp.json     |   21 ++-
+ 2 files changed, 1442 insertions(+), 25 deletions(-)
 
 diff --git a/configurations/amd/vulcano_1O800_800g_ocp.json b/configurations/amd/vulcano_1O800_800g_ocp.json
-index 84ecebc..d68494e 100644
+index 84ecebc..2d211ad 100644
 --- a/configurations/amd/vulcano_1O800_800g_ocp.json
 +++ b/configurations/amd/vulcano_1O800_800g_ocp.json
-@@ -5,9 +5,163 @@
-             "Bus": "$bus",
-             "Name": "AMD OCP NIC FRU",
-             "Type": "EEPROM"
-+        },
-+        {
-+            "EntityId": 11,
-+            "EntityInstance": 0,
-+            "MaxValue": 255,
-+            "MinValue": -255,
-+            "Name": "NIC$bus - 39 TEMP_C",
-+            "Timeout": 30.0,
-+            "Thresholds": [
-+                {
-+                    "Direction": "greater than",
-+                    "Name": "upper non critical",
-+                    "Severity": 0,
-+                    "Value": 95
-+                },
-+                {
-+                    "Direction": "greater than",
-+                    "Name": "upper critical",
-+                    "Severity": 1,
-+                    "Value": 100
-+                },
-+                {
-+                    "Direction": "greater than",
-+                    "Name": "upper non recoverable",
-+                    "Severity": 4,
-+                    "Value": 105
-+                }
-+            ],
-+            "Type": "ExternalSensor",
-+            "Units": "DegreesC"
-+        },
-+        {
-+            "EntityId": 11,
-+            "EntityInstance": 1,
-+            "MaxValue": 255,
-+            "MinValue": -255,
-+            "Name": "NIC$bus - 39 VR_TEMP_C",
-+            "Timeout": 30.0,
-+            "Thresholds": [
-+                {
-+                    "Direction": "greater than",
-+                    "Name": "upper non critical",
-+                    "Severity": 0,
-+                    "Value": 95
-+                },
-+                {
-+                    "Direction": "greater than",
-+                    "Name": "upper critical",
-+                    "Severity": 1,
-+                    "Value": 100
-+                },
-+                {
-+                    "Direction": "greater than",
-+                    "Name": "upper non recoverable",
-+                    "Severity": 4,
-+                    "Value": 105
-+                }
-+            ],
-+            "Type": "ExternalSensor",
-+            "Units": "DegreesC"
-+        },
-+        {
-+            "EntityId": 11,
-+            "EntityInstance": 2,
-+            "MaxValue": 255,
-+            "MinValue": -255,
-+            "Name": "NIC$bus - 39 BOARD_TEMP_C",
-+            "Timeout": 30.0,
-+            "Thresholds": [
-+                {
-+                    "Direction": "greater than",
-+                    "Name": "upper non critical",
-+                    "Severity": 0,
-+                    "Value": 75
-+                },
-+                {
-+                    "Direction": "greater than",
-+                    "Name": "upper critical",
-+                    "Severity": 1,
-+                    "Value": 80
-+                },
-+                {
-+                    "Direction": "greater than",
-+                    "Name": "upper non recoverable",
-+                    "Severity": 4,
-+                    "Value": 85
-+                }
-+            ],
-+            "Type": "ExternalSensor",
-+            "Units": "DegreesC"
-+        },
-+        {
-+            "EntityId": 11,
-+            "EntityInstance": 3,
-+            "MaxValue": 255,
-+            "MinValue": -255,
-+            "Name": "NIC$bus - 39 OSFP_TEMP_C",
-+            "Timeout": 30.0,
-+            "Thresholds": [
-+                {
-+                    "Direction": "greater than",
-+                    "Name": "upper critical",
-+                    "Severity": 1,
-+                    "Value": 65
-+                },
-+                {
-+                    "Direction": "greater than",
-+                    "Name": "upper non recoverable",
-+                    "Severity": 4,
-+                    "Value": 70
-+                }
-+            ],
-+            "Type": "ExternalSensor",
-+            "Units": "DegreesC"
-+        },
-+        {
-+            "EntityId": 11,
-+            "EntityInstance": 4,
-+            "MaxValue": 3000,
-+            "MinValue": 0,
-+            "Name": "NIC$bus - 39 VR_PWR_W",
-+            "Timeout": 30.0,
-+            "Type": "ExternalSensor",
-+            "Units": "Watts"
-+        },
-+        {
-+            "EntityId": 11,
-+            "EntityInstance": 5,
-+            "MaxValue": 3000,
-+            "MinValue": 0,
-+            "Name": "NIC$bus - 39 ASIC_PWR_W",
-+            "Timeout": 30.0,
-+            "Type": "ExternalSensor",
-+            "Units": "Watts"
-+        },
-+        {
-+            "EntityId": 11,
-+            "EntityInstance": 6,
-+            "MaxValue": 255,
-+            "MinValue": 0,
-+            "Name": "NIC$bus - 39 VR_VIN_VOLT_V",
-+            "Timeout": 30.0,
-+            "Type": "ExternalSensor",
-+            "Units": "Volts"
-+        },
-+        {
-+            "EntityId": 11,
-+            "EntityInstance": 7,
-+            "MaxValue": 255,
-+            "MinValue": 0,
-+            "Name": "NIC$bus - 39 ASIC_VOLT_V",
-+            "Timeout": 30.0,
-+            "Type": "ExternalSensor",
-+            "Units": "Volts"
-         }
-     ],
+@@ -1,19 +1,1433 @@
+-{
+-    "Exposes": [
+-        {
+-            "Address": "$address",
+-            "Bus": "$bus",
+-            "Name": "AMD OCP NIC FRU",
+-            "Type": "EEPROM"
+-        }
+-    ],
 -    "Name": "AMD OCP NIC $bus",
-+    "Name": "OCP NIC $bus - 39",
-     "Probe": "xyz.openbmc_project.FruDevice({'BOARD_PRODUCT_NAME': 'VULCANO-1O800-OCP*', 'BOARD_MANUFACTURER': 'AMD'})",
-     "Type": "Board",
-     "xyz.openbmc_project.Inventory.Decorator.Asset": {
+-    "Probe": "xyz.openbmc_project.FruDevice({'BOARD_PRODUCT_NAME': 'VULCANO-1O800-OCP*', 'BOARD_MANUFACTURER': 'AMD'})",
+-    "Type": "Board",
+-    "xyz.openbmc_project.Inventory.Decorator.Asset": {
+-        "Manufacturer": "$BOARD_MANUFACTURER",
+-        "Model": "$BOARD_PRODUCT_NAME",
+-        "PartNumber": "$BOARD_PART_NUMBER",
+-        "SerialNumber": "$BOARD_SERIAL_NUMBER"
++[
++    {
++        "Exposes": [
++            {
++                "Address": "$address",
++                "Bus": "$bus",
++                "Name": "AMD OCP NIC FRU",
++                "Type": "EEPROM"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 0,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC0 TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 1,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC0 VR_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 2,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC0 BOARD_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 75
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 80
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 85
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 3,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC0 OSFP_TEMP_C",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 4,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC0 VR_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 5,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC0 ASIC_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 6,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC0 VR_VIN_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 7,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC0 ASIC_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            }
++        ],
++        "Name": "OCP NIC 0",
++        "Probe": "xyz.openbmc_project.FruDevice({'BOARD_PRODUCT_NAME': 'VULCANO-1O800-OCP*', 'BOARD_MANUFACTURER': 'AMD', 'BUS': 39})",
++        "Type": "Board",
++        "xyz.openbmc_project.Inventory.Decorator.Asset": {
++            "Manufacturer": "$BOARD_MANUFACTURER",
++            "Model": "$BOARD_PRODUCT_NAME",
++            "PartNumber": "$BOARD_PART_NUMBER",
++            "SerialNumber": "$BOARD_SERIAL_NUMBER"
++        }
++    },
++    {
++        "Exposes": [
++            {
++                "Address": "$address",
++                "Bus": "$bus",
++                "Name": "AMD OCP NIC FRU",
++                "Type": "EEPROM"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 0,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC1 TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 1,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC1 VR_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 2,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC1 BOARD_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 75
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 80
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 85
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 3,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC1 OSFP_TEMP_C",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 4,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC1 VR_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 5,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC1 ASIC_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 6,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC1 VR_VIN_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 7,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC1 ASIC_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            }
++        ],
++        "Name": "OCP NIC 1",
++        "Probe": "xyz.openbmc_project.FruDevice({'BOARD_PRODUCT_NAME': 'VULCANO-1O800-OCP*', 'BOARD_MANUFACTURER': 'AMD', 'BUS': 40})",
++        "Type": "Board",
++        "xyz.openbmc_project.Inventory.Decorator.Asset": {
++            "Manufacturer": "$BOARD_MANUFACTURER",
++            "Model": "$BOARD_PRODUCT_NAME",
++            "PartNumber": "$BOARD_PART_NUMBER",
++            "SerialNumber": "$BOARD_SERIAL_NUMBER"
++        }
++    },
++    {
++        "Exposes": [
++            {
++                "Address": "$address",
++                "Bus": "$bus",
++                "Name": "AMD OCP NIC FRU",
++                "Type": "EEPROM"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 0,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC2 TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 1,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC2 VR_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 2,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC2 BOARD_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 75
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 80
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 85
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 3,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC2 OSFP_TEMP_C",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 4,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC2 VR_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 5,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC2 ASIC_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 6,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC2 VR_VIN_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 7,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC2 ASIC_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            }
++        ],
++        "Name": "OCP NIC 2",
++        "Probe": "xyz.openbmc_project.FruDevice({'BOARD_PRODUCT_NAME': 'VULCANO-1O800-OCP*', 'BOARD_MANUFACTURER': 'AMD', 'BUS': 41})",
++        "Type": "Board",
++        "xyz.openbmc_project.Inventory.Decorator.Asset": {
++            "Manufacturer": "$BOARD_MANUFACTURER",
++            "Model": "$BOARD_PRODUCT_NAME",
++            "PartNumber": "$BOARD_PART_NUMBER",
++            "SerialNumber": "$BOARD_SERIAL_NUMBER"
++        }
++    },
++    {
++        "Exposes": [
++            {
++                "Address": "$address",
++                "Bus": "$bus",
++                "Name": "AMD OCP NIC FRU",
++                "Type": "EEPROM"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 0,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC3 TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 1,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC3 VR_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 2,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC3 BOARD_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 75
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 80
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 85
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 3,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC3 OSFP_TEMP_C",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 4,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC3 VR_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 5,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC3 ASIC_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 6,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC3 VR_VIN_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 7,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC3 ASIC_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            }
++        ],
++        "Name": "OCP NIC 3",
++        "Probe": "xyz.openbmc_project.FruDevice({'BOARD_PRODUCT_NAME': 'VULCANO-1O800-OCP*', 'BOARD_MANUFACTURER': 'AMD', 'BUS': 42})",
++        "Type": "Board",
++        "xyz.openbmc_project.Inventory.Decorator.Asset": {
++            "Manufacturer": "$BOARD_MANUFACTURER",
++            "Model": "$BOARD_PRODUCT_NAME",
++            "PartNumber": "$BOARD_PART_NUMBER",
++            "SerialNumber": "$BOARD_SERIAL_NUMBER"
++        }
++    },
++    {
++        "Exposes": [
++            {
++                "Address": "$address",
++                "Bus": "$bus",
++                "Name": "AMD OCP NIC FRU",
++                "Type": "EEPROM"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 0,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC4 TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 1,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC4 VR_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 2,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC4 BOARD_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 75
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 80
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 85
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 3,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC4 OSFP_TEMP_C",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 4,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC4 VR_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 5,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC4 ASIC_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 6,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC4 VR_VIN_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 7,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC4 ASIC_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            }
++        ],
++        "Name": "OCP NIC 4",
++        "Probe": "xyz.openbmc_project.FruDevice({'BOARD_PRODUCT_NAME': 'VULCANO-1O800-OCP*', 'BOARD_MANUFACTURER': 'AMD', 'BUS': 43})",
++        "Type": "Board",
++        "xyz.openbmc_project.Inventory.Decorator.Asset": {
++            "Manufacturer": "$BOARD_MANUFACTURER",
++            "Model": "$BOARD_PRODUCT_NAME",
++            "PartNumber": "$BOARD_PART_NUMBER",
++            "SerialNumber": "$BOARD_SERIAL_NUMBER"
++        }
++    },
++    {
++        "Exposes": [
++            {
++                "Address": "$address",
++                "Bus": "$bus",
++                "Name": "AMD OCP NIC FRU",
++                "Type": "EEPROM"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 0,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC5 TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 1,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC5 VR_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 2,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC5 BOARD_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 75
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 80
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 85
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 3,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC5 OSFP_TEMP_C",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 4,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC5 VR_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 5,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC5 ASIC_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 6,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC5 VR_VIN_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 7,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC5 ASIC_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            }
++        ],
++        "Name": "OCP NIC 5",
++        "Probe": "xyz.openbmc_project.FruDevice({'BOARD_PRODUCT_NAME': 'VULCANO-1O800-OCP*', 'BOARD_MANUFACTURER': 'AMD', 'BUS': 46})",
++        "Type": "Board",
++        "xyz.openbmc_project.Inventory.Decorator.Asset": {
++            "Manufacturer": "$BOARD_MANUFACTURER",
++            "Model": "$BOARD_PRODUCT_NAME",
++            "PartNumber": "$BOARD_PART_NUMBER",
++            "SerialNumber": "$BOARD_SERIAL_NUMBER"
++        }
++    },
++    {
++        "Exposes": [
++            {
++                "Address": "$address",
++                "Bus": "$bus",
++                "Name": "AMD OCP NIC FRU",
++                "Type": "EEPROM"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 0,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC6 TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 1,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC6 VR_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 2,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC6 BOARD_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 75
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 80
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 85
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 3,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC6 OSFP_TEMP_C",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 4,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC6 VR_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 5,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC6 ASIC_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 6,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC6 VR_VIN_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 7,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC6 ASIC_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            }
++        ],
++        "Name": "OCP NIC 6",
++        "Probe": "xyz.openbmc_project.FruDevice({'BOARD_PRODUCT_NAME': 'VULCANO-1O800-OCP*', 'BOARD_MANUFACTURER': 'AMD', 'BUS': 47})",
++        "Type": "Board",
++        "xyz.openbmc_project.Inventory.Decorator.Asset": {
++            "Manufacturer": "$BOARD_MANUFACTURER",
++            "Model": "$BOARD_PRODUCT_NAME",
++            "PartNumber": "$BOARD_PART_NUMBER",
++            "SerialNumber": "$BOARD_SERIAL_NUMBER"
++        }
++    },
++    {
++        "Exposes": [
++            {
++                "Address": "$address",
++                "Bus": "$bus",
++                "Name": "AMD OCP NIC FRU",
++                "Type": "EEPROM"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 0,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC7 TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 1,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC7 VR_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 2,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC7 BOARD_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 75
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 80
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 85
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 3,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC7 OSFP_TEMP_C",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 4,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC7 VR_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 5,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC7 ASIC_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 6,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC7 VR_VIN_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 7,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC7 ASIC_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            }
++        ],
++        "Name": "OCP NIC 7",
++        "Probe": "xyz.openbmc_project.FruDevice({'BOARD_PRODUCT_NAME': 'VULCANO-1O800-OCP*', 'BOARD_MANUFACTURER': 'AMD', 'BUS': 44})",
++        "Type": "Board",
++        "xyz.openbmc_project.Inventory.Decorator.Asset": {
++            "Manufacturer": "$BOARD_MANUFACTURER",
++            "Model": "$BOARD_PRODUCT_NAME",
++            "PartNumber": "$BOARD_PART_NUMBER",
++            "SerialNumber": "$BOARD_SERIAL_NUMBER"
++        }
++    },
++    {
++        "Exposes": [
++            {
++                "Address": "$address",
++                "Bus": "$bus",
++                "Name": "AMD OCP NIC FRU",
++                "Type": "EEPROM"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 0,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC8 TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 1,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC8 VR_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 95
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 100
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 105
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 2,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC8 BOARD_TEMP_C",
++                "Timeout": 30.0,
++                "Thresholds": [
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non critical",
++                        "Severity": 0,
++                        "Value": 75
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper critical",
++                        "Severity": 1,
++                        "Value": 80
++                    },
++                    {
++                        "Direction": "greater than",
++                        "Name": "upper non recoverable",
++                        "Severity": 4,
++                        "Value": 85
++                    }
++                ],
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 3,
++                "MaxValue": 255,
++                "MinValue": -255,
++                "Name": "NIC8 OSFP_TEMP_C",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "DegreesC"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 4,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC8 VR_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 5,
++                "MaxValue": 3000,
++                "MinValue": 0,
++                "Name": "NIC8 ASIC_PWR_W",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Watts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 6,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC8 VR_VIN_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            },
++            {
++                "EntityId": 11,
++                "EntityInstance": 7,
++                "MaxValue": 255,
++                "MinValue": 0,
++                "Name": "NIC8 ASIC_VOLT_V",
++                "Timeout": 30.0,
++                "Type": "ExternalSensor",
++                "Units": "Volts"
++            }
++        ],
++        "Name": "OCP NIC 8",
++        "Probe": "xyz.openbmc_project.FruDevice({'BOARD_PRODUCT_NAME': 'VULCANO-1O800-OCP*', 'BOARD_MANUFACTURER': 'AMD', 'BUS': 45})",
++        "Type": "Board",
++        "xyz.openbmc_project.Inventory.Decorator.Asset": {
++            "Manufacturer": "$BOARD_MANUFACTURER",
++            "Model": "$BOARD_PRODUCT_NAME",
++            "PartNumber": "$BOARD_PART_NUMBER",
++            "SerialNumber": "$BOARD_SERIAL_NUMBER"
++        }
+     }
+-}
++]
 diff --git a/configurations/broadcomm/800g_1p_ocp.json b/configurations/broadcomm/800g_1p_ocp.json
 index c80209c..a3c157d 100644
 --- a/configurations/broadcomm/800g_1p_ocp.json
@@ -231,4 +1518,3 @@ index c80209c..a3c157d 100644
      "xyz.openbmc_project.Inventory.Decorator.Asset": {
 -- 
 2.34.1
-

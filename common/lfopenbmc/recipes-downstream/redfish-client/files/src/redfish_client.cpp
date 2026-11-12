@@ -200,7 +200,7 @@ auto RedfishClient::getCompatiblePlatformNames()
                 info("platformNames is still empty. Retry again");
             }
         }
-        catch (const sdbusplus::exception::SdBusError& e)
+        catch (const sdbusplus::exception::exception& e)
         {
             info("subtree query failed: {ERR}", "ERR", e.what());
         }

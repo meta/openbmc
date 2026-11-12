@@ -1,4 +1,5 @@
 #include <nlohmann/json.hpp>
+#include <org/freedesktop/DBus/Error/event.hpp>
 #include <redfish-binding/Sensor_Sensor.hpp>
 #include <redfish_client/core/sensor.hpp>
 #include <xyz/openbmc_project/Association/Definitions/client.hpp>
@@ -13,6 +14,7 @@
 #include <gtest/gtest.h>
 
 using namespace redfish_client::core;
+namespace DBusError = sdbusplus::error::org::freedesktop::d_bus::Error;
 
 class SensorTest : public ::testing::Test
 {
@@ -172,8 +174,7 @@ TEST_F(SensorTest, NoOpBeforeCreation)
         auto sensorClient = getSensorClient();
 
         // No Sensor has been created, so nothing is published on the bus.
-        EXPECT_THROW(co_await sensorClient.value(),
-                     sdbusplus::exception::SdBusError);
+        EXPECT_THROW(co_await sensorClient.value(), DBusError::UnknownObject);
 
         testBodyExecuted = true;
         co_return;
@@ -308,8 +309,7 @@ TEST_F(SensorTest, UnrecognizedUnitIsNotCreated)
 
         // Nothing is published on the bus.
         auto sensorClient = getSensorClient();
-        EXPECT_THROW(co_await sensorClient.value(),
-                     sdbusplus::exception::SdBusError);
+        EXPECT_THROW(co_await sensorClient.value(), DBusError::UnknownObject);
 
         testBodyExecuted = true;
         co_return;
@@ -329,8 +329,7 @@ TEST_F(SensorTest, MissingUnitsIsNotCreated)
 
         // Nothing is published on the bus.
         auto sensorClient = getSensorClient();
-        EXPECT_THROW(co_await sensorClient.value(),
-                     sdbusplus::exception::SdBusError);
+        EXPECT_THROW(co_await sensorClient.value(), DBusError::UnknownObject);
 
         testBodyExecuted = true;
         co_return;

@@ -1,5 +1,6 @@
 #include "helper.hpp"
 
+#include <org/freedesktop/DBus/Error/event.hpp>
 #include <redfish_client/core/config.hpp>
 #include <redfish_client/core/update_service_handler.hpp>
 #include <xyz/openbmc_project/Software/Activation/client.hpp>
@@ -14,6 +15,7 @@
 #include <gtest/gtest.h>
 
 using namespace redfish_client::core;
+namespace DBusError = sdbusplus::error::org::freedesktop::d_bus::Error;
 
 namespace
 {
@@ -154,7 +156,7 @@ TEST_F(UpdateServiceHandlerTest, FirmwareInventory)
 
         // FW2 has no mapper -> not published.
         auto fw2 = getVersionClient("/xyz/openbmc_project/software/FW2_1234");
-        EXPECT_THROW(co_await fw2.version(), sdbusplus::exception::SdBusError);
+        EXPECT_THROW(co_await fw2.version(), DBusError::UnknownObject);
 
         ctx.request_stop();
         co_return;
@@ -187,7 +189,7 @@ TEST_F(UpdateServiceHandlerTest, SoftwareInventory)
 
         // SW1 has no mapper -> not published.
         auto sw1 = getVersionClient("/xyz/openbmc_project/software/SW1_1234");
-        EXPECT_THROW(co_await sw1.version(), sdbusplus::exception::SdBusError);
+        EXPECT_THROW(co_await sw1.version(), DBusError::UnknownObject);
 
         ctx.request_stop();
         co_return;

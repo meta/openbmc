@@ -155,7 +155,7 @@ TEST(RedfishClientTests, WiresUpHandlers)
                     version = co_await versionClient.version();
                 }
             }
-            catch (const sdbusplus::exception::SdBusError&)
+            catch (const sdbusplus::exception::exception&)
             {
                 pending = true;
             }

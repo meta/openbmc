@@ -1,5 +1,6 @@
 #include "helper.hpp"
 
+#include <org/freedesktop/DBus/Error/event.hpp>
 #include <redfish_client/core/config.hpp>
 #include <redfish_client/core/sensor.hpp>
 #include <redfish_client/core/sensor_handler.hpp>
@@ -14,6 +15,7 @@
 #include <gtest/gtest.h>
 
 using namespace redfish_client::core;
+namespace DBusError = sdbusplus::error::org::freedesktop::d_bus::Error;
 
 class SensorHandlerTest : public ::testing::Test
 {
@@ -126,7 +128,7 @@ TEST_F(SensorHandlerTest, IndividualPolling)
 
         // Pressure0 returns unparseable content, so nothing is published.
         EXPECT_THROW(co_await getSensorClient(kPressure0Path).value(),
-                     sdbusplus::exception::SdBusError);
+                     DBusError::UnknownObject);
 
         ctx.request_stop();
         co_return;

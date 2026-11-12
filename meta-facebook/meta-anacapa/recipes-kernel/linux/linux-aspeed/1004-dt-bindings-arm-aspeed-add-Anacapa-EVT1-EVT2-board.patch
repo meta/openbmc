@@ -1,4 +1,4 @@
-From fbbc77ebe52063e19b574dd94ab9dd03d80e9478 Mon Sep 17 00:00:00 2001
+From 04b039f929f91f48d35aaa66b510c8bb525e616b Mon Sep 17 00:00:00 2001
 From: Colin Huang <colin.huang2@amd.com>
 Date: Tue, 7 Apr 2026 21:44:04 +0800
 Subject: [PATCH] dt-bindings: arm: aspeed: add Anacapa EVT1 EVT2 board
@@ -13,10 +13,10 @@ Signed-off-by: Colin Huang <colin.huang2@amd.com>
  1 file changed, 2 insertions(+)
 
 diff --git a/Documentation/devicetree/bindings/arm/aspeed/aspeed.yaml b/Documentation/devicetree/bindings/arm/aspeed/aspeed.yaml
-index 9ba195b8f22d..6cc42370539c 100644
+index 9ac4a7a8ede0..d6406e0f3a03 100644
 --- a/Documentation/devicetree/bindings/arm/aspeed/aspeed.yaml
 +++ b/Documentation/devicetree/bindings/arm/aspeed/aspeed.yaml
-@@ -84,6 +84,8 @@ properties:
+@@ -86,6 +86,8 @@ properties:
                - asus,ast2600-kommando-ipmi-card
                - asus,x4tf-bmc
                - facebook,anacapa-bmc
@@ -26,5 +26,5 @@ index 9ba195b8f22d..6cc42370539c 100644
                - facebook,catalina-bmc
                - facebook,clemente-bmc
 -- 
-2.52.0
+2.53.0-Meta
 

@@ -1,4 +1,4 @@
-From 246b9ba45178f560306cf81d943d98f3d2e9e108 Mon Sep 17 00:00:00 2001
+From f56b5a181c4eb1316a6d2912a004482942633069 Mon Sep 17 00:00:00 2001
 From: Jagpal Singh Gill <paligill@gmail.com>
 Date: Mon, 26 Oct 2026 15:11:54 -0700
 Subject: [PATCH] Catch update events committed before the task exists
@@ -22,7 +22,7 @@ Signed-off-by: Jagpal Singh Gill <paligill@gmail.com>
  1 file changed, 87 insertions(+), 26 deletions(-)
 
 diff --git a/redfish-core/lib/update_service.hpp b/redfish-core/lib/update_service.hpp
-index 7330c25f..8df13203 100644
+index a760c3ac..15cae32b 100644
 --- a/redfish-core/lib/update_service.hpp
 +++ b/redfish-core/lib/update_service.hpp
 @@ -149,6 +149,27 @@ constexpr const char* loggingMatchStr =
@@ -151,7 +151,7 @@ index 7330c25f..8df13203 100644
                      }
                      fwUpdateInProgress = false;
                  });
-@@ -1035,8 +1086,10 @@ inline std::optional<MultiPartUpdate> extractMultipartUpdateParameters(
+@@ -1037,8 +1088,10 @@ inline std::optional<MultiPartUpdate> extractMultipartUpdateParameters(
  
  inline void handleStartUpdate(
      const std::shared_ptr<bmcweb::AsyncResp>& asyncResp, task::Payload payload,
@@ -164,7 +164,7 @@ index 7330c25f..8df13203 100644
  {
      if (ec)
      {
-@@ -1048,8 +1101,8 @@ inline void handleStartUpdate(
+@@ -1050,8 +1103,8 @@ inline void handleStartUpdate(
  
      BMCWEB_LOG_INFO("Call to StartUpdate on {} Success, retPath = {}",
                      objectPath, retPath.str);
@@ -175,7 +175,7 @@ index 7330c25f..8df13203 100644
  }
  
  inline void startUpdate(
-@@ -1057,13 +1110,21 @@ inline void startUpdate(
+@@ -1059,13 +1112,21 @@ inline void startUpdate(
      const MemoryFileDescriptor& memfd, const std::string& applyTime,
      const std::string& objectPath, const std::string& serviceName)
  {
@@ -202,3 +202,6 @@ index 7330c25f..8df13203 100644
          },
          serviceName, objectPath, updateInterface, "StartUpdate",
          sdbusplus::message::unix_fd(memfd.fd), applyTime);
+-- 
+2.53.0-Meta
+

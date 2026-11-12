@@ -1,4 +1,4 @@
-From c26324932371689a399c0f85c75f51258b63f061 Mon Sep 17 00:00:00 2001
+From 7ef4f4eed2c98a2a1cc1d3a4b01c9aeeb5a7d76e Mon Sep 17 00:00:00 2001
 From: x <x@x>
 Date: Tue, 11 Aug 2026 16:21:14 -0700
 Subject: [PATCH] oem-meta: support MCTP I2C and I3C target configs
@@ -26,7 +26,7 @@ Signed-off-by: Henry Wu <Henry_Wu@quantatw.com>
  5 files changed, 158 insertions(+), 69 deletions(-)
 
 diff --git a/oem/meta/libpldmresponder/file_io_type_event_log.cpp b/oem/meta/libpldmresponder/file_io_type_event_log.cpp
-index 4bef5057..55c9eaae 100644
+index 2e63f2a..93c9b05 100644
 --- a/oem/meta/libpldmresponder/file_io_type_event_log.cpp
 +++ b/oem/meta/libpldmresponder/file_io_type_event_log.cpp
 @@ -12,6 +12,7 @@
@@ -37,7 +37,7 @@ index 4bef5057..55c9eaae 100644
  #include <string>
  #include <string_view>
  #include <utility>
-@@ -1144,6 +1145,13 @@ static const std::map<uint8_t, FaultDesc> arkeFaultsList = {
+@@ -1192,6 +1193,13 @@ static const std::map<uint8_t, FaultDesc> arkeFaultsList = {
        "DEVICE", record::thermalFault}},
  };
  
@@ -51,7 +51,7 @@ index 4bef5057..55c9eaae 100644
  namespace report
  {
  static void recordEventLog(const FaultDesc& fault, EventAssert eventStatus,
-@@ -1161,9 +1169,10 @@ static void recordEventLog(const FaultDesc& fault, EventAssert eventStatus,
+@@ -1209,9 +1217,10 @@ static void recordEventLog(const FaultDesc& fault, EventAssert eventStatus,
  }
  
  static void thermalFault(const message& eventData, const std::string&,
@@ -64,7 +64,7 @@ index 4bef5057..55c9eaae 100644
      EventAssert eventStatus = static_cast<EventAssert>(eventData[1]);
  
      record::thermalFault(device, eventStatus,
-@@ -1171,18 +1180,20 @@ static void thermalFault(const message& eventData, const std::string&,
+@@ -1219,18 +1228,20 @@ static void thermalFault(const message& eventData, const std::string&,
  }
  
  static void powerRailFault(const message& eventData, const std::string& event,
@@ -89,7 +89,7 @@ index 4bef5057..55c9eaae 100644
  
      if (eventData[3] == 0 && eventData[4] == 0)
      {
-@@ -1206,7 +1217,7 @@ static void prochotSdSensor(const message& eventData, const std::string&,
+@@ -1254,7 +1265,7 @@ static void prochotSdSensor(const message& eventData, const std::string&,
  }
  
  static void mtiaFault(const message& eventData, const std::string&,
@@ -98,7 +98,7 @@ index 4bef5057..55c9eaae 100644
  {
      EventAssert eventStatus = static_cast<EventAssert>(eventData[1]);
      auto faultEvent = mtiaFaultsList.find(eventData[2]);
-@@ -1220,8 +1231,25 @@ static void mtiaFault(const message& eventData, const std::string&,
+@@ -1268,8 +1279,25 @@ static void mtiaFault(const message& eventData, const std::string&,
      recordEventLog(faultEvent->second, eventStatus, eventData[3], eventData[4]);
  }
  
@@ -125,7 +125,7 @@ index 4bef5057..55c9eaae 100644
  {
      EventAssert eventStatus = static_cast<EventAssert>(eventData[1]);
      auto faultEvent = rainbowFaultsList.find(eventData[2]);
-@@ -1232,40 +1260,26 @@ static void rainbowFault(const message& eventData, const std::string&,
+@@ -1280,40 +1308,26 @@ static void rainbowFault(const message& eventData, const std::string&,
          return;
      }
  
@@ -175,7 +175,7 @@ index 4bef5057..55c9eaae 100644
  {
      EventAssert eventStatus = static_cast<EventAssert>(eventData[1]);
      auto faultEvent = arkeFaultsList.find(eventData[2]);
-@@ -1276,33 +1290,19 @@ static void arkeFault(const message& eventData, const std::string&,
+@@ -1324,33 +1338,19 @@ static void arkeFault(const message& eventData, const std::string&,
          return;
      }
  
@@ -217,7 +217,7 @@ index 4bef5057..55c9eaae 100644
      }
  
      recordEventLog(updatedFault, eventStatus, eventData[3], eventData[4]);
-@@ -1340,7 +1340,7 @@ static void createEventLog(
+@@ -1388,7 +1388,7 @@ static void createEventLog(
  }
  
  static void cxlEvent(const message& eventData, const std::string& event,
@@ -226,7 +226,7 @@ index 4bef5057..55c9eaae 100644
  {
      using EntrySeverity =
          sdbusplus::xyz::openbmc_project::Logging::server::Entry::Level;
-@@ -1354,7 +1354,7 @@ static void cxlEvent(const message& eventData, const std::string& event,
+@@ -1402,7 +1402,7 @@ static void cxlEvent(const message& eventData, const std::string& event,
  }
  
  static void platformEvent(const message&, const std::string& event,
@@ -235,7 +235,7 @@ index 4bef5057..55c9eaae 100644
  {
      using EntrySeverity =
          sdbusplus::xyz::openbmc_project::Logging::server::Entry::Level;
-@@ -1363,13 +1363,13 @@ static void platformEvent(const message&, const std::string& event,
+@@ -1411,13 +1411,13 @@ static void platformEvent(const message&, const std::string& event,
  }
  
  static void reportError(const message&, const std::string& event,
@@ -251,7 +251,7 @@ index 4bef5057..55c9eaae 100644
  {
      static constexpr auto SYSTEMD_SERVICE = "org.freedesktop.systemd1";
      static constexpr auto SYSTEMD_ROOT = "/org/freedesktop/systemd1";
-@@ -1381,7 +1381,7 @@ static void updateRetimerFwVersion(const message&, const std::string&,
+@@ -1429,7 +1429,7 @@ static void updateRetimerFwVersion(const message&, const std::string&,
      auto bus = sdbusplus::bus::new_default();
      auto method = bus.new_method_call(SYSTEMD_SERVICE, SYSTEMD_ROOT,
                                        SYSTEMD_INTERFACE, "StartUnit");
@@ -260,7 +260,7 @@ index 4bef5057..55c9eaae 100644
                     ".service";
      method.append(service, "replace");
      bus.call_noreply(method);
-@@ -1426,7 +1426,7 @@ static std::string dimmPmicError(const message& eventData, EventType eventType)
+@@ -1474,7 +1474,7 @@ static std::string dimmPmicError(const message& eventData, EventType eventType)
  } // namespace format
  
  using EventReporter = void (*)(const message&, const std::string&,
@@ -269,7 +269,7 @@ index 4bef5057..55c9eaae 100644
  using EventFormatter = std::string (*)(const message&, EventType);
  
  struct EventDescriptor
-@@ -1505,7 +1505,7 @@ static void checkEventAssert(const message& eventData, std::string& event,
+@@ -1553,7 +1553,7 @@ static void checkEventAssert(const message& eventData, std::string& event,
  }
  
  static std::string processEventData(const message& eventData,
@@ -278,7 +278,7 @@ index 4bef5057..55c9eaae 100644
  {
      std::string event;
      EventType eventType = static_cast<EventType>(eventData[0]);
-@@ -1528,14 +1528,14 @@ static std::string processEventData(const message& eventData,
+@@ -1576,14 +1576,14 @@ static std::string processEventData(const message& eventData,
          }
      }
  
@@ -295,7 +295,7 @@ index 4bef5057..55c9eaae 100644
  {
      EventType eventType = static_cast<EventType>(eventData[0]);
      auto it = eventHandlers.find(eventType);
-@@ -1543,7 +1543,7 @@ static void addSystemEventLogAndJournal(const message& eventData,
+@@ -1591,7 +1591,7 @@ static void addSystemEventLogAndJournal(const message& eventData,
      {
          if (it->second.reporter)
          {
@@ -304,7 +304,7 @@ index 4bef5057..55c9eaae 100644
          }
      }
      else
-@@ -1555,7 +1555,7 @@ static void addSystemEventLogAndJournal(const message& eventData,
+@@ -1603,7 +1603,7 @@ static void addSystemEventLogAndJournal(const message& eventData,
      if (eventType == EventType::POST_ENDED ||
          eventType == EventType::POST_COMPLETED)
      {
@@ -313,7 +313,7 @@ index 4bef5057..55c9eaae 100644
      }
  }
  
-@@ -1600,9 +1600,10 @@ int EventLogHandler::write(const message& eventData)
+@@ -1648,9 +1648,10 @@ int EventLogHandler::write(const message& eventData)
          receivedEventTimeStamp[eventKey] = eventTimeStamp;
      }
  
@@ -328,7 +328,7 @@ index 4bef5057..55c9eaae 100644
      return PLDM_SUCCESS;
  }
 diff --git a/oem/meta/requester/configuration_discovery_handler.cpp b/oem/meta/requester/configuration_discovery_handler.cpp
-index 0ffd6af6..2ba8fc75 100644
+index 0ffd6af..2ba8fc7 100644
 --- a/oem/meta/requester/configuration_discovery_handler.cpp
 +++ b/oem/meta/requester/configuration_discovery_handler.cpp
 @@ -33,6 +33,7 @@ void ConfigurationDiscoveryHandler::searchConfigurationFor(MctpInfo mctpInfo)
@@ -419,7 +419,7 @@ index 0ffd6af6..2ba8fc75 100644
      const pldm::utils::PropertyMap& response)
  {
 diff --git a/oem/meta/requester/configuration_discovery_handler.hpp b/oem/meta/requester/configuration_discovery_handler.hpp
-index f8a57235..563f2d53 100644
+index f8a5723..563f2d5 100644
 --- a/oem/meta/requester/configuration_discovery_handler.hpp
 +++ b/oem/meta/requester/configuration_discovery_handler.hpp
 @@ -86,6 +86,16 @@ class ConfigurationDiscoveryHandler : public MctpDiscoveryHandlerIntf
@@ -440,7 +440,7 @@ index f8a57235..563f2d53 100644
       *
       *  @param[in] response - Response data of GetAll method
 diff --git a/oem/meta/utils.cpp b/oem/meta/utils.cpp
-index 6563a45f..b5e2fed4 100644
+index 6563a45..b5e2fed 100644
 --- a/oem/meta/utils.cpp
 +++ b/oem/meta/utils.cpp
 @@ -70,6 +70,19 @@ bool checkMetaIana(const pldm_tid_t& tid)
@@ -464,7 +464,7 @@ index 6563a45f..b5e2fed4 100644
  {
      static const pldm::dbus::Property slotNumberProperty = "SlotNumber";
 diff --git a/oem/meta/utils.hpp b/oem/meta/utils.hpp
-index 28f63eda..dc8d41c7 100644
+index 28f63ed..dc8d41c 100644
 --- a/oem/meta/utils.hpp
 +++ b/oem/meta/utils.hpp
 @@ -4,6 +4,7 @@
@@ -492,5 +492,5 @@ index 28f63eda..dc8d41c7 100644
   * @brief Get the slot number from D-Bus for the given sender tid.
   *
 -- 
-2.34.1
+2.53.0-Meta
 

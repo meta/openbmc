@@ -1,4 +1,4 @@
-From 994e7498fa3654df1d9dca2158fa4beda106b515 Mon Sep 17 00:00:00 2001
+From a164893c937288c66e618eb682e3b6989f9de1a2 Mon Sep 17 00:00:00 2001
 From: Patrick Williams <patrick@stwcx.xyz>
 Date: Fri, 28 Aug 2026 18:10:06 -0400
 Subject: [PATCH] bindings-cxx: add optional c++ bindings using nlohmann
@@ -400,7 +400,7 @@ index 0000000..1b68d6c
 +    subdir('cxx')
 +endif
 diff --git a/meson.build b/meson.build
-index 097222f..222ad03 100644
+index f49aa40..3644473 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -5,6 +5,7 @@ project(
@@ -431,7 +431,7 @@ index 097222f..222ad03 100644
  if get_option('output-all-properties').enabled()
      add_project_arguments('-DOUTPUT_ALL_PROPERTIES', language: 'c')
  endif
-@@ -84,6 +98,9 @@ json_c_dep = declare_dependency(
+@@ -86,6 +100,9 @@ json_c_dep = declare_dependency(
      include_directories: include_directories('subprojects'),
      dependencies: json_c,
  )
@@ -441,7 +441,7 @@ index 097222f..222ad03 100644
  libcper_include = ['include']
  libcper_include_dir = include_directories(libcper_include, is_system: true)
  
-@@ -134,6 +151,10 @@ libcper_generate_dep = declare_dependency(
+@@ -136,6 +153,10 @@ libcper_generate_dep = declare_dependency(
      link_with: libcper_generate,
  )
  
@@ -974,7 +974,7 @@ index 0000000..5276d6f
 +)
 +test('test-cper-cxx-examples-tests', cper_cxx_examples_tests)
 diff --git a/tests/ir-tests.c b/tests/ir-tests.c
-index b8f0771..bd1adb9 100644
+index 532e9eb..7422e1d 100644
 --- a/tests/ir-tests.c
 +++ b/tests/ir-tests.c
 @@ -23,6 +23,7 @@
@@ -1007,7 +1007,7 @@ index b8f0771..bd1adb9 100644
  }
  
  //Tests randomly generated CPER sections for binary compatibility of a given type, in both single section mode and full CPER log mode.
-@@ -989,6 +992,12 @@ int main(void)
+@@ -1002,6 +1005,12 @@ int main(void)
  	CompileTimeAssertions_TwoWayConversion();
  	CompileTimeAssertions_ShortcodeNoSpaces();
  

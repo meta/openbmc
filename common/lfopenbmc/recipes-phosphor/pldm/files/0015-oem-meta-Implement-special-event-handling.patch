@@ -1,4 +1,4 @@
-From af3e042b9fbe43e42cea8ccd98557f63c15a1b81 Mon Sep 17 00:00:00 2001
+From 1569c324c00bdb9dc5cc22640489228c4231b323 Mon Sep 17 00:00:00 2001
 From: Eric Yang <eric.yang.wiwynn@gmail.com>
 Date: Thu, 21 May 2026 07:03:10 +0000
 Subject: [PATCH] oem-meta: Implement special event handling
@@ -25,10 +25,10 @@ Signed-off-by: Eric Yang <eric.yang.wiwynn@gmail.com>
  1 file changed, 63 insertions(+), 8 deletions(-)
 
 diff --git a/oem/meta/libpldmresponder/file_io_type_event_log.cpp b/oem/meta/libpldmresponder/file_io_type_event_log.cpp
-index e338e06..12c52cb 100644
+index 665ee03..2dc2cc8 100644
 --- a/oem/meta/libpldmresponder/file_io_type_event_log.cpp
 +++ b/oem/meta/libpldmresponder/file_io_type_event_log.cpp
-@@ -1166,16 +1166,17 @@ static void thermalFault(const message& eventData, const std::string&,
+@@ -1214,16 +1214,17 @@ static void thermalFault(const message& eventData, const std::string&,
      auto device = "/xyz/openbmc_project/State/Thermal/host" + slotNum + "/cpu0";
      EventAssert eventStatus = static_cast<EventAssert>(eventData[1]);
  
@@ -49,7 +49,7 @@ index e338e06..12c52cb 100644
  }
  
  static void prochotSdSensor(const message& eventData, const std::string&,
-@@ -1307,6 +1308,60 @@ static void arkeFault(const message& eventData, const std::string&,
+@@ -1355,6 +1356,60 @@ static void arkeFault(const message& eventData, const std::string&,
      recordEventLog(updatedFault, eventStatus, eventData[3], eventData[4]);
  }
  
@@ -110,7 +110,7 @@ index e338e06..12c52cb 100644
  static void reportError(const message&, const std::string& event,
                          const std::string&)
  {
-@@ -1369,11 +1424,11 @@ static const std::map<EventType, EventDescriptor> eventHandlers = {
+@@ -1417,11 +1472,11 @@ static const std::map<EventType, EventDescriptor> eventHandlers = {
      {EventType::POWER_ON_SEQUENCE_FAILURE, {report::powerRailFault, nullptr}},
      {EventType::DIMM_PMIC_ERROR,
       {report::powerRailFault, format::dimmPmicError}},

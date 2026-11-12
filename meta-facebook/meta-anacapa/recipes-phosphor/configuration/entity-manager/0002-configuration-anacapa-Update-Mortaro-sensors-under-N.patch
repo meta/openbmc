@@ -1,4 +1,4 @@
-From 582e97053c0d3a77c9ceea3c20a8e518d66856ba Mon Sep 17 00:00:00 2001
+From 779741772739dd3393aa61d2b9801eff4a135d1f Mon Sep 17 00:00:00 2001
 From: Andy Chung <Andy.Chung@amd.com>
 Date: Mon, 25 May 2026 14:05:38 +0800
 Subject: [PATCH] configuration: anacapa: Update Mortaro sensors under NIC
@@ -9,9 +9,9 @@ Summary:
 2. Add additional PLDM sensor support.
 3. Update Thor3 NIC thresholds and sensor name to align with Mortaro.
 ---
- .../amd/vulcano_1O800_800g_ocp.json           | 1446 ++++++++++++++++++++++++++++---
- configurations/broadcomm/800g_1p_ocp.json     |   21 ++-
- 2 files changed, 1442 insertions(+), 25 deletions(-)
+ .../amd/vulcano_1O800_800g_ocp.json           | 1450 ++++++++++++++++-
+ configurations/broadcomm/800g_1p_ocp.json     |   21 +-
+ 2 files changed, 1446 insertions(+), 25 deletions(-)
 
 diff --git a/configurations/amd/vulcano_1O800_800g_ocp.json b/configurations/amd/vulcano_1O800_800g_ocp.json
 index 84ecebc..2d211ad 100644
@@ -1517,4 +1517,5 @@ index c80209c..a3c157d 100644
      "Type": "Board",
      "xyz.openbmc_project.Inventory.Decorator.Asset": {
 -- 
-2.34.1
+2.53.0-Meta
+

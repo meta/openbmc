@@ -1,4 +1,4 @@
-From 674e513a52e84fb2a0521220ce8a0681e5f69ba6 Mon Sep 17 00:00:00 2001
+From 6b485c484f925130c06c5d832f6e425e11bde526 Mon Sep 17 00:00:00 2001
 From: Henry Wu <Henry_Wu@quantatw.com>
 Date: Thu, 19 Mar 2026 16:20:37 +0800
 Subject: [PATCH] configuration: schema: mctp target add powerstate property
@@ -18,7 +18,7 @@ Signed-off-by: Henry Wu <Henry_Wu@quantatw.com>
  1 file changed, 6 insertions(+)
 
 diff --git a/schemas/mctp.json b/schemas/mctp.json
-index bade5d6..c0c05e0 100644
+index e5616a0..e167c0d 100644
 --- a/schemas/mctp.json
 +++ b/schemas/mctp.json
 @@ -37,6 +37,9 @@
@@ -31,7 +31,7 @@ index bade5d6..c0c05e0 100644
                  "Type": {
                      "x-dbus-type": "string",
                      "type": "string",
-@@ -82,6 +85,9 @@
+@@ -83,6 +86,9 @@
                      },
                      "type": "array"
                  },

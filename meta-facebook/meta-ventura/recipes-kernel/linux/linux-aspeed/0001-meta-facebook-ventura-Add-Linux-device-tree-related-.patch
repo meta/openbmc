@@ -1,4 +1,4 @@
-From 764c9a48d6dd340c54df9ee9092c3eeb62653f5f Mon Sep 17 00:00:00 2001
+From 3243d677de41877828f529a1ddc2da289d6bd740 Mon Sep 17 00:00:00 2001
 From: Jason Hsu <jason-hsu@quantatw.com>
 Date: Fri, 29 Nov 2024 10:23:54 +0800
 Subject: [PATCH] meta-facebook: ventura: Add Linux device tree related to
@@ -13,10 +13,10 @@ LORE: https://lore.kernel.org/lkml/20241127073409.147714-3-jason-hsu@quantatw.co
  create mode 100644 arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-ventura.dts
 
 diff --git a/arch/arm/boot/dts/aspeed/Makefile b/arch/arm/boot/dts/aspeed/Makefile
-index 6874b621deb4..6ca3a75ed403 100644
+index eb37ad2cf030..976ced5521bd 100644
 --- a/arch/arm/boot/dts/aspeed/Makefile
 +++ b/arch/arm/boot/dts/aspeed/Makefile
-@@ -38,6 +38,7 @@ dtb-$(CONFIG_ARCH_ASPEED) += \
+@@ -40,6 +40,7 @@ dtb-$(CONFIG_ARCH_ASPEED) += \
  	aspeed-bmc-facebook-sanmiguel.dtb \
  	aspeed-bmc-facebook-santabarbara.dtb \
  	aspeed-bmc-facebook-tiogapass.dtb \

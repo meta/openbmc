@@ -1,4 +1,4 @@
-From 81f475822d4808c88d670b258a776ddb2b958814 Mon Sep 17 00:00:00 2001
+From 0425425c15f4fa278ac742beb1019bc7e546b561 Mon Sep 17 00:00:00 2001
 From: Peter Yin <peter.yin@quantatw.com>
 Date: Wed, 10 Dec 2025 14:41:23 +0800
 Subject: [PATCH] configuration: schema: extend MCTP target members
@@ -36,7 +36,7 @@ Signed-off-by: Peter Yin <peter.yin@quantatw.com>
  1 file changed, 40 insertions(+), 2 deletions(-)
 
 diff --git a/schemas/mctp.json b/schemas/mctp.json
-index 522d8ac..bade5d6 100644
+index 692431f..e5616a0 100644
 --- a/schemas/mctp.json
 +++ b/schemas/mctp.json
 @@ -13,18 +13,37 @@
@@ -78,7 +78,7 @@ index 522d8ac..bade5d6 100644
              "type": "object"
          },
          "MCTPI3CTarget": {
-@@ -39,18 +58,37 @@
+@@ -40,18 +59,37 @@
                      "x-dbus-type": "uint64",
                      "type": ["string", "number"]
                  },

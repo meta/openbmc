@@ -1,4 +1,4 @@
-From 5f4aeb015fffd1affaba3915ec5892c422f144b4 Mon Sep 17 00:00:00 2001
+From a8bdd0b8e9a4e372fac9dce43444b24c2c956b9a Mon Sep 17 00:00:00 2001
 From: Peter Yin <peter.yin@quantatw.com>
 Date: Tue, 31 Mar 2026 20:37:28 +0800
 Subject: [PATCH] terminus: replace inventory and sensor configuration
@@ -31,16 +31,16 @@ Signed-off-by: Peter Yin <peter.yin@quantatw.com>
  common/types.hpp                              |   7 +-
  fw-update/inventory_manager.cpp               |   2 +-
  .../test/firmware_inventory_manager_test.cpp  |   5 +-
- platform-mc/terminus.cpp                      | 147 ++++++++++++-
+ platform-mc/terminus.cpp                      | 147 +++++++++++-
  platform-mc/terminus.hpp                      |  26 +++
  platform-mc/terminus_manager.cpp              |  54 ++++-
  platform-mc/test/event_manager_test.cpp       |  12 +-
- platform-mc/test/platform_manager_test.cpp    |  24 +--
+ platform-mc/test/platform_manager_test.cpp    |  24 +-
  platform-mc/test/terminus_manager_test.cpp    |  32 +--
- requester/mctp_endpoint_discovery.cpp         | 195 ++++++++++++++----
+ requester/mctp_endpoint_discovery.cpp         | 217 +++++++++++++-----
  requester/mctp_endpoint_discovery.hpp         |  11 +
- .../test/mctp_endpoint_discovery_test.cpp     |  50 ++---
- 12 files changed, 457 insertions(+), 108 deletions(-)
+ .../test/mctp_endpoint_discovery_test.cpp     |  50 ++--
+ 12 files changed, 460 insertions(+), 127 deletions(-)
 
 diff --git a/common/types.hpp b/common/types.hpp
 index 4e76ac0..d8b925a 100644
@@ -636,7 +636,7 @@ index 6a52c72..27e1a93 100644
      auto tid = mappedTid.value();
      termini[tid] = std::make_shared<pldm::platform_mc::Terminus>(
 diff --git a/requester/mctp_endpoint_discovery.cpp b/requester/mctp_endpoint_discovery.cpp
-index 74b435d..f6fba8f 100644
+index 27cbd9d..f6fba8f 100644
 --- a/requester/mctp_endpoint_discovery.cpp
 +++ b/requester/mctp_endpoint_discovery.cpp
 @@ -91,9 +91,9 @@ void MctpDiscovery::getMctpInfos(
@@ -673,7 +673,7 @@ index 74b435d..f6fba8f 100644
              searchConfigurationFor(pldm::utils::DBusHandler(), mctpInfo);
              if (availability)
              {
-@@ -459,71 +460,177 @@ std::string MctpDiscovery::constructMctpReactorObjectPath(
+@@ -459,87 +460,177 @@ std::string MctpDiscovery::constructMctpReactorObjectPath(
             "/endpoints/" + std::to_string(eid) + "/configured_by";
  }
  
@@ -683,79 +683,56 @@ index 74b435d..f6fba8f 100644
 +                                       MctpInfo& mctpInfo)
  {
      const auto mctpReactorObjectPath = constructMctpReactorObjectPath(mctpInfo);
+-    std::string associatedObjPath;
+-    std::string associatedService;
+-    std::string associatedInterface;
+-    sdbusplus::object_path inventorySubtreePath(inventorySubtreePathStr);
+-
+-    //"/{board or chassis type}/{board or chassis}/{device}"
+-    auto constexpr subTreeDepth = 3;
+-    utils::GetAssociatedSubTreeResponse response;
 +
      try
      {
--        std::string associatedObjPath;
--        std::string associatedService;
--        std::string associatedInterface;
--        sdbusplus::object_path inventorySubtreePath(inventorySubtreePathStr);
+-        response = handler.getAssociatedSubTree(
 +        // Define the search scope for the association
 +        sdbusplus::object_path inventorySubtreePath(
 +            inventorySubtreePathStr);
 +        constexpr auto subTreeDepth = 3;
- 
--        //"/{board or chassis type}/{board or chassis}/{device}"
--        auto constexpr subTreeDepth = 3;
++
 +        // Query the ObjectMapper for associated subtrees
-         auto response = handler.getAssociatedSubTree(
++        auto response = handler.getAssociatedSubTree(
              mctpReactorObjectPath, inventorySubtreePath, subTreeDepth,
              interfaceFilter);
 +
-         if (response.empty())
-         {
--            warning("No associated subtree found for path {PATH}", "PATH",
--                    mctpReactorObjectPath);
--            return;
++        if (response.empty())
++        {
 +            return false;
-         }
--        // Assume the first entry is the one we want
++        }
 +
 +        // Parse the response (map<Path, map<Service, vector<Interface>>>)
 +        // We take the first result found.
-         auto subTree = response.begin();
--        associatedObjPath = subTree->first;
++        auto subTree = response.begin();
 +        std::string associatedObjPath = subTree->first;
-         auto associatedServiceProp = subTree->second;
++        auto associatedServiceProp = subTree->second;
 +
-         if (associatedServiceProp.empty())
-         {
--            warning("No associated service found for path {PATH}", "PATH",
--                    mctpReactorObjectPath);
--            return;
++        if (associatedServiceProp.empty())
++        {
 +            return false;
-         }
--        // Assume the first entry is the one we want
++        }
 +
-         auto entry = associatedServiceProp.begin();
--        associatedService = entry->first;
++        auto entry = associatedServiceProp.begin();
 +        std::string associatedService = entry->first;
-         auto dBusIntfList = entry->second;
--        auto associatedInterfaceItr = std::find_if(
++        auto dBusIntfList = entry->second;
 +
 +        // Check if the service implements any of the interfaces in our filter
 +        auto it = std::find_if(
-             dBusIntfList.begin(), dBusIntfList.end(), [](const auto& intf) {
--                return std::find(interfaceFilter.begin(), interfaceFilter.end(),
--                                 intf) != interfaceFilter.end();
++            dBusIntfList.begin(), dBusIntfList.end(), [](const auto& intf) {
 +                return std::ranges::contains(interfaceFilter, intf);
-             });
--        if (associatedInterfaceItr == dBusIntfList.end())
--        {
--            error("No associated interface found for path {PATH}", "PATH",
--                  mctpReactorObjectPath);
--            return;
--        }
--        associatedInterface = *associatedInterfaceItr;
--        auto mctpTargetProperties = handler.getDbusPropertiesVariant(
--            associatedService.c_str(), associatedObjPath.c_str(),
--            associatedInterface.c_str());
--        auto name = getNameFromProperties(mctpTargetProperties);
--        if (!name.empty())
++            });
 +
 +        if (it != dBusIntfList.end())
-         {
--            std::get<std::optional<std::string>>(mctpInfo) = name;
++        {
 +            // Avoid an extra D-Bus call by using the path segment as name.
 +            auto name = sdbusplus::object_path(associatedObjPath).filename();
 +            lg2::info(
@@ -771,18 +748,43 @@ index 74b435d..f6fba8f 100644
 +            // Update the internal configuration map with the resolved info
 +            configurations.insert_or_assign(associatedObjPath, mctpInfo);
 +            return true;
-         }
--        configurations.emplace(associatedObjPath, mctpInfo);
++        }
      }
      catch (const std::exception& e)
      {
--        error(
--            "Error getting associated subtree for path {PATH}, error - {ERROR}",
--            "PATH", mctpReactorObjectPath, "ERROR", e);
+-        error("Failed to get associated subtree for path '{PATH}': {ERROR}",
+-              "PATH", mctpReactorObjectPath, "ERROR", e);
+-        return;
 +        lg2::error("Error resolving association for {PATH}: {ERR}", "PATH",
 +                   mctpReactorObjectPath, "ERR", e);
-+    }
-+
+     }
+ 
+-    if (response.empty())
+-    {
+-        warning("No associated subtree found for path {PATH}", "PATH",
+-                mctpReactorObjectPath);
+-        return;
+-    }
+-    // Assume the first entry is the one we want
+-    auto subTree = response.begin();
+-    associatedObjPath = subTree->first;
+-    auto associatedServiceProp = subTree->second;
+-    if (associatedServiceProp.empty())
+-    {
+-        warning("No associated service found for path {PATH}", "PATH",
+-                mctpReactorObjectPath);
+-        return;
+-    }
+-    // Assume the first entry is the one we want
+-    auto entry = associatedServiceProp.begin();
+-    associatedService = entry->first;
+-    auto dBusIntfList = entry->second;
+-    auto associatedInterfaceItr = std::find_if(
+-        dBusIntfList.begin(), dBusIntfList.end(), [](const auto& intf) {
+-            return std::find(interfaceFilter.begin(), interfaceFilter.end(),
+-                             intf) != interfaceFilter.end();
+-        });
+-    if (associatedInterfaceItr == dBusIntfList.end())
 +    return false;
 +}
 +
@@ -793,10 +795,15 @@ index 74b435d..f6fba8f 100644
 +
 +    // If resolution failed, check if we are already monitoring this path.
 +    if (associationMatches.contains(mctpReactorObjectPath))
-+    {
+     {
+-        error("No associated interface found for path {PATH}", "PATH",
+-              mctpReactorObjectPath);
          return;
      }
-+
+-    associatedInterface = *associatedInterfaceItr;
+ 
+-    utils::PropertyMap mctpTargetProperties;
+-    std::string name;
 +    // Create an asynchronous D-Bus Match rule to wait for the association.
 +    auto networkId = std::get<3>(mctpInfo);
 +    auto eid = std::get<0>(mctpInfo);
@@ -807,8 +814,12 @@ index 74b435d..f6fba8f 100644
 +        std::string(MCTPPath) + "/networks/" + std::to_string(networkId) +
 +        "/endpoints/" + std::to_string(eid);
 +
-+    try
-+    {
+     try
+     {
+-        mctpTargetProperties = handler.getDbusPropertiesVariant(
+-            associatedService.c_str(), associatedObjPath.c_str(),
+-            associatedInterface.c_str());
+-        name = getNameFromProperties(mctpTargetProperties);
 +        associationMatches[mctpReactorObjectPath] = std::make_unique<
 +            sdbusplus::bus::match_t>(
 +            pldm::utils::DBusHandler::getBus(),
@@ -870,22 +881,30 @@ index 74b435d..f6fba8f 100644
 +                    }
 +                }
 +            });
-+    }
-+    catch (const std::exception& e)
-+    {
+     }
+     catch (const std::exception& e)
+     {
+-        error("Failed to get properties from '{SERVICE}' at '{PATH}' "
+-              "for interface '{INTERFACE}': {ERROR}",
+-              "SERVICE", associatedService, "PATH", associatedObjPath,
+-              "INTERFACE", associatedInterface, "ERROR", e);
+-        return;
 +        lg2::error("Failed to create match rule for {PATH}: {ERR}", "PATH",
 +                   mctpReactorObjectPath, "ERR", e);
-+    }
-+
+     }
+ 
+-    if (!name.empty())
 +    // Synchronous attempt after registering the match rule. If the association
 +    // already exists, resolve it immediately and cancel the deferred rule.
 +    // Registering first ensures that if InterfacesAdded arrives while
 +    // resolveAssociation's bus.call() blocks the event loop, the signal lands
 +    // in the socket buffer and is processed when the event loop resumes.
 +    if (resolveAssociation(handler, mctpInfo))
-+    {
+     {
+-        std::get<std::optional<std::string>>(mctpInfo) = name;
 +        associationMatches.erase(mctpReactorObjectPath);
-+    }
+     }
+-    configurations.emplace(associatedObjPath, mctpInfo);
  }
  
  void MctpDiscovery::removeConfigs(const MctpInfos& removedInfos)

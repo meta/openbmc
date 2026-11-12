@@ -1,4 +1,4 @@
-From 3dc5cc124cf856594c3b2e8b1b8d92bec885672c Mon Sep 17 00:00:00 2001
+From 70f89337df3b15b871fa250289d50026dc5b5a14 Mon Sep 17 00:00:00 2001
 From: Jagpal Singh Gill <paligill@gmail.com>
 Date: Mon, 26 Oct 2026 15:04:31 -0700
 Subject: [PATCH] Add firmware update events to task messages
@@ -71,7 +71,7 @@ index ab8a1aff..cbc387e1 100644
      std::optional<Payload> payload;
      bool gave204 = false;
 diff --git a/redfish-core/lib/update_service.hpp b/redfish-core/lib/update_service.hpp
-index aa385741..7330c25f 100644
+index 086e350a..a760c3ac 100644
 --- a/redfish-core/lib/update_service.hpp
 +++ b/redfish-core/lib/update_service.hpp
 @@ -23,6 +23,7 @@
@@ -312,7 +312,7 @@ index aa385741..7330c25f 100644
          {
              for (const std::pair<std::string, dbus::utility::DbusVariantType>&
                       value : interface.second)
-@@ -865,7 +1048,8 @@ inline void handleStartUpdate(
+@@ -867,7 +1050,8 @@ inline void handleStartUpdate(
  
      BMCWEB_LOG_INFO("Call to StartUpdate on {} Success, retPath = {}",
                      objectPath, retPath.str);
@@ -322,7 +322,7 @@ index aa385741..7330c25f 100644
  }
  
  inline void startUpdate(
-@@ -884,7 +1068,6 @@ inline void startUpdate(
+@@ -886,7 +1070,6 @@ inline void startUpdate(
          serviceName, objectPath, updateInterface, "StartUpdate",
          sdbusplus::message::unix_fd(memfd.fd), applyTime);
  }
@@ -330,3 +330,6 @@ index aa385741..7330c25f 100644
  inline void getSwInfo(const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
                        task::Payload payload, const MemoryFileDescriptor& memfd,
                        const std::string& applyTime, const std::string& target,
+-- 
+2.53.0-Meta
+

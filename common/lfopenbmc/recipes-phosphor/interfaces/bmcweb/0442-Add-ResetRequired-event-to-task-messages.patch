@@ -1,4 +1,4 @@
-From 3e6d13c957cca0e9242adeb1a8361bd17d32b269 Mon Sep 17 00:00:00 2001
+From e606d96a3c3fc80ea6f3bb601717fb28c22e9c2b Mon Sep 17 00:00:00 2001
 From: Jagpal Singh Gill <paligill@gmail.com>
 Date: Fri, 5 Jun 2026 14:16:47 -0700
 Subject: [PATCH] Add ResetRequired event to task messages
@@ -16,7 +16,7 @@ Signed-off-by: Jagpal Singh Gill <paligill@gmail.com>
  1 file changed, 34 insertions(+)
 
 diff --git a/redfish-core/lib/update_service.hpp b/redfish-core/lib/update_service.hpp
-index 8df13203..7250b98f 100644
+index 15cae32b..5fa6b92c 100644
 --- a/redfish-core/lib/update_service.hpp
 +++ b/redfish-core/lib/update_service.hpp
 @@ -245,6 +245,31 @@ inline std::string metadataValue(
@@ -67,3 +67,6 @@ index 8df13203..7250b98f 100644
      return std::nullopt;
  }
  
+-- 
+2.53.0-Meta
+

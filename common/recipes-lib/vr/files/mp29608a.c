@@ -558,8 +558,22 @@ int get_mp29608a_ver(struct vr_info *info, char *ver_str)
 			vr_xfer = info->xfer;
 		}
 
+		//Stop sensor polling before read crc from register
+		if (info->sensor_polling_ctrl != NULL) {
+			info->sensor_polling_ctrl(false);
+		}
+
 		if (cache_mp29608a_crc(info->bus, info->addr, key, ver_str)) {
+			//Resume sensor polling
+			if (info->sensor_polling_ctrl != NULL) {
+				info->sensor_polling_ctrl(true);
+			}
 			return VR_STATUS_FAILURE;
+		}
+
+		//Resume sensor polling
+		if (info->sensor_polling_ctrl != NULL) {
+			info->sensor_polling_ctrl(true);
 		}
 	}
 

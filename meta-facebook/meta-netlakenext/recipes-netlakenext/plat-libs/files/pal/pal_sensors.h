@@ -23,6 +23,8 @@
 #define GET_DIMM_INFO_TIME_MS 1000
 #define READ_DIMM_SPD_TEMP 0x31
 
+#define ERR_VR_UPDATE_ONGOING     -16
+
 typedef struct {
   float ucr_thresh;
   float unc_thresh;

@@ -661,13 +661,19 @@ read_pmbus(uint8_t id, float *value) {
     float voltage, current;
 
     ret = read_pmbus(power_cal_list[id].vol_sensor_id, &voltage);
-    if (ret < 0) {
+    if (ret == ERR_VR_UPDATE_ONGOING) {
+      syslog(LOG_INFO, "%s() Skip getting voltage value to calculate power, because VR update/get CRC is ongoing", __func__);
+      return ERR_VR_UPDATE_ONGOING;
+    } else if (ret < 0) {
       syslog(LOG_ERR, "%s() Failed to get voltage value to calculate power", __func__);
       return -1;
     }
 
     ret = read_pmbus(power_cal_list[id].cur_sensor_id, &current);
-    if (ret < 0) {
+    if (ret == ERR_VR_UPDATE_ONGOING) {
+      syslog(LOG_INFO, "%s() Skip getting current value to calculate power, because VR update/get CRC is ongoing", __func__);
+      return ERR_VR_UPDATE_ONGOING;
+    } else if (ret < 0) {
       syslog(LOG_ERR, "%s() Failed to get current value to calculate power", __func__);
       return -1;
     }
@@ -692,9 +698,9 @@ read_pmbus(uint8_t id, float *value) {
     retry = SENSOR_RETRY_TIME;
     do {
       if (pal_is_fw_update_ongoing(FRU_SERVER)) {
-        syslog(LOG_INFO, "snr_monitor: fru%d_fwupd detected, skip reading", FRU_SERVER);
+        syslog(LOG_INFO, "%s() fru%d_fwupd detected, skip reading", __func__, FRU_SERVER);
         close(fd);
-        return SENSOR_NA;
+        return ERR_VR_UPDATE_ONGOING;
       }
       ret = i2c_rdwr_msg_transfer(fd, addr, setpage_data, sizeof(setpage_data),
                                   NULL, 0);
@@ -1241,7 +1247,7 @@ pal_sensor_read_raw(uint8_t fru, uint8_t sensor_num, void *value) {
 
   if (pal_is_fw_update_ongoing(fru)) {
     syslog(LOG_INFO, "snr_monitor: fru%d_fwupd detected, skip reading", fru);
-    return SENSOR_NA;
+    return ERR_VR_UPDATE_ONGOING;
   }
 
   switch(fru) {
@@ -1315,6 +1321,8 @@ pal_sensor_read_raw(uint8_t fru, uint8_t sensor_num, void *value) {
                  __func__, sensor.snr_name);
           break;
       case SENSOR_NA:
+          break;
+      case ERR_VR_UPDATE_ONGOING:
           break;
       default:
           syslog(LOG_WARNING,

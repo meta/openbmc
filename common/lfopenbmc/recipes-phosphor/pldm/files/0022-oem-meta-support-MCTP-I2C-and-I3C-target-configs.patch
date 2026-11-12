@@ -1,4 +1,4 @@
-From 19dc658f193fa68cbc1ede3a508c6c2d32f525e2 Mon Sep 17 00:00:00 2001
+From c26324932371689a399c0f85c75f51258b63f061 Mon Sep 17 00:00:00 2001
 From: x <x@x>
 Date: Tue, 11 Aug 2026 16:21:14 -0700
 Subject: [PATCH] oem-meta: support MCTP I2C and I3C target configs
@@ -12,17 +12,21 @@ target path when no MCTPEndpoint configuration is found. Also expose the
 configuration path by TID and use it for Rainbow fault handling so the
 fault inventory path is derived from the target configuration.
 
+Also switch Arke fault handling to derive its inventory path from the
+target configuration the same way, instead of inserting the slot
+number into a hardcoded "/Santabarbara_Electra" path segment.
+
 Signed-off-by: Henry Wu <Henry_Wu@quantatw.com>
 ---
- .../file_io_type_event_log.cpp                | 109 ++++++++++--------
- .../configuration_discovery_handler.cpp       |  59 +++++++++-
+ .../file_io_type_event_log.cpp                | 135 +++++++++---------
+ .../configuration_discovery_handler.cpp       |  59 +++++++-
  .../configuration_discovery_handler.hpp       |  10 ++
- oem/meta/utils.cpp                            |  13 +++
+ oem/meta/utils.cpp                            |  13 ++
  oem/meta/utils.hpp                            |  10 ++
- 5 files changed, 152 insertions(+), 49 deletions(-)
+ 5 files changed, 158 insertions(+), 69 deletions(-)
 
 diff --git a/oem/meta/libpldmresponder/file_io_type_event_log.cpp b/oem/meta/libpldmresponder/file_io_type_event_log.cpp
-index 4bef505..b6bfbfe 100644
+index 4bef5057..55c9eaae 100644
 --- a/oem/meta/libpldmresponder/file_io_type_event_log.cpp
 +++ b/oem/meta/libpldmresponder/file_io_type_event_log.cpp
 @@ -12,6 +12,7 @@
@@ -146,19 +150,19 @@ index 4bef505..b6bfbfe 100644
 -        size_t pos = newPath.find(needle);
 -
 -        if (pos != std::string::npos)
+-        {
+-            newPath.insert(pos + needle.size(), "_" + std::to_string(slot));
+-        }
+-        else
 +        updatedPath = rebaseFaultPathToConfigParent(updatedFault.object_path,
 +                                                    *context.configPath);
 +        if (!updatedPath)
          {
--            newPath.insert(pos + needle.size(), "_" + std::to_string(slot));
+-            newPath += "_" + std::to_string(slot);
 +            lg2::error(
 +                "Failed to update Rainbow fault path from config path {CONFIG_PATH} for TID {TID}",
 +                "CONFIG_PATH", *context.configPath, "TID", context.tid);
          }
--        else
--        {
--            newPath += "_" + std::to_string(slot);
--        }
 -        updatedFault.object_path = std::move(newPath);
      }
  
@@ -171,21 +175,49 @@ index 4bef505..b6bfbfe 100644
  {
      EventAssert eventStatus = static_cast<EventAssert>(eventData[1]);
      auto faultEvent = arkeFaultsList.find(eventData[2]);
-@@ -1279,11 +1293,11 @@ static void arkeFault(const message& eventData, const std::string&,
-     int slot = -1;
-     try
-     {
--        slot = std::stoi(slotNumStr);
-+        slot = std::stoi(context.slotNum);
-     }
-     catch (const std::exception& e)
-     {
--        lg2::error("Invalid slot number {SLOT}", "SLOT", slotNumStr);
-+        lg2::error("Invalid slot number {SLOT}", "SLOT", context.slotNum);
+@@ -1276,33 +1290,19 @@ static void arkeFault(const message& eventData, const std::string&,
+         return;
      }
  
+-    int slot = -1;
+-    try
+-    {
+-        slot = std::stoi(slotNumStr);
+-    }
+-    catch (const std::exception& e)
+-    {
+-        lg2::error("Invalid slot number {SLOT}", "SLOT", slotNumStr);
+-    }
+-
      FaultDesc updatedFault = faultEvent->second;
-@@ -1340,7 +1354,7 @@ static void createEventLog(
++    bool updatedPath = false;
+ 
+-    if (slot != -1)
++    if (context.configPath)
+     {
+-        constexpr std::string_view needle = "/Santabarbara_Electra";
+-        std::string newPath = updatedFault.object_path;
+-        size_t pos = newPath.find(needle);
+-
+-        if (pos != std::string::npos)
+-        {
+-            newPath.insert(pos + needle.size(), "_" + std::to_string(slot));
+-        }
+-        else
++        updatedPath = rebaseFaultPathToConfigParent(updatedFault.object_path,
++                                                    *context.configPath);
++        if (!updatedPath)
+         {
+-            newPath += "_" + std::to_string(slot);
++            lg2::error(
++                "Failed to update Arke fault path from config path {CONFIG_PATH} for TID {TID}",
++                "CONFIG_PATH", *context.configPath, "TID", context.tid);
+         }
+-        updatedFault.object_path = std::move(newPath);
+     }
+ 
+     recordEventLog(updatedFault, eventStatus, eventData[3], eventData[4]);
+@@ -1340,7 +1340,7 @@ static void createEventLog(
  }
  
  static void cxlEvent(const message& eventData, const std::string& event,
@@ -194,7 +226,7 @@ index 4bef505..b6bfbfe 100644
  {
      using EntrySeverity =
          sdbusplus::xyz::openbmc_project::Logging::server::Entry::Level;
-@@ -1354,7 +1368,7 @@ static void cxlEvent(const message& eventData, const std::string& event,
+@@ -1354,7 +1354,7 @@ static void cxlEvent(const message& eventData, const std::string& event,
  }
  
  static void platformEvent(const message&, const std::string& event,
@@ -203,7 +235,7 @@ index 4bef505..b6bfbfe 100644
  {
      using EntrySeverity =
          sdbusplus::xyz::openbmc_project::Logging::server::Entry::Level;
-@@ -1363,13 +1377,13 @@ static void platformEvent(const message&, const std::string& event,
+@@ -1363,13 +1363,13 @@ static void platformEvent(const message&, const std::string& event,
  }
  
  static void reportError(const message&, const std::string& event,
@@ -219,7 +251,7 @@ index 4bef505..b6bfbfe 100644
  {
      static constexpr auto SYSTEMD_SERVICE = "org.freedesktop.systemd1";
      static constexpr auto SYSTEMD_ROOT = "/org/freedesktop/systemd1";
-@@ -1381,7 +1395,7 @@ static void updateRetimerFwVersion(const message&, const std::string&,
+@@ -1381,7 +1381,7 @@ static void updateRetimerFwVersion(const message&, const std::string&,
      auto bus = sdbusplus::bus::new_default();
      auto method = bus.new_method_call(SYSTEMD_SERVICE, SYSTEMD_ROOT,
                                        SYSTEMD_INTERFACE, "StartUnit");
@@ -228,7 +260,7 @@ index 4bef505..b6bfbfe 100644
                     ".service";
      method.append(service, "replace");
      bus.call_noreply(method);
-@@ -1426,7 +1440,7 @@ static std::string dimmPmicError(const message& eventData, EventType eventType)
+@@ -1426,7 +1426,7 @@ static std::string dimmPmicError(const message& eventData, EventType eventType)
  } // namespace format
  
  using EventReporter = void (*)(const message&, const std::string&,
@@ -237,7 +269,7 @@ index 4bef505..b6bfbfe 100644
  using EventFormatter = std::string (*)(const message&, EventType);
  
  struct EventDescriptor
-@@ -1505,7 +1519,7 @@ static void checkEventAssert(const message& eventData, std::string& event,
+@@ -1505,7 +1505,7 @@ static void checkEventAssert(const message& eventData, std::string& event,
  }
  
  static std::string processEventData(const message& eventData,
@@ -246,7 +278,7 @@ index 4bef505..b6bfbfe 100644
  {
      std::string event;
      EventType eventType = static_cast<EventType>(eventData[0]);
-@@ -1528,14 +1542,14 @@ static std::string processEventData(const message& eventData,
+@@ -1528,14 +1528,14 @@ static std::string processEventData(const message& eventData,
          }
      }
  
@@ -263,7 +295,7 @@ index 4bef505..b6bfbfe 100644
  {
      EventType eventType = static_cast<EventType>(eventData[0]);
      auto it = eventHandlers.find(eventType);
-@@ -1543,7 +1557,7 @@ static void addSystemEventLogAndJournal(const message& eventData,
+@@ -1543,7 +1543,7 @@ static void addSystemEventLogAndJournal(const message& eventData,
      {
          if (it->second.reporter)
          {
@@ -272,7 +304,7 @@ index 4bef505..b6bfbfe 100644
          }
      }
      else
-@@ -1555,7 +1569,7 @@ static void addSystemEventLogAndJournal(const message& eventData,
+@@ -1555,7 +1555,7 @@ static void addSystemEventLogAndJournal(const message& eventData,
      if (eventType == EventType::POST_ENDED ||
          eventType == EventType::POST_COMPLETED)
      {
@@ -281,7 +313,7 @@ index 4bef505..b6bfbfe 100644
      }
  }
  
-@@ -1600,9 +1614,10 @@ int EventLogHandler::write(const message& eventData)
+@@ -1600,9 +1600,10 @@ int EventLogHandler::write(const message& eventData)
          receivedEventTimeStamp[eventKey] = eventTimeStamp;
      }
  
@@ -296,7 +328,7 @@ index 4bef505..b6bfbfe 100644
      return PLDM_SUCCESS;
  }
 diff --git a/oem/meta/requester/configuration_discovery_handler.cpp b/oem/meta/requester/configuration_discovery_handler.cpp
-index 0ffd6af..2ba8fc7 100644
+index 0ffd6af6..2ba8fc75 100644
 --- a/oem/meta/requester/configuration_discovery_handler.cpp
 +++ b/oem/meta/requester/configuration_discovery_handler.cpp
 @@ -33,6 +33,7 @@ void ConfigurationDiscoveryHandler::searchConfigurationFor(MctpInfo mctpInfo)
@@ -387,7 +419,7 @@ index 0ffd6af..2ba8fc7 100644
      const pldm::utils::PropertyMap& response)
  {
 diff --git a/oem/meta/requester/configuration_discovery_handler.hpp b/oem/meta/requester/configuration_discovery_handler.hpp
-index f8a5723..563f2d5 100644
+index f8a57235..563f2d53 100644
 --- a/oem/meta/requester/configuration_discovery_handler.hpp
 +++ b/oem/meta/requester/configuration_discovery_handler.hpp
 @@ -86,6 +86,16 @@ class ConfigurationDiscoveryHandler : public MctpDiscoveryHandlerIntf
@@ -408,7 +440,7 @@ index f8a5723..563f2d5 100644
       *
       *  @param[in] response - Response data of GetAll method
 diff --git a/oem/meta/utils.cpp b/oem/meta/utils.cpp
-index 6563a45..b5e2fed 100644
+index 6563a45f..b5e2fed4 100644
 --- a/oem/meta/utils.cpp
 +++ b/oem/meta/utils.cpp
 @@ -70,6 +70,19 @@ bool checkMetaIana(const pldm_tid_t& tid)
@@ -432,7 +464,7 @@ index 6563a45..b5e2fed 100644
  {
      static const pldm::dbus::Property slotNumberProperty = "SlotNumber";
 diff --git a/oem/meta/utils.hpp b/oem/meta/utils.hpp
-index 28f63ed..dc8d41c 100644
+index 28f63eda..dc8d41c7 100644
 --- a/oem/meta/utils.hpp
 +++ b/oem/meta/utils.hpp
 @@ -4,6 +4,7 @@
@@ -460,5 +492,5 @@ index 28f63ed..dc8d41c 100644
   * @brief Get the slot number from D-Bus for the given sender tid.
   *
 -- 
-2.53.0-Meta
+2.34.1
 

@@ -22,19 +22,18 @@ SRC_URI:append = " \
     file://1017-arm-dts-anacapa-Align-EDSFF-SGPIO-pin-names.patch \
     file://1018-arm-dts-anacapa-Align-PDB-fan-GPIO-numbering.patch \
     file://1019-arm-dts-anacapa-Align-leakage-SGPIO-pin-names.patch \
-    file://1020-ARM-dts-aspeed-anacapa-evt2-add-shunt-resistor-value.patch \
-    file://1021-ARM-dts-aspeed-anacapa-Add-eeprom-device-node-for-NF.patch \
-    file://1022-ARM-dts-aspeed-anacapa-add-JTAG-CPLD-TRST-pin-to-SGP.patch \
-    file://1023-ARM-dts-aspeed-anacapa-Support-Venice-B0-CPU-APML.patch \
-    file://1024-jtag-jtag-aspeed-Bring-changes-for-Aspeed-26XX.patch \
-    file://1025-jtag-jtag-aspeed-Increase-the-wait-iteration-to-300.patch \
-    file://1026-ARM-dts-aspeed-anacapa-Add-MCTP-I2C-controller-node.patch \
-    file://1027-ARM-dts-aspeed-anacapa-add-NCT7363-fan-controllers.patch \
-    file://1028-arm-dts-anacapa-Align-Cable-and-SSD-SGPIO-pin-names.patch \
-    file://1029-ARM-dts-aspeed-anacapa-Add-LPDB-fuse-monitor-GPIO-ex.patch \
-    file://1030-misc-amd-apml-Add-Venice-B0-I3C-ID-and-canonical-nod.patch \
-    file://1031-jtag-increase-JTAG_MAX_XFER_DATA_LEN-to-0x1000000-2-.patch \
-    file://1032-ARM-dts-aspeed-anacapa-Simplify-leakage-GPIO-line-na.patch \
-    file://1033-ARM-dts-aspeed-anacapa-Rename-FM_CPU0_PWRGD-to-host0.patch \
-    file://1034-ARM-dts-aspeed-anacapa-remove-unused-EEPROM.patch \
+    file://1020-ARM-dts-aspeed-anacapa-Add-eeprom-device-node-for-NF.patch \
+    file://1021-ARM-dts-aspeed-anacapa-add-JTAG-CPLD-TRST-pin-to-SGP.patch \
+    file://1022-ARM-dts-aspeed-anacapa-Support-Venice-B0-CPU-APML.patch \
+    file://1023-jtag-jtag-aspeed-Bring-changes-for-Aspeed-26XX.patch \
+    file://1024-jtag-jtag-aspeed-Increase-the-wait-iteration-to-300.patch \
+    file://1025-ARM-dts-aspeed-anacapa-Add-MCTP-I2C-controller-node.patch \
+    file://1026-ARM-dts-aspeed-anacapa-add-NCT7363-fan-controllers.patch \
+    file://1027-arm-dts-anacapa-Align-Cable-and-SSD-SGPIO-pin-names.patch \
+    file://1028-ARM-dts-aspeed-anacapa-Add-LPDB-fuse-monitor-GPIO-ex.patch \
+    file://1029-misc-amd-apml-Add-Venice-B0-I3C-ID-and-canonical-nod.patch \
+    file://1030-jtag-increase-JTAG_MAX_XFER_DATA_LEN-to-0x1000000-2-.patch \
+    file://1031-ARM-dts-aspeed-anacapa-Simplify-leakage-GPIO-line-na.patch \
+    file://1032-ARM-dts-aspeed-anacapa-Rename-FM_CPU0_PWRGD-to-host0.patch \
+    file://1033-ARM-dts-aspeed-anacapa-remove-unused-EEPROM.patch \
 "

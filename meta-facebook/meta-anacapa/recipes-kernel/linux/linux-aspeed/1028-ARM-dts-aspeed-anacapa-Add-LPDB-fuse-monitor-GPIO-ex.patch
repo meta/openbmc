@@ -1,4 +1,4 @@
-From 1d46641247e3eebd41c271f6b501fb160003f8cb Mon Sep 17 00:00:00 2001
+From 61919acc12f1a50a7c6a870e602605ec323076fd Mon Sep 17 00:00:00 2001
 From: Rex Fu <rex.fu@amd.com>
 Date: Tue, 6 Oct 2026 16:59:18 +0800
 Subject: [PATCH] ARM: dts: aspeed: anacapa: Add LPDB fuse monitor GPIO
@@ -17,7 +17,7 @@ Signed-off-by: Rex Fu <rex.fu@amd.com>
  1 file changed, 42 insertions(+), 10 deletions(-)
 
 diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
-index 601600cad66e..d773f0b06899 100644
+index 9d7c7fa01..883b52c78 100644
 --- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
 +++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
 @@ -565,14 +565,14 @@ gpio@22 {
@@ -67,10 +67,10 @@ index 601600cad66e..d773f0b06899 100644
 +				interrupts = <174 IRQ_TYPE_LEVEL_LOW>;
 +			};
 +
- 			power-monitor@42 {
- 				compatible = "lltc,ltc4287";
- 				reg = <0x42>;
-@@ -642,12 +658,12 @@ gpio@22 {
+ 			// R-PDB FRU
+ 			eeprom@50 {
+ 				compatible = "atmel,24c128";
+@@ -621,12 +637,12 @@ gpio@22 {
  				gpio-line-names =
  					"LPDB_FAN_FULL_SPEED_R_N","LPDB_I2C_TEMP75_U8_ALERT_R_N",
  					"LPDB_I2C_TMP432_U29_ALERT_R_N","LPDB_GLOBAL_WP",
@@ -86,7 +86,7 @@ index 601600cad66e..d773f0b06899 100644
  			};
  
  			fanctl0: fan-controller@23 {
-@@ -712,9 +728,25 @@ gpio@24 {
+@@ -691,9 +707,25 @@ gpio@24 {
  					"LPDB_P50V_FAN4_R2_PG","LPDB_FAN0_PRSNT_N_R",
  					"LPDB_FAN1_PRSNT_N_R","LPDB_FAN2_PRSNT_N_R",
  					"LPDB_FAN3_PRSNT_N_R","LPDB_FAN4_PRSNT_N_R",
@@ -112,7 +112,7 @@ index 601600cad66e..d773f0b06899 100644
 +				interrupts = <174 IRQ_TYPE_LEVEL_LOW>;
  			};
  
- 			power-monitor@40 {
+ 			// L-PDB FRU
 -- 
-2.53.0-Meta
+2.34.1
 

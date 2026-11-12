@@ -1,0 +1,69 @@
+From a568870fb6c508c5de062a8c6bc40c6385dd8a09 Mon Sep 17 00:00:00 2001
+From: Callen Chiu <callen.chiu@amd.com>
+Date: Thu, 27 Aug 2026 14:42:10 +0800
+Subject: [PATCH] sensor events: update FatalThreshold redfish-mapping
+
+Description:
+ReadingBelowUpperSoftShutdownThreshold and
+ReadingBelowUpperHardShutdownThreshold were both mapped to
+"SensorEvent.ReadingBelowFatalThreshold", which does not exist in the
+DMTF SensorEvent v1.2.0 message registry.
+Based on the other D-Bus events and their redfish-mapping, the correct
+mapping should be "SensorEvent.ReadingBelowUpperFatalThreshold".
+
+Tested:
+- phosphor-dbus-interfaces:
+xyz/openbmc_project/Sensor/Threshold.json
+'''
+"xyz.openbmc_project.Sensor.Threshold.ReadingBelowUpperSoftShutdownThreshold": {
+    "RedfishEvent": "SensorEvent.ReadingBelowUpperFatalThreshold",
+"xyz.openbmc_project.Sensor.Threshold.ReadingBelowUpperHardShutdownThreshold": {
+    "RedfishEvent": "SensorEvent.ReadingBelowUpperFatalThreshold",
+'''
+
+- bmcweb:
+external_registries_map.hpp
+'''
+"xyz.openbmc_project.Sensor.Threshold.ReadingBelowUpperHardShutdownThreshold",
+{
+    "SensorEvent",
+    "ReadingBelowUpperFatalThreshold",
+"xyz.openbmc_project.Sensor.Threshold.ReadingBelowUpperSoftShutdownThreshold",
+{
+    "SensorEvent",
+    "ReadingBelowUpperFatalThreshold",
+'''
+
+[1] https://github.com/DMTF/Redfish-Publications/blob/main/registries/SensorEvent.1.2.0.json#L181
+
+Change-Id: Icd997536660a67a1bb293d1c46e9115a40d3ff7f
+Signed-off-by: Callen Chiu <callen.chiu@amd.com>
+---
+ yaml/xyz/openbmc_project/Sensor/Threshold.events.yaml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/yaml/xyz/openbmc_project/Sensor/Threshold.events.yaml b/yaml/xyz/openbmc_project/Sensor/Threshold.events.yaml
+index 85d24eee..2c3c2875 100644
+--- a/yaml/xyz/openbmc_project/Sensor/Threshold.events.yaml
++++ b/yaml/xyz/openbmc_project/Sensor/Threshold.events.yaml
+@@ -329,7 +329,7 @@ errors:
+             description: The configured threshold value for this sensor.
+             type: double
+             primary: true
+-      redfish-mapping: SensorEvent.ReadingBelowFatalThreshold
++      redfish-mapping: SensorEvent.ReadingBelowUpperFatalThreshold
+ 
+     - name: ReadingBelowUpperHardShutdownThreshold
+       severity: critical
+@@ -351,7 +351,7 @@ errors:
+             description: The configured threshold value for this sensor.
+             type: double
+             primary: true
+-      redfish-mapping: SensorEvent.ReadingBelowFatalThreshold
++      redfish-mapping: SensorEvent.ReadingBelowUpperFatalThreshold
+ 
+     - name: ReadingWarning
+       severity: warning
+-- 
+2.34.1
+

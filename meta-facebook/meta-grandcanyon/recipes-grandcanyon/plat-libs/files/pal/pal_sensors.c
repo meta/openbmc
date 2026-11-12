@@ -3902,8 +3902,8 @@ exp_read_sensor_wrapper(uint8_t fru, uint8_t *sensor_list, int sensor_cnt, uint8
         }
 #ifdef CONFIG_GRANDCANYON2
         else if (strncmp(units, "mV", sizeof(units)) == 0) {
-          value = (((p_sensor_data[i].raw_data_1 << 8) + p_sensor_data[i].raw_data_2));
-          value /= 1000;
+          value = (int16_t)((p_sensor_data[i].raw_data_1 << 8) + p_sensor_data[i].raw_data_2);
+          value /= 100;
         }
 #endif
         else {

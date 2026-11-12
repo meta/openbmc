@@ -3,11 +3,12 @@
 lockfile="/tmp/pldm-fw-update.lock"
 
 FAIL_TO_UPDATE_WF_CXL_PLDM_SERVICE_NOT_RUNING=16
-# FAIL_TO_UPDATE_WF_CXL_EID_DOES_NOT_EXIST=17
 FAIL_TO_UPDATE_WF_CXL_CAN_ONLY_UPDATE_ONE_BIC_AT_A_TIME=18
 FAIL_TO_UPDATE_WF_CXL_TIME_OUT_ERROR=19
+FAIL_TO_UPDATE_WF_CXL_FAIL_TO_DELETE_SOFTWARE_ID=20
 FAIL_TO_UPDATE_PLDM_FAIL_TO_SET_REQUESTED_ACTIVATION=21
 FAIL_TO_UPDATE_WF_CXL_MISS_SOFTWARE_ID=22
+FAIL_TO_UPDATE_WF_CXL_SOFTWARE_ACTIVATION_STATUS_FAIL=23
 FAIL_TO_UPDATE_PLDM_IMAGE_DOES_NOT_MATCH=24
 FAIL_TO_UPDATE_WF_EID_DOES_NOT_EXIST=25
 INVALID_INPUT=255
@@ -51,14 +52,38 @@ show_usage() {
 
 wait_for_update_complete() {
     local counter=0
+    local output status progress ret
     while true;
     do
         sleep 5
         echo -ne "Waiting for updating... ${counter} sec"\\r
-        progress=$(busctl get-property xyz.openbmc_project.PLDM /xyz/openbmc_project/software/"$software_id" xyz.openbmc_project.Software.ActivationProgress Progress --timeout=120 2>&1 | cut -d " " -f 2)
-        if [ "${progress}" == 100 ]; then
-            echo -ne \\n"Update done."\\n
-            return 0
+        output=$(busctl get-property xyz.openbmc_project.PLDM /xyz/openbmc_project/software/"$software_id" xyz.openbmc_project.Software.Activation Activation --timeout=120 2>&1)
+        ret=$?
+        if [ "$ret" -eq 0 ]; then
+            status=$(echo "$output" | cut -d " " -f 2)
+            if [ "${status}" == "\"xyz.openbmc_project.Software.Activation.Activations.Failed\"" ] || [ "${status}" == "\"xyz.openbmc_project.Software.Activation.Activations.Invalid\"" ]; then
+                echo -ne \\n"PLDM software activation is ${status}."\\n
+                return $FAIL_TO_UPDATE_WF_CXL_SOFTWARE_ACTIVATION_STATUS_FAIL
+            fi
+            if [ "${status}" == "\"xyz.openbmc_project.Software.Activation.Activations.Active\"" ]; then
+                output=$(busctl get-property xyz.openbmc_project.PLDM /xyz/openbmc_project/software/"$software_id" xyz.openbmc_project.Software.ActivationProgress Progress --timeout=120 2>&1)
+                ret=$?
+                if [ "$ret" -eq 0 ]; then
+                    progress=$(echo "$output" | cut -d " " -f 2)
+                    if [ "${progress}" == 100 ]; then
+                        echo -ne \\n"Update done."\\n
+                        return 0
+                    fi
+                else
+                    echo -e "\nFailed to read update progress: $output"
+                fi
+            fi
+        else
+            echo -e "\nFailed to read software activation: $output"
+        fi
+        if echo "$output" | grep -q "Unknown object"; then
+            echo "The software ID $software_id does not exist."
+            return $FAIL_TO_UPDATE_WF_CXL_MISS_SOFTWARE_ID
         fi
         counter=$((counter+5))
         if [ "${counter}" == 400 ]; then
@@ -189,13 +214,20 @@ update_cxl() {
     return 0
 }
 
-prompt_confirmation() {
-    echo "WARNING! This will automatically update all all CXL on the blade."
-    read -r -p "Continue? [y/N] " continue
-    if [ "$continue" != "y" ]; then
-        echo "Aborting on user request."
-        exit 0
+delete_software_id() {
+    local output ret
+    if [ -z "$software_id" ]; then
+        return 0
     fi
+
+    output=$(busctl call xyz.openbmc_project.PLDM /xyz/openbmc_project/software/"$software_id" xyz.openbmc_project.Object.Delete Delete --timeout=120 2>&1)
+    ret=$?
+    if [ "$ret" -ne 0 ]; then
+        echo "Failed to delete software id $software_id: $output"
+        return $FAIL_TO_UPDATE_WF_CXL_FAIL_TO_DELETE_SOFTWARE_ID
+    fi
+    software_id=""
+    return 0
 }
 
 error_and_exit() {
@@ -219,16 +251,15 @@ retry_update_cxl() {
     while [ $retries -lt $MAX_RETRIES ]; do
         retries=$((retries + 1))
         echo "CXL firmware update failed. Retrying... ($retries/$MAX_RETRIES)"
+        if ! delete_software_id; then
+            echo "Warning: Failed to delete previous software id before retry"
+        fi
         # each retry before restart pldmd
         systemctl stop pldmd
         sleep 10
         systemctl start pldmd
         sleep 60
-        # Try to delete previous software_id before retry
-        if [ -n "$software_id" ]; then
-            busctl call xyz.openbmc_project.PLDM /xyz/openbmc_project/software/"$software_id" xyz.openbmc_project.Object.Delete Delete --timeout=120
-            sleep 2
-        fi
+        software_id=""
         update_cxl "$pldm_image"
         ret=$?
         if [ $ret -eq 0 ]; then
@@ -236,6 +267,9 @@ retry_update_cxl() {
         fi
     done
 
+    if ! delete_software_id; then
+        echo "Warning: Failed to delete software id after retries exhausted"
+    fi
     echo "Maximum retries ($MAX_RETRIES) reached. Exiting with error code: $ret."
     return $ret
 }
@@ -314,10 +348,8 @@ if [ "$ret" -ne 0 ]; then
     exit "$ret"
 fi
 
-busctl call xyz.openbmc_project.PLDM /xyz/openbmc_project/software/"$software_id" xyz.openbmc_project.Object.Delete Delete --timeout=120 2>&1
-ret=$?
-if [ "$ret" -ne 0 ]; then
-    echo "Warning: Failed to delete software id after successful update (exit code: $ret)"
+if ! delete_software_id; then
+    echo "Warning: Failed to delete software id after successful update"
 fi
 
 add_result_sel "${SUCCESS_MSG}"

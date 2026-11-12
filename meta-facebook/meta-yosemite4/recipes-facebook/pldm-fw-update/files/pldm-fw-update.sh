@@ -726,38 +726,39 @@ recover_and_update_bic_by_uart() {
 }
 wait_for_update_complete() {
 	local counter=5
+	local output status progress ret
 	while true
 	do
 		sleep 5
 		echo -ne "Waiting for updating... ${counter} sec"\\r
 
-		# Capture the output of busctl command
-		local output
-		output=$(busctl get-property xyz.openbmc_project.PLDM /xyz/openbmc_project/software/"$software_id" xyz.openbmc_project.Software.ActivationProgress Progress --timeout=120 2>&1)
+		output=$(busctl get-property xyz.openbmc_project.PLDM /xyz/openbmc_project/software/"$software_id" xyz.openbmc_project.Software.Activation Activation --timeout=120 2>&1)
 		ret=$?
-		if [ "$ret" -ne "0" ]; then
-			local status
-
-			if echo "$output" | grep -q "Unknown object"; then
-				echo "The software ID $software_id does not exist."
-				return $FAIL_TO_UPDATE_PLDM_MISS_SOFTWARE_ID
-			fi
-
-			status=$(busctl get-property xyz.openbmc_project.PLDM /xyz/openbmc_project/software/"$software_id" xyz.openbmc_project.Software.Activation Activation --timeout=120 2>&1 )
-			status=$(echo "$status" | cut -d " " -f 2)
+		if [ "$ret" -eq 0 ]; then
+			status=$(echo "$output" | cut -d " " -f 2)
 			if [ "${status}" == "\"xyz.openbmc_project.Software.Activation.Activations.Failed\"" ] || [ "${status}" == "\"xyz.openbmc_project.Software.Activation.Activations.Invalid\"" ]; then
 				echo -ne \\n"PLDM software activation is ${status}."\\n
 				return $FAIL_TO_UPDATE_PLDM_PLDM_SOFTWARE_ACTIVATION_STATUS_FAIL
 			fi
+			if [ "${status}" == "\"xyz.openbmc_project.Software.Activation.Activations.Active\"" ]; then
+				output=$(busctl get-property xyz.openbmc_project.PLDM /xyz/openbmc_project/software/"$software_id" xyz.openbmc_project.Software.ActivationProgress Progress --timeout=120 2>&1)
+				ret=$?
+				if [ "$ret" -eq 0 ]; then
+					progress=$(echo "$output" | cut -d " " -f 2)
+					if [ "${progress}" == 100 ]; then
+						echo -ne \\n"Update done."\\n
+						return 0
+					fi
+				else
+					echo -e "\nFailed to read update progress: $output"
+				fi
+			fi
+		else
+			echo -e "\nFailed to read software activation: $output"
 		fi
-
-		# Extract progress value from the output
-		local progress
-		progress=$(echo "$output" | cut -d " " -f 2)
-
-		if [ "${progress}" == 100 ]; then
-			echo -ne \\n"Update done."\\n
-			return 0
+		if echo "$output" | grep -q "Unknown object"; then
+			echo "The software ID $software_id does not exist."
+			return $FAIL_TO_UPDATE_PLDM_MISS_SOFTWARE_ID
 		fi
 
 		counter=$((counter+5))

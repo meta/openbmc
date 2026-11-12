@@ -346,13 +346,11 @@ std::function<int()>& Software::randomIdGenerator()
 
 UpdateServiceHandler::UpdateServiceHandler(
     const std::string& host, const std::string& inventoryName,
-    const std::optional<std::string>& multipartUpdateUri,
     const std::vector<UpdateServiceMapper>& mappers) :
     host(host),
     inventoryUrl(std::format("http://{}/redfish/v1/UpdateService/{}?$expand=.",
                              host, inventoryName)),
-    handle(std::make_unique<AsyncHttpHandle>(inventoryUrl)),
-    multipartUpdateUri(multipartUpdateUri), mappers(mappers)
+    handle(std::make_unique<AsyncHttpHandle>(inventoryUrl)), mappers(mappers)
 {}
 
 auto UpdateServiceHandler::load(sdbusplus::async::context& ctx)
@@ -386,6 +384,10 @@ auto UpdateServiceHandler::load(sdbusplus::async::context& ctx)
     if (!maybeMembers.hasValue())
     {
         co_return;
+    }
+    if (!multipartUpdateUri.has_value())
+    {
+        multipartUpdateUri = co_await getMultipartUpdateUri(ctx, host);
     }
     for (auto& member : maybeMembers.value())
     {
@@ -458,21 +460,18 @@ auto UpdateServiceHandler::run(sdbusplus::async::context& ctx,
                                const UpdateServiceConfig& config)
     -> sdbusplus::async::task<void>
 {
-    auto multipartUpdateUri = co_await getMultipartUpdateUri(ctx, host);
     if (!config.firmwareMappers.empty())
     {
         ctx.spawn(loop(ctx,
                        std::make_unique<UpdateServiceHandler>(
-                           host, "FirmwareInventory", multipartUpdateUri,
-                           config.firmwareMappers),
+                           host, "FirmwareInventory", config.firmwareMappers),
                        config.intervalMilliseconds));
     }
     if (!config.softwareMappers.empty())
     {
         ctx.spawn(loop(ctx,
                        std::make_unique<UpdateServiceHandler>(
-                           host, "SoftwareInventory", multipartUpdateUri,
-                           config.softwareMappers),
+                           host, "SoftwareInventory", config.softwareMappers),
                        config.intervalMilliseconds));
     }
     co_return;

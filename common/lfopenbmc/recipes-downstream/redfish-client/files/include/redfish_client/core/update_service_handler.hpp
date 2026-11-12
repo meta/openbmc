@@ -127,7 +127,6 @@ class UpdateServiceHandler
 
     UpdateServiceHandler(const std::string& host,
                          const std::string& inventoryName,
-                         const std::optional<std::string>& multipartUpdateUri,
                          const std::vector<UpdateServiceMapper>& mappers);
 
     static auto run(sdbusplus::async::context& ctx, const std::string& host,

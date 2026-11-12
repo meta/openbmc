@@ -4,10 +4,12 @@
 #include <redfish_client/core/config.hpp>
 #include <redfish_client/core/update_service_handler.hpp>
 #include <xyz/openbmc_project/Software/Activation/client.hpp>
+#include <xyz/openbmc_project/Software/Update/client.hpp>
 #include <xyz/openbmc_project/Software/Version/client.hpp>
 
 #include <format>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -74,6 +76,34 @@ constexpr auto kSoftwareInventoryResponse = R"(
 }
 )";
 
+constexpr auto kUpdateableFirmwareInventoryResponse = R"(
+{
+  "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory",
+  "@odata.type": "#SoftwareInventoryCollection.SoftwareInventoryCollection",
+  "Members": [
+    {
+      "@odata.id": "/redfish/v1/UpdateService/FirmwareInventory/FW0",
+      "@odata.type": "#SoftwareInventory.v1_4_0.SoftwareInventory",
+      "Id": "FW0",
+      "Updateable": true,
+      "Version": "FW0-V1"
+    }
+  ],
+  "Members@odata.count": 1,
+  "Name": "Software Inventory Collection"
+}
+)";
+
+constexpr auto kUpdateServiceResponse = R"(
+{
+  "@odata.id": "/redfish/v1/UpdateService",
+  "@odata.type": "#UpdateService.v1_11_0.UpdateService",
+  "Id": "UpdateService",
+  "MultipartHttpPushUri": "/redfish/v1/UpdateService/update-multipart",
+  "Name": "Update Service"
+}
+)";
+
 std::string generateResponse(
     const SimpleTestHttpServer::ReceivedHttpRequest& request)
 {
@@ -119,6 +149,13 @@ class UpdateServiceHandlerTest : public ::testing::Test
             .path(path);
     }
 
+    auto getUpdateClient(const char* path)
+    {
+        return sdbusplus::client::xyz::openbmc_project::software::Update<>(ctx)
+            .service(kServiceName)
+            .path(path);
+    }
+
     sdbusplus::async::context ctx;
     sdbusplus::server::manager_t manager;
 };
@@ -130,7 +167,7 @@ TEST_F(UpdateServiceHandlerTest, FirmwareInventory)
     std::vector<UpdateServiceMapper> mappers = {makeMapper("FW0", "Host0_FW0"),
                                                 makeMapper("FW1", "BMC_FW1")};
     UpdateServiceHandler handler(std::format("localhost:{}", server.getPort()),
-                                 "FirmwareInventory", std::nullopt, mappers);
+                                 "FirmwareInventory", mappers);
 
     ctx.request_name(kServiceName);
     ctx.spawn([&]() -> sdbusplus::async::task<> {
@@ -170,7 +207,7 @@ TEST_F(UpdateServiceHandlerTest, SoftwareInventory)
     SimpleTestHttpServer server(generateResponse, {});
     std::vector<UpdateServiceMapper> mappers = {makeMapper("SW0", "CPLD_SW0")};
     UpdateServiceHandler handler(std::format("localhost:{}", server.getPort()),
-                                 "SoftwareInventory", std::nullopt, mappers);
+                                 "SoftwareInventory", mappers);
 
     ctx.request_name(kServiceName);
     ctx.spawn([&]() -> sdbusplus::async::task<> {
@@ -190,6 +227,48 @@ TEST_F(UpdateServiceHandlerTest, SoftwareInventory)
         // SW1 has no mapper -> not published.
         auto sw1 = getVersionClient("/xyz/openbmc_project/software/SW1_1234");
         EXPECT_THROW(co_await sw1.version(), DBusError::UnknownObject);
+
+        ctx.request_stop();
+        co_return;
+    }());
+    ctx.run();
+}
+
+TEST_F(UpdateServiceHandlerTest, MultipartUpdateEnabledOnceUpdateServiceReady)
+{
+    Software::randomIdGenerator() = []() { return 1234; };
+    bool updateServiceReady = false;
+    SimpleTestHttpServer server(
+        [&](const SimpleTestHttpServer::ReceivedHttpRequest& request)
+            -> std::string {
+            if (request.path.ends_with("/FirmwareInventory?$expand=."))
+            {
+                return kUpdateableFirmwareInventoryResponse;
+            }
+            if (request.path.ends_with("/UpdateService"))
+            {
+                return updateServiceReady ? kUpdateServiceResponse : "{}";
+            }
+            return "[]";
+        },
+        {});
+    std::vector<UpdateServiceMapper> mappers = {makeMapper("FW0", "Host0_FW0")};
+    UpdateServiceHandler handler(std::format("localhost:{}", server.getPort()),
+                                 "FirmwareInventory", mappers);
+
+    ctx.request_name(kServiceName);
+    ctx.spawn([&]() -> sdbusplus::async::task<> {
+        constexpr auto path = "/xyz/openbmc_project/software/Host0_FW0_1234";
+
+        co_await handler.load(ctx);
+        EXPECT_EQ("FW0-V1", co_await getVersionClient(path).version());
+        EXPECT_THROW(co_await getUpdateClient(path).allowed_apply_times(),
+                     DBusError::UnknownProperty);
+
+        updateServiceReady = true;
+        co_await handler.load(ctx);
+        EXPECT_EQ(std::set<RequestedApplyTimes>{RequestedApplyTimes::Immediate},
+                  co_await getUpdateClient(path).allowed_apply_times());
 
         ctx.request_stop();
         co_return;

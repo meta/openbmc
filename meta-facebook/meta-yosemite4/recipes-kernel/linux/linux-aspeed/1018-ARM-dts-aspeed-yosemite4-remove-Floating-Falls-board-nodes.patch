@@ -1,0 +1,171 @@
+From: Sean He <sean_he@wiwynn.com>
+Date: Mon, 9 Nov 2026 10:00:00 +0800
+Subject: [PATCH] ARM: dts: aspeed: yosemite4: Remove Floating Falls board nodes
+
+The Floating Falls (FF) board carries a pca9537 GPIO expander at address
+0x49 and a FRU EEPROM at address 0x50 on each slot I2C bus. FF was
+planned in the early Yosemite 4 design but has not been used since the
+DVT stage, so these addresses never acknowledge. The pca953x driver
+fails to probe all eight pca9537 nodes on every boot, and the at24
+driver does not bind to the eight EEPROM nodes either. Remove the nodes
+for both devices.
+
+Link: https://lore.kernel.org/all/20261105-yv4-remove-ff-nodes-v1-1-aa707a9577b7@gmail.com/
+
+Signed-off-by: Sean He <sean_he@wiwynn.com>
+Signed-off-by: Eric Yang <eric.yang.wiwynn@gmail.com>
+---
+--- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-yosemite4.dts
++++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-yosemite4.dts
+@@ -765,18 +765,6 @@
+ 			reg = <0>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			gpio@49 {
+-				compatible = "nxp,pca9537";
+-				reg = <0x49>;
+-				gpio-controller;
+-				#gpio-cells = <2>;
+-			};
+-
+-			eeprom@50 {
+-				compatible = "atmel,24c128";
+-				reg = <0x50>;
+-			};
+-
+ 			eeprom@51 {
+ 				compatible = "atmel,24c128";
+ 				reg = <0x51>;
+@@ -792,18 +780,6 @@
+ 			reg = <1>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			gpio@49 {
+-				compatible = "nxp,pca9537";
+-				reg = <0x49>;
+-				gpio-controller;
+-				#gpio-cells = <2>;
+-			};
+-
+-			eeprom@50 {
+-				compatible = "atmel,24c128";
+-				reg = <0x50>;
+-			};
+-
+ 			eeprom@51 {
+ 				compatible = "atmel,24c128";
+ 				reg = <0x51>;
+@@ -819,18 +795,6 @@
+ 			reg = <2>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			gpio@49 {
+-				compatible = "nxp,pca9537";
+-				reg = <0x49>;
+-				gpio-controller;
+-				#gpio-cells = <2>;
+-			};
+-
+-			eeprom@50 {
+-				compatible = "atmel,24c128";
+-				reg = <0x50>;
+-			};
+-
+ 			eeprom@51 {
+ 				compatible = "atmel,24c128";
+ 				reg = <0x51>;
+@@ -846,18 +810,6 @@
+ 			reg = <3>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			gpio@49 {
+-				compatible = "nxp,pca9537";
+-				reg = <0x49>;
+-				gpio-controller;
+-				#gpio-cells = <2>;
+-			};
+-
+-			eeprom@50 {
+-				compatible = "atmel,24c128";
+-				reg = <0x50>;
+-			};
+-
+ 			eeprom@51 {
+ 				compatible = "atmel,24c128";
+ 				reg = <0x51>;
+@@ -890,18 +842,6 @@
+ 			reg = <0>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			gpio@49 {
+-				compatible = "nxp,pca9537";
+-				reg = <0x49>;
+-				gpio-controller;
+-				#gpio-cells = <2>;
+-			};
+-
+-			eeprom@50 {
+-				compatible = "atmel,24c128";
+-				reg = <0x50>;
+-			};
+-
+ 			eeprom@51 {
+ 				compatible = "atmel,24c128";
+ 				reg = <0x51>;
+@@ -917,18 +857,6 @@
+ 			reg = <1>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			gpio@49 {
+-				compatible = "nxp,pca9537";
+-				reg = <0x49>;
+-				gpio-controller;
+-				#gpio-cells = <2>;
+-			};
+-
+-			eeprom@50 {
+-				compatible = "atmel,24c128";
+-				reg = <0x50>;
+-			};
+-
+ 			eeprom@51 {
+ 				compatible = "atmel,24c128";
+ 				reg = <0x51>;
+@@ -944,18 +872,6 @@
+ 			reg = <2>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			gpio@49 {
+-				compatible = "nxp,pca9537";
+-				reg = <0x49>;
+-				gpio-controller;
+-				#gpio-cells = <2>;
+-			};
+-
+-			eeprom@50 {
+-				compatible = "atmel,24c128";
+-				reg = <0x50>;
+-			};
+-
+ 			eeprom@51 {
+ 				compatible = "atmel,24c128";
+ 				reg = <0x51>;
+@@ -971,18 +887,6 @@
+ 			reg = <3>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+-			gpio@49 {
+-				compatible = "nxp,pca9537";
+-				reg = <0x49>;
+-				gpio-controller;
+-				#gpio-cells = <2>;
+-			};
+-
+-			eeprom@50 {
+-				compatible = "atmel,24c128";
+-				reg = <0x50>;
+-			};
+-
+ 			eeprom@51 {
+ 				compatible = "atmel,24c128";
+ 				reg = <0x51>;

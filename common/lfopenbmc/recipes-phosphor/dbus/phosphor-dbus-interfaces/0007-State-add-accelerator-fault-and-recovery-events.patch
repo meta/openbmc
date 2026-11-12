@@ -1,0 +1,198 @@
+From 7d0e1b5e1b9f0698b9e1c9c30f19e4ef66ee666e Mon Sep 17 00:00:00 2001
+From: Jayanth Othayoth <ojayanth@gmail.com>
+Date: Tue, 11 Aug 2026 23:29:05 -0500
+Subject: [PATCH] State: add accelerator fault and recovery events
+
+These events provide a common mechanism for reporting
+accelerator fault conditions, status changes, and recovery
+events, while allowing the event to be associated with an
+accelerator inventory object.
+
+Change-Id: If49910e4d848df223bf7e5adb8b7fa48a271e79a
+Signed-off-by: Jayanth Othayoth <ojayanth@gmail.com>
+---
+ .../State/Accelerator/meson.build             | 34 ++++++++++
+ gen/xyz/openbmc_project/State/meson.build     | 49 ++++++++++++++
+ .../State/Accelerator.events.yaml             | 64 +++++++++++++++++++
+ 3 files changed, 147 insertions(+)
+ create mode 100644 gen/xyz/openbmc_project/State/Accelerator/meson.build
+ create mode 100644 yaml/xyz/openbmc_project/State/Accelerator.events.yaml
+
+diff --git a/gen/xyz/openbmc_project/State/Accelerator/meson.build b/gen/xyz/openbmc_project/State/Accelerator/meson.build
+new file mode 100644
+index 00000000..83862ff2
+--- /dev/null
++++ b/gen/xyz/openbmc_project/State/Accelerator/meson.build
+@@ -0,0 +1,34 @@
++# Generated file; do not modify.
++
++sdbusplus_current_path = 'xyz/openbmc_project/State/Accelerator'
++
++generated_sources += custom_target(
++    'xyz/openbmc_project/State/Accelerator__cpp'.underscorify(),
++    input: [
++        '../../../../../yaml/xyz/openbmc_project/State/Accelerator.events.yaml',
++    ],
++    output: [
++        'event.cpp',
++        'event.hpp',
++    ],
++    depend_files: sdbusplusplus_depfiles,
++    command: [
++        sdbuspp_gen_meson_prog,
++        '--command',
++        'cpp',
++        '--output',
++        meson.current_build_dir(),
++        '--tool',
++        sdbusplusplus_prog,
++        '--directory',
++        meson.current_source_dir() / '../../../../../yaml',
++        'xyz/openbmc_project/State/Accelerator',
++    ],
++    install: should_generate_cpp,
++    install_dir: [
++        false,
++        get_option('includedir') / sdbusplus_current_path,
++    ],
++    build_by_default: should_generate_cpp,
++)
++
+diff --git a/gen/xyz/openbmc_project/State/meson.build b/gen/xyz/openbmc_project/State/meson.build
+index 854a644b..21d29e17 100644
+--- a/gen/xyz/openbmc_project/State/meson.build
++++ b/gen/xyz/openbmc_project/State/meson.build
+@@ -1,4 +1,5 @@
+ # Generated file; do not modify.
++subdir('Accelerator')
+ subdir('BMC')
+ subdir('BMCRedundancy')
+ subdir('Boot')
+@@ -26,6 +27,54 @@ subdir('Watchdog')
+ 
+ sdbusplus_current_path = 'xyz/openbmc_project/State'
+ 
++generated_markdown += custom_target(
++    'xyz/openbmc_project/State/Accelerator__markdown'.underscorify(),
++    input: [
++        '../../../../yaml/xyz/openbmc_project/State/Accelerator.events.yaml',
++    ],
++    output: ['Accelerator.md'],
++    depend_files: sdbusplusplus_depfiles,
++    command: [
++        sdbuspp_gen_meson_prog,
++        '--command',
++        'markdown',
++        '--output',
++        meson.current_build_dir(),
++        '--tool',
++        sdbusplusplus_prog,
++        '--directory',
++        meson.current_source_dir() / '../../../../yaml',
++        'xyz/openbmc_project/State/Accelerator',
++    ],
++    install: should_generate_markdown,
++    install_dir: [inst_markdown_dir / sdbusplus_current_path],
++    build_by_default: should_generate_markdown,
++)
++
++generated_registry += custom_target(
++    'xyz/openbmc_project/State/Accelerator__registry'.underscorify(),
++    input: [
++        '../../../../yaml/xyz/openbmc_project/State/Accelerator.events.yaml',
++    ],
++    output: ['Accelerator.json'],
++    depend_files: sdbusplusplus_depfiles,
++    command: [
++        sdbuspp_gen_meson_prog,
++        '--command',
++        'registry',
++        '--output',
++        meson.current_build_dir(),
++        '--tool',
++        sdbusplusplus_prog,
++        '--directory',
++        meson.current_source_dir() / '../../../../yaml',
++        'xyz/openbmc_project/State/Accelerator',
++    ],
++    install: should_generate_registry,
++    install_dir: [inst_registry_dir / sdbusplus_current_path],
++    build_by_default: should_generate_registry,
++)
++
+ generated_markdown += custom_target(
+     'xyz/openbmc_project/State/BMC__markdown'.underscorify(),
+     input: [
+diff --git a/yaml/xyz/openbmc_project/State/Accelerator.events.yaml b/yaml/xyz/openbmc_project/State/Accelerator.events.yaml
+new file mode 100644
+index 00000000..82f1581b
+--- /dev/null
++++ b/yaml/xyz/openbmc_project/State/Accelerator.events.yaml
+@@ -0,0 +1,64 @@
++version: 1.0.0
++
++description: >
++    Events indicating accelerator error conditions, status changes, and recovery
++    from previously reported conditions.
++
++    A Source object may be provided to associate the resulting log entry with an
++    accelerator inventory object.
++
++errors:
++    - name: AcceleratorFailed
++      severity: error
++      errno: EIO
++
++      metadata:
++          - name: Source
++            type: object_path
++            primary: true
++            description: >
++                The inventory object associated with the accelerator.
++
++          - name: FailureType
++            type: string
++            description: >
++                An [optional] identifier of the failure type.
++
++      en:
++          description: An accelerator has been detected in a failure state.
++          message: The accelerator '{Source}' is in a failure state.
++
++    - name: AcceleratorCritical
++      severity: critical
++      errno: EIO
++
++      metadata:
++          - name: Source
++            type: object_path
++            primary: true
++            description: >
++                The inventory object associated with the accelerator.
++
++          - name: FailureType
++            type: string
++            description: >
++                An [optional] identifier of the failure type.
++
++      en:
++          description:
++              An accelerator has been detected in a critical failure state.
++          message: The accelerator '{Source}' is in a critical failure state.
++
++events:
++    - name: AcceleratorRestored
++
++      metadata:
++          - name: Source
++            type: object_path
++            primary: true
++            description: >
++                The inventory object associated with the accelerator.
++
++      en:
++          description: The accelerator status has been restored.
++          message: The accelerator '{Source}' has been restored.
+-- 
+2.43.0
+

@@ -7,7 +7,7 @@ namespace redfish_client::component_config {
 inline void registerCommonOpenBmcMappers() {
     auto& registry = core::LogEntryMapperRegistry::instance();
 
-    registry.registerMapper(std::make_unique<core::OpenBmcMapper>(), 100);
+    registry.registerMapper(std::make_unique<core::OpenBmcMapper>(), 102);
 }
 
 } // namespace redfish_client::component_config

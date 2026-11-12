@@ -1,0 +1,42 @@
+From 2091d593777f67d0bd4f285cbb609d2b59920bfa Mon Sep 17 00:00:00 2001
+From: Abhijeet Singh <abhijeet.singh@amd.com>
+Date: Sun, 18 Oct 2026 14:38:36 +0000
+Subject: [PATCH] State: SMC: add critical event
+
+---
+ .../xyz/openbmc_project/State/SMC.events.yaml | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/yaml/xyz/openbmc_project/State/SMC.events.yaml b/yaml/xyz/openbmc_project/State/SMC.events.yaml
+index 64155aa3..28f3fcb4 100644
+--- a/yaml/xyz/openbmc_project/State/SMC.events.yaml
++++ b/yaml/xyz/openbmc_project/State/SMC.events.yaml
+@@ -20,6 +20,25 @@ errors:
+               state.
+       errno: EHOSTUNREACH
+ 
++    - name: SMCCritical
++      severity: critical
++      metadata:
++          - name: Identifier
++            type: object_path
++            primary: true
++            description: The name or identifier of the SMC.
++          - name: FailureType
++            type: string
++            description: An [optional] identifier of the failure type.
++      en:
++          description:
++              A Satellite Management Controller (SMC) has been detected in
++              critical state.
++          message:
++              The Satellite Management Controller '{Identifier}' is in a critical
++              state.
++      errno: EHOSTUNREACH
++
+ events:
+     - name: SMCRestored
+       metadata:
+-- 
+2.43.0
+

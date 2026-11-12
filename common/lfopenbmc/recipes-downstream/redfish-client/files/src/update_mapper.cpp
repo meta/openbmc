@@ -4,6 +4,9 @@
 #include <phosphor-logging/lg2.hpp>
 #include <sdbusplus/message.hpp>
 #include <xyz/openbmc_project/Software/Update/event.hpp>
+#include <redfish_client/core/log_entry_mapper_utils.hpp>
+#include <xyz/openbmc_project/Logging/Extension/CPER/Processed/common.hpp>
+
 
 #include <optional>
 #include <string>
@@ -115,48 +118,76 @@ void UpdateMapper::map(redfish_binding::LogEntry::LogEntry& entry)
     auto& maybeArgs = entry.getMessageArgs();
     const MsgArgs& args = maybeArgs.hasValue() ? maybeArgs.value() : kNoArgs;
 
+    auto oemData = extractOemData(entry);
+    std::optional<sdbusplus::common::xyz::openbmc_project::logging::extension::cper::Processed::properties_t> maybeCper;
+
+    if (oemData.has_value())
+    {
+        using CPERProcessed = sdbusplus::common::xyz::openbmc_project::logging::extension::cper::Processed;
+        using CPERTypes = sdbusplus::common::xyz::openbmc_project::logging::cper::Types;
+
+        CPERProcessed::properties_t cper{};
+        cper.diagnostic_data_type = CPERTypes::ContentType::CPER;
+        cper.oem = {
+            {oemData->vendor , oemData->jsonData},
+        };
+        maybeCper = std::move(cper);
+    }
+
+    auto commitWithOem = [&maybeCper](auto&& error)
+    {
+        if (maybeCper.has_value())
+        {
+            lg2::commit(std::move(error).extend(*maybeCper));
+        }
+        else
+        {
+            lg2::commit(std::move(error));
+        }
+    };
+
     if (suffix == "VerificationFailed")
     {
-        lg2::commit(makeImageTarget<UpdateError::VerificationFailed>(args));
+        commitWithOem(makeImageTarget<UpdateError::VerificationFailed>(args));
     }
     else if (suffix == "ActivateFailed")
     {
-        lg2::commit(makeImageTarget<UpdateError::ActivateFailed>(args));
+        commitWithOem(makeImageTarget<UpdateError::ActivateFailed>(args));
     }
     else if (suffix == "TransferFailed")
     {
-        lg2::commit(makeImageTarget<UpdateError::TransferFailed>(args));
+        commitWithOem(makeImageTarget<UpdateError::TransferFailed>(args));
     }
     else if (suffix == "UpdateNotApplicable")
     {
-        lg2::commit(makeImageTarget<UpdateError::UpdateNotApplicable>(args));
+        commitWithOem(makeImageTarget<UpdateError::UpdateNotApplicable>(args));
     }
     else if (suffix == "InstallingOnComponent")
     {
-        lg2::commit(makeImageTarget<UpdateEvent::InstallingOnComponent>(args));
+        commitWithOem(makeImageTarget<UpdateEvent::InstallingOnComponent>(args));
     }
     else if (suffix == "TransferringToComponent")
     {
-        lg2::commit(
+        commitWithOem(
             makeImageTarget<UpdateEvent::TransferringToComponent>(args));
     }
     else if (suffix == "VerifyingAtComponent")
     {
-        lg2::commit(makeImageTarget<UpdateEvent::VerifyingAtComponent>(args));
+        commitWithOem(makeImageTarget<UpdateEvent::VerifyingAtComponent>(args));
     }
     else if (suffix == "TargetDetermined")
     {
-        lg2::commit(makeTargetImage<UpdateEvent::TargetDetermined>(args));
+        commitWithOem(makeTargetImage<UpdateEvent::TargetDetermined>(args));
     }
     else if (suffix == "UpdateSuccessful")
     {
-        lg2::commit(makeTargetImage<UpdateEvent::UpdateSuccessful>(args));
+        commitWithOem(makeTargetImage<UpdateEvent::UpdateSuccessful>(args));
     }
     else if (suffix == "ResetRequired")
     {
         if (auto event = makeResetRequired(args))
         {
-            lg2::commit(std::move(*event));
+            commitWithOem(std::move(*event));
         }
         else
         {

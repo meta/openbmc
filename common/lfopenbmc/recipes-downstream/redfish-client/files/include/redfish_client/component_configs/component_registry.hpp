@@ -5,7 +5,11 @@
 #include <redfish_client/component_configs/hgx_thermal.hpp>
 #include <redfish_client/component_configs/hgx_leak_detector.hpp>
 #include <redfish_client/component_configs/sensor_threshold.hpp>
+#include <redfish_client/component_configs/instinct_cper.hpp>
 #include <redfish_client/component_configs/instinct_gpu.hpp>
+#include <redfish_client/component_configs/instinct_amc.hpp>
+#include <redfish_client/component_configs/instinct_thermal.hpp>
+#include <redfish_client/component_configs/instinct_power_supply.hpp>
 #include <redfish_client/component_configs/common_openbmc.hpp>
 #include <redfish_client/component_configs/common_update.hpp>
 #include <redfish_client/component_configs/common_environmental.hpp>
@@ -45,9 +49,25 @@ inline void registerComponent(const std::string& componentName,
     {
         registerSensorThresholdMappers(config.sensorConfig);
     }
+    else if (componentName == "instinct_cper")
+    {
+        registerInstinctCperMappers(ctx, host);
+    }
     else if (componentName == "instinct_gpu")
     {
-        registerInstinctGpuMappers(ctx, host);
+        registerInstinctGpuMappers(config.sensorConfig);
+    }
+    else if (componentName == "instinct_amc")
+    {
+        registerInstinctAmcMappers(config.sensorConfig);
+    }
+    else if (componentName == "instinct_thermal")
+    {
+        registerInstinctThermalMappers();
+    }
+    else if (componentName == "instinct_power_supply")
+    {
+        registerInstinctPowerSupplyMappers();
     }
     else if (componentName == "common_openbmc")
     {

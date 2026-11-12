@@ -4,6 +4,7 @@
 #include <redfish_client/core/unhandled_mapper.hpp>
 #include <redfish_client/core/cper_mapper.hpp>
 #include <redfish_client/core/instinct_cper_mapper.hpp>
+#include <redfish_client/core/instinct_amc_mapper.hpp>
 #include <redfish_client/core/hgx_ps_run_pwr_fault_mapper.hpp>
 #include <redfish_client/core/hgx_thermal_mapper.hpp>
 #include <redfish_client/core/hgx_leak_detector_mapper.hpp>

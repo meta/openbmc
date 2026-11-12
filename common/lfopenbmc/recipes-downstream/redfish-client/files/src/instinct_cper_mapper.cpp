@@ -7,7 +7,7 @@
 #include <xyz/openbmc_project/Logging/Extension/CPER/Processed/common.hpp>
 #include <xyz/openbmc_project/Logging/Extension/CPER/Raw/common.hpp>
 #include <xyz/openbmc_project/State/CPER/event.hpp>
-
+#include "redfish-binding/LogEntry_EventSeverity.hpp"
 #include "redfish-binding/LogEntry_LogDiagnosticDataTypes.hpp"
 
 namespace redfish_client::core
@@ -15,6 +15,7 @@ namespace redfish_client::core
 
 namespace
 {
+using EventSeverity = redfish_binding::LogEntry::EventSeverity;
 namespace CPER = sdbusplus::error::xyz::openbmc_project::state::CPER;
 namespace CPERExtension =
     sdbusplus::common::xyz::openbmc_project::logging::extension::cper;
@@ -279,6 +280,10 @@ void InstinctCperMapper::map(redfish_binding::LogEntry::LogEntry& entry)
         data.additionalDataURI = maybeURI.value();
     }
 
+    data.severity = entry.getSeverity().hasValue()
+                        ? entry.getSeverity().value()
+                        : EventSeverity::Critical;
+
     // Hand off all processing and committing to async task
     ctx.spawn(commitCPER(ctx, std::move(data)));
 }
@@ -352,18 +357,30 @@ auto InstinctCperMapper::commitCPER(sdbusplus::async::context& ctx,
     }
 
     // Build and extend CPER event
-    auto cperEvent = CPER::GenericCPERFault("SOURCE", data.source, "CPER", "");
-    cperEvent.extend(cperProperties);
-
-    // Attach raw binary if successfully fetched
-    if (maybeBinary.has_value())
+    auto commitEvent = [&](auto&& cperEvent)
     {
-        CPERExtension::Raw::properties_t rawProperties{};
-        rawProperties.data = std::move(maybeBinary.value());
-        cperEvent.extend(rawProperties);
-    }
+        cperEvent.extend(cperProperties);
 
-    auto eventId = lg2::commit(std::move(cperEvent));
+        if (maybeBinary.has_value())
+        {
+            CPERExtension::Raw::properties_t rawProperties{};
+            rawProperties.data = std::move(maybeBinary.value());
+            cperEvent.extend(rawProperties);
+        }
+
+        return lg2::commit(std::move(cperEvent));
+    };
+
+    if (data.severity == EventSeverity::Critical)
+    {
+        commitEvent(CPER::GenericCPERFault(
+            "SOURCE", data.source, "CPER", ""));
+    }
+    else
+    {
+        commitEvent(CPER::GenericCPERWarning(
+            "SOURCE", data.source, "CPER", ""));
+    }
     co_return;
 }
 

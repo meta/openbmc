@@ -1,7 +1,7 @@
 {
   "host": "192.168.31.1",
   "compatible": "com.meta.Hardware.BMC.Model.Anacapa",
-  "components": ["sensor_threshold", "instinct_gpu", "common_openbmc", "common_update", "common_environmental"],
+  "components": ["sensor_threshold", "instinct_cper", "instinct_gpu", "instinct_amc", "instinct_thermal", "instinct_power_supply", "common_openbmc", "common_update", "common_environmental"],
   "logServiceConfig": {
     "urls": [
       "/redfish/v1/Systems/Accelerators/LogServices/EventLog/Entries"

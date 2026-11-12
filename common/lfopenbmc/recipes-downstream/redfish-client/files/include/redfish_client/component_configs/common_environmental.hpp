@@ -7,7 +7,7 @@ namespace redfish_client::component_config {
 inline void registerCommonEnvironmentalMappers() {
     auto& registry = core::LogEntryMapperRegistry::instance();
 
-    registry.registerMapper(std::make_unique<core::EnvironmentalMapper>(), 98);
+    registry.registerMapper(std::make_unique<core::EnvironmentalMapper>(), 105);
 }
 
 } // namespace redfish_client::component_config

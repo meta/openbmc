@@ -5,6 +5,7 @@
 #include <sdbusplus/async/context.hpp>
 #include <sdbusplus/async/task.hpp>
 #include <xyz/openbmc_project/Logging/CPER/Types/common.hpp>
+#include "redfish-binding/LogEntry_EventSeverity.hpp"
 
 namespace redfish_client::core {
 
@@ -37,6 +38,7 @@ private:
       std::string vendor;
       std::string oemData;
       std::string additionalDataURI;
+      redfish_binding::LogEntry::EventSeverity severity;
   };
 
   static auto commitCPER(

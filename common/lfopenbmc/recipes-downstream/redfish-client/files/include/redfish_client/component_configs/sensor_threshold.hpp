@@ -14,7 +14,7 @@ inline void registerSensorThresholdMappers(
 
     registry.registerMapper(
         std::make_unique<core::SensorThresholdMapper>(sensorConfig->mappers),
-        106);
+        103);
 }
 
 } // namespace redfish_client::component_config

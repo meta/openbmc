@@ -1,0 +1,182 @@
+From 588c6f3d8f2f25e321ca82cc8972591677040b00 Mon Sep 17 00:00:00 2001
+From: Carter Chen <carter.chen.wiwynn@gmail.com>
+Date: Tue, 6 Oct 2026 11:20:30 +0000
+Subject: [PATCH] arm64: dts: aspeed: yosemite5a7: add CXL BD on J32 and MCTP
+ on MCIO 2A
+
+- Add CXL BD (Cedar Falls / Ruby Falls) mux and devices under PWRPIC J32
+- Rename PWRPIC mux and channel comments to connector names
+  (J32/J40/J35/J38)
+- Enable MCTP on MCIO 2A I2C (i2c14)
+
+Upstream-Status: Inappropriate [modifies downstream-only aspeed-bmc-facebook-yosemite5a7.dts created by 1000-Arm64-aspeed-dts-add-yosemite5-dts.patch]
+Signed-off-by: Carter Chen <carter.chen.wiwynn@gmail.com>
+---
+ .../aspeed-bmc-facebook-yosemite5a7.dts       | 107 +++++++++++++++++-
+ 1 file changed, 102 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-yosemite5a7.dts b/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-yosemite5a7.dts
+index d6f874933313..dbb9a9733f0f 100644
+--- a/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-yosemite5a7.dts
++++ b/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-yosemite5a7.dts
+@@ -89,6 +89,10 @@ aliases {
+ 		i2c69 = &i2c8mux1ch5;
+ 		i2c70 = &i2c8mux1ch6;
+ 		i2c71 = &i2c8mux1ch7;
++		i2c72 = &i2c28mux0ch0;
++		i2c73 = &i2c28mux0ch1;
++		i2c74 = &i2c28mux0ch2;
++		i2c75 = &i2c28mux0ch3;
+ 	};
+ 
+ 	chosen {
+@@ -682,7 +686,7 @@ channel@2 {
+ 		};
+ 	};
+ 
+-	/* I2C MUX for PWRPIC #1, #2, #11, #12 */
++	/* I2C MUX for PWRPIC J32, J40, J35, J38 */
+ 	i2c-mux@77 {
+ 		compatible = "nxp,pca9546";
+ 		reg = <0x77>;
+@@ -690,14 +694,99 @@ i2c-mux@77 {
+ 		#size-cells = <0>;
+ 		i2c-mux-idle-disconnect;
+ 
+-		/* PWRPIC #1 */
++		/* PWRPIC J32 for CXL BD (Cedar Falls and Ruby Falls) */
+ 		i2c8mux0ch0: i2c@0 {
+ 			reg = <0>;
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
++
++			i2c-mux@70 {
++				compatible = "nxp,pca9546";
++				reg = <0x70>;
++				#address-cells = <1>;
++				#size-cells = <0>;
++				i2c-mux-idle-disconnect;
++
++				i2c28mux0ch0: i2c@0 {
++					reg = <0>;
++					#address-cells = <1>;
++					#size-cells = <0>;
++				};
++
++				i2c28mux0ch1: i2c@1 {
++					reg = <1>;
++					#address-cells = <1>;
++					#size-cells = <0>;
++				};
++
++				i2c28mux0ch2: i2c@2 {
++					reg = <2>;
++					#address-cells = <1>;
++					#size-cells = <0>;
++
++					adc@1e {
++						compatible = "ti,adc128d818";
++						reg = <0x1e>;
++						ti,mode = /bits/ 8 <1>;
++					};
++
++					adc@1f {
++						compatible = "ti,adc128d818";
++						reg = <0x1f>;
++						ti,mode = /bits/ 8 <1>;
++					};
++
++					/* CXL BD IOEXP */
++					gpio-expander@27 {
++						compatible = "nxp,pca9535";
++						reg = <0x27>;
++						interrupt-parent = <&sgpiom0>;
++						interrupts = <228 IRQ_TYPE_LEVEL_LOW>;
++						gpio-controller;
++						#gpio-cells = <2>;
++						gpio-line-names =
++						"IRQ_TEMP_0_ALERT_N","IRQ_TEMP_1_ALERT_N",
++						"ALERT_PMBUS_0_N","ALERT_PMBUS_1_N",
++						"ALERT_PMBUS_2_N","IRQ_INA230_12V_ALERT_N",
++						"RST_IOX_CXL_N","DEBUG_UART_SEL_0",
++						"DEBUG_UART_SEL_1","BMC_REMOTEJTAG_EN_N",
++						"JTAG_BMC_3V3_CTL_CLR_N","DDR_CH02_I2C_MUX_SEL",
++						"DDR_CH13_I2C_MUX_SEL","SYS_OK",
++						"CXL_VRHOT_ALERT_R1_N","BOOT_READY";
++					};
++
++					temperature-sensor@4a {
++						compatible = "ti,tmp75";
++						reg = <0x4a>;
++					};
++
++					power-sensor@4d {
++						compatible = "ti,ina230";
++						reg = <0x4d>;
++						shunt-resistor = <2000>;
++					};
++
++					temperature-sensor@4e {
++						compatible = "ti,tmp75";
++						reg = <0x4e>;
++					};
++
++					/* CXL FRU */
++					eeprom@50 {
++						compatible = "atmel,24c64";
++						reg = <0x50>;
++					};
++				};
++
++				i2c28mux0ch3: i2c@3 {
++					reg = <3>;
++					#address-cells = <1>;
++					#size-cells = <0>;
++				};
++			};
+ 		};
+ 
+-		/* PWRPIC #2 */
++		/* PWRPIC J40 */
+ 		i2c8mux0ch1: i2c@1 {
+ 			reg = <1>;
+ 			#address-cells = <1>;
+@@ -983,7 +1072,7 @@ i2c8mux1ch7: i2c@7 {
+ 			};
+ 		};
+ 
+-		/* PWRPIC #12 (Connector to CXL BD) */
++		/* PWRPIC J35 for CXL BD (Maple Falls and Victoria Falls) */
+ 		i2c8mux0ch2: i2c@2 {
+ 			reg = <2>;
+ 			#address-cells = <1>;
+@@ -1075,7 +1164,7 @@ i2c30mux0ch3: i2c@3 {
+ 			};
+ 		};
+ 
+-		/* PWRPIC #11 */
++		/* PWRPIC J38 */
+ 		i2c8mux0ch3: i2c@3 {
+ 			#address-cells = <1>;
+ 			#size-cells = <0>;
+@@ -1836,9 +1925,17 @@ &i2c13 {
+ 
+ /* MCIO 2A I2C */
+ &i2c14 {
++	multi-master;
++	i2c-scl-clk-low-timeout-us = <31744>;
++	mctp-controller;
+ 	status = "okay";
+ 	pinctrl-0 = <&pinctrl_di2c14_default>;
+ 
++	mctp@10 {
++		compatible = "mctp-i2c-controller";
++		reg = <(0x10 | I2C_OWN_SLAVE_ADDRESS)>;
++	};
++
+ 	/* RIO GRANDE IOEXP2 U263 */
+ 	rio_io_expander2: gpio-expander@26 {
+ 		compatible = "nxp,pca9506";
+-- 
+2.43.0
+

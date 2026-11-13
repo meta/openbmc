@@ -1,0 +1,61 @@
+From e76ab6b9cea51c5a7cf0242438563f25b7edd772 Mon Sep 17 00:00:00 2001
+From: Tomer Maimon <tmaimon77@gmail.com>
+Date: Tue, 16 Apr 2024 21:12:58 +0300
+Subject: [PATCH] usb: chipidea: udc: enforce write to the memory.
+
+During prime endpoint function we need to read from qh.ptr->td.token
+to make sure the previous write to it indeed got into the memory.
+
+This change was pushed upstream and under reviewing:
+https://lore.kernel.org/all/20240710124157.2106609-1-tmaimon77@gmail.com/
+
+Signed-off-by: Tomer Maimon <tmaimon77@gmail.com>
+---
+ drivers/usb/chipidea/udc.c | 12 +++++++++---
+ 1 file changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/usb/chipidea/udc.c b/drivers/usb/chipidea/udc.c
+index 0b7bd3c643c3..6e5bba9b0043 100644
+--- a/drivers/usb/chipidea/udc.c
++++ b/drivers/usb/chipidea/udc.c
+@@ -190,12 +190,18 @@ static int hw_ep_get_halt(struct ci_hdrc *ci, int num, int dir)
+  *
+  * This function returns an error code
+  */
+-static int hw_ep_prime(struct ci_hdrc *ci, int num, int dir, int is_ctrl)
++static int hw_ep_prime(struct ci_hdrc *ci, struct ci_hw_ep *hwep, int num, int dir, int is_ctrl)
+ {
+ 	int n = hw_ep_bit(num, dir);
+ 
+ 	/* Synchronize before ep prime */
+ 	wmb();
++	
++	/* We add the read from qh.ptr->td.token to make sure the previous
++	   write to it indeed got into the mamory so when we prime the DMA
++	   will read the updated data */
++	if (hwep->qh.ptr->td.token & 0x80000000)
++		pr_info("%s(): hwep->qh.ptr->td.token=%08x\n", __func__, hwep->qh.ptr->td.token);
+ 
+ 	if (is_ctrl && dir == RX && hw_read(ci, OP_ENDPTSETUPSTAT, BIT(num)))
+ 		return -EAGAIN;
+@@ -632,7 +638,7 @@ static int _hardware_enqueue(struct ci_hw_ep *hwep, struct ci_hw_req *hwreq)
+ 		hwep->qh.ptr->cap |= cpu_to_le32(mul << __ffs(QH_MULT));
+ 	}
+ 
+-	ret = hw_ep_prime(ci, hwep->num, hwep->dir,
++	ret = hw_ep_prime(ci, hwep, hwep->num, hwep->dir,
+ 			   hwep->type == USB_ENDPOINT_XFER_CONTROL);
+ done:
+ 	return ret;
+@@ -658,7 +664,7 @@ static int reprime_dtd(struct ci_hdrc *ci, struct ci_hw_ep *hwep,
+ 	hwep->qh.ptr->td.token &=
+ 		cpu_to_le32(~(TD_STATUS_HALTED | TD_STATUS_ACTIVE));
+ 
+-	return hw_ep_prime(ci, hwep->num, hwep->dir,
++	return hw_ep_prime(ci, hwep, hwep->num, hwep->dir,
+ 				hwep->type == USB_ENDPOINT_XFER_CONTROL);
+ }
+ 
+-- 
+2.34.1
+

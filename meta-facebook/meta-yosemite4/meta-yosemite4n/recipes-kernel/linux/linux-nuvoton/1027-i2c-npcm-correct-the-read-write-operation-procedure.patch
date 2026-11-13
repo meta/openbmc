@@ -1,0 +1,44 @@
+From 116f523d04855d1fb2c86a6c616e978757d812ed Mon Sep 17 00:00:00 2001
+From: Tyrone Ting <kfting@nuvoton.com>
+Date: Mon, 9 May 2022 18:06:33 +0800
+Subject: [PATCH 6/6] i2c: npcm: correct the read/write operation procedure
+
+Originally the driver uses the XMIT bit in SMBnST register to decide
+the upcoming i2c transaction. If XMIT bit is 1, then it will be an i2c
+write operation. If it's 0, then a read operation will be executed.
+
+After checking the datasheet, the XMIT bit is valid when the i2c module
+is acting in a slave role. Use the software status to control the i2c
+transaction flow instead when the i2c module is acting in a master role.
+
+This change was pushed upstream and under reviewing:
+https://lore.kernel.org/all/20240913101445.16513-2-kfting@nuvoton.com/
+
+Signed-off-by: Tyrone Ting <kfting@nuvoton.com>
+---
+ drivers/i2c/busses/i2c-npcm7xx.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/i2c/busses/i2c-npcm7xx.c b/drivers/i2c/busses/i2c-npcm7xx.c
+index c39d1717c132..6e649dc6c99e 100644
+--- a/drivers/i2c/busses/i2c-npcm7xx.c
++++ b/drivers/i2c/busses/i2c-npcm7xx.c
+@@ -1747,13 +1747,10 @@ static void npcm_i2c_irq_handle_sda(struct npcm_i2c *bus, u8 i2cst)
+ 			npcm_i2c_wr_byte(bus, bus->dest_addr | BIT(0));
+ 	/* SDA interrupt, after start\restart */
+ 	} else {
+-		if (NPCM_I2CST_XMIT & i2cst) {
+-			bus->operation = I2C_WRITE_OPER;
++		if (bus->operation == I2C_WRITE_OPER)
+ 			npcm_i2c_irq_master_handler_write(bus);
+-		} else {
+-			bus->operation = I2C_READ_OPER;
++		else if (bus->operation == I2C_READ_OPER)
+ 			npcm_i2c_irq_master_handler_read(bus);
+-		}
+ 	}
+ }
+ 
+-- 
+2.34.1
+

@@ -1,0 +1,47 @@
+From 146caa101dd8978b5a99de1edaf0fe5fdb56f257 Mon Sep 17 00:00:00 2001
+From: Tomer Maimon <tmaimon77@gmail.com>
+Date: Tue, 21 Mar 2023 10:25:17 +0200
+Subject: [PATCH] iio: adc: npcm: cover more module reset cases
+
+Incase the wait_event_interruptible_timeout functio failed and ADC still
+converting the driver should stop converting by reset the module.
+
+We will push this change upstream for reviewing soon.
+
+Signed-off-by: Tomer Maimon <tmaimon77@gmail.com>
+---
+ drivers/iio/adc/npcm_adc.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/iio/adc/npcm_adc.c b/drivers/iio/adc/npcm_adc.c
+index 4628b314b740..a2bd1a619c95 100644
+--- a/drivers/iio/adc/npcm_adc.c
++++ b/drivers/iio/adc/npcm_adc.c
+@@ -285,7 +285,7 @@ static int npcm_adc_read(struct npcm_adc *info, int *val, u8 channel)
+ 
+ 	ret = wait_event_interruptible_timeout(info->wq, info->int_status,
+ 					       msecs_to_jiffies(10));
+-	if (ret == 0) {
++	if (ret <= 0) {
+ 		regtemp = ioread32(info->regs + NPCM_ADCCON);
+ 		if (regtemp & NPCM_ADCCON_ADC_CONV) {
+ 			/* if conversion failed - reset ADC module */
+@@ -299,10 +299,12 @@ static int npcm_adc_read(struct npcm_adc *info, int *val, u8 channel)
+ 				  info->regs + NPCM_ADCCON);
+ 			dev_err(info->dev, "RESET ADC Complete\n");
+ 		}
+-		return -ETIMEDOUT;
+-	}
+-	if (ret < 0)
++
++		if (ret == 0)
++			return -ETIMEDOUT;
++
+ 		return ret;
++	}
+ 
+ 	*val = ioread32(info->regs + NPCM_ADCDATA);
+ 	*val &= info->data->data_mask;
+-- 
+2.34.1
+

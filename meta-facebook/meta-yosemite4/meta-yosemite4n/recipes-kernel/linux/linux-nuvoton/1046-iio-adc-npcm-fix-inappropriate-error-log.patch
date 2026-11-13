@@ -1,0 +1,32 @@
+From 9163d60d9419379120a29b50990e5dc226c0cc8f Mon Sep 17 00:00:00 2001
+From: Stanley Chu <yschu@nuvoton.com>
+Date: Tue, 25 Oct 2022 14:31:01 +0800
+Subject: [PATCH] iio: adc: npcm: fix inappropriate error log
+
+npcm_adc_read may return -ERESTARTSYS (interrupted by a signal),
+don't print error log since this is not an error condition.
+
+We will push this change upstream for reviewing soon.
+
+Signed-off-by: Stanley Chu <yschu@nuvoton.com>
+---
+ drivers/iio/adc/npcm_adc.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/iio/adc/npcm_adc.c b/drivers/iio/adc/npcm_adc.c
+index 7f203cf9cdff..ec723eb772f3 100644
+--- a/drivers/iio/adc/npcm_adc.c
++++ b/drivers/iio/adc/npcm_adc.c
+@@ -347,7 +347,8 @@ static int npcm_adc_read_raw(struct iio_dev *indio_dev,
+ 		ret = npcm_adc_read(info, val, chan->channel);
+ 		mutex_unlock(&info->lock);
+ 		if (ret) {
+-			dev_err(info->dev, "NPCM ADC read failed\n");
++			if (ret != -ERESTARTSYS)
++				dev_err(info->dev, "NPCM ADC read failed\n");
+ 			return ret;
+ 		}
+ 
+-- 
+2.34.1
+

@@ -15,9 +15,7 @@
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 
-obj-m := pwrcpld.o
-
-ccflags-y += -I$(KERNEL_EXTRA_HEADER_PATH)
+obj-m := nh_fpga_reg.o
 
 SRC := $(shell pwd)
 

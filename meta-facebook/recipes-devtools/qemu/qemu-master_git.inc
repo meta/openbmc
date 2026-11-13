@@ -208,6 +208,40 @@ SRC_URI:append = " \
            file://slirp-0001-bootp-honour-static-DHCP-leases.patch;patchdir=subprojects/slirp \
            "
 
+SRC_URI += " \
+           file://0601-hw-sensor-adc128d818-add-12-bit-8-channel-ADC-device.patch \
+           file://0602-tests-qtest-adc128d818-add-test-harness-and-register.patch \
+           file://0603-tests-qtest-adc128d818-test-voltage-and-temperature-.patch \
+           file://0604-tests-qtest-adc128d818-test-limit-interrupts.patch \
+           file://0605-tests-qtest-adc128d818-test-operating-modes-and-powe.patch \
+           file://0606-hw-arm-aspeed-anacapa-use-ASCII-in-comments.patch \
+           file://0607-hw-gpio-pca9552-register-types-with-DEFINE_TYPES.patch \
+           file://0608-hw-gpio-pca9552-move-PCA955xState-definition-out-of-.patch \
+           file://0609-hw-gpio-pca9552-rename-I2CSlave-member-to-parent_obj.patch \
+           file://0610-hw-gpio-pca9552-default-description-to-the-instantia.patch \
+           file://0611-hw-gpio-pca9552-declare-pca9555-device-as-an-alias-o.patch \
+           file://0612-hw-gpio-pca9552-use-the-Resettable-interface-instead.patch \
+           file://0613-hw-gpio-pca9552-apply-input-polarity-inversion-on-re.patch \
+           file://0614-hw-gpio-pca9552-conform-GPIO-command-handling-to-the.patch \
+           file://0615-hw-gpio-pca9552-expose-GPIO-pins-as-pin-d-QOM-proper.patch \
+           file://0616-tests-qtest-add-PCA9555-register-access-tests.patch \
+           file://0617-tests-qtest-pca9555-test-output-to-input-reflection-.patch \
+           file://0618-tests-qtest-pca9555-test-polarity-inversion.patch \
+           file://0619-tests-qtest-pca9555-test-auto-increment-and-command-.patch \
+           file://0620-tests-qtest-pca9552-test-behaviour-specific-to-the-L.patch \
+           file://0621-hw-gpio-pca9554-add-PCA9536-support.patch \
+           file://0622-hw-gpio-pca9554-add-hw-dir-property-honoring-the-con.patch \
+           file://0623-hw-gpio-pca9554-reflect-push-pull-outputs-in-the-inp.patch \
+           file://0624-hw-gpio-pca9554-expose-pin-d-as-a-string-property.patch \
+           file://0625-tests-qtest-add-PCA9554-register-access-tests.patch \
+           file://0626-tests-qtest-pca9554-test-output-to-input-reflection-.patch \
+           file://0627-tests-qtest-pca9554-test-polarity-inversion.patch \
+           file://0628-tests-qtest-pca9554-test-absence-of-command-auto-inc.patch \
+           file://0629-tests-qtest-pca9554-test-the-PCA9536-4-bit-variant.patch \
+           file://0630-hw-arm-catalina-model-PCA9555-IO-expanders-with-thei.patch \
+           file://0631-hw-arm-catalina-add-NIC-and-FIO-temperature-sensors.patch \
+           "
+
 QEMU_CHECKOUT_DIR = "${BPN}-${PV}"
 QEMU_CHECKOUT_DIR:openbmc-fb-dunfell = "git"
 QEMU_CHECKOUT_DIR:openbmc-fb-kirkstone = "git"

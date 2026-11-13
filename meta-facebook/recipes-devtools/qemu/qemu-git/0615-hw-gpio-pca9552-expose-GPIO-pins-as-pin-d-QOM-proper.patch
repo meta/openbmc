@@ -1,0 +1,155 @@
+From 1692491456996b7bcf69c2820c7ac35798f59df7 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 9 Jul 2026 17:23:47 +0200
+Subject: [PATCH 615/631] hw/gpio: pca9552: expose GPIO pins as pin%d QOM
+ properties
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The PCA9552 exposes its LED channels as led%d QOM string properties, but
+the GPIO variants (PCA9535/PCA9555) inherited the same led%d interface,
+which drives the LED selector registers and is meaningless for a plain
+I/O expander.
+
+Add pin%d string properties ("low"/"high") for the GPIO variants,
+mirroring the standalone pca9555 model:
+
+  - reading returns the raw pin logic level from the INPUT register;
+  - writing drives the external input level, but only for pins the guest
+    has configured as inputs (writes to output pins are ignored with a
+    LOG_UNIMP message).
+
+The LED variant keeps its led%d properties.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
+Link: https://lore.kernel.org/qemu-devel/20260709-catalina-upgrade-v1-9-814575bc076b@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ hw/gpio/pca9552.c | 91 ++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 86 insertions(+), 5 deletions(-)
+
+diff --git a/hw/gpio/pca9552.c b/hw/gpio/pca9552.c
+index 54a5945d925..719149b7174 100644
+--- a/hw/gpio/pca9552.c
++++ b/hw/gpio/pca9552.c
+@@ -68,6 +68,7 @@ struct PCA955xClass {
+ #define PCA9552_PIN_HIZ  0x1
+ 
+ static const char *led_state[] = {"on", "off", "pwm0", "pwm1"};
++static const char *pin_state[] = {"low", "high"};
+ 
+ static uint8_t pca955x_pin_get_config(PCA955xState *s, int pin)
+ {
+@@ -428,6 +429,79 @@ static void pca955x_set_led(Object *obj, Visitor *v, const char *name,
+     pca955x_write(s, reg, val);
+ }
+ 
++static void pca955x_set_ext_state(PCA955xState *s, int pin, int level);
++
++static void pca955x_get_pin(Object *obj, Visitor *v, const char *name,
++                            void *opaque, Error **errp)
++{
++    PCA955xClass *k = PCA955X_GET_CLASS(obj);
++    PCA955xState *s = PCA955X(obj);
++    int pin, rc;
++    uint8_t input_reg, state;
++
++    rc = sscanf(name, "pin%2d", &pin);
++    if (rc != 1) {
++        error_setg(errp, "%s: error reading %s", __func__, name);
++        return;
++    }
++    if (pin < 0 || pin >= k->pin_count) {
++        error_setg(errp, "%s invalid pin %s", __func__, name);
++        return;
++    }
++
++    /*
++     * Report the raw pin logic level; polarity inversion is a read-time
++     * transform applied to the INPUT register, not to the pin state itself.
++     */
++    input_reg = PCA9535_INPUT0 + (pin / 8);
++    state = (s->regs[input_reg] >> (pin % 8)) & 0x1;
++    visit_type_str(v, name, (char **)&pin_state[state], errp);
++}
++
++static void pca955x_set_pin(Object *obj, Visitor *v, const char *name,
++                            void *opaque, Error **errp)
++{
++    PCA955xClass *k = PCA955X_GET_CLASS(obj);
++    PCA955xState *s = PCA955X(obj);
++    int pin, rc;
++    uint8_t state, config_reg;
++    g_autofree char *state_str = NULL;
++
++    if (!visit_type_str(v, name, &state_str, errp)) {
++        return;
++    }
++    rc = sscanf(name, "pin%2d", &pin);
++    if (rc != 1) {
++        error_setg(errp, "%s: error reading %s", __func__, name);
++        return;
++    }
++    if (pin < 0 || pin >= k->pin_count) {
++        error_setg(errp, "%s invalid pin %s", __func__, name);
++        return;
++    }
++
++    for (state = 0; state < ARRAY_SIZE(pin_state); state++) {
++        if (!strcmp(state_str, pin_state[state])) {
++            break;
++        }
++    }
++    if (state >= ARRAY_SIZE(pin_state)) {
++        error_setg(errp, "%s invalid pin state %s", __func__, state_str);
++        return;
++    }
++
++    /* Only input-configured pins can be driven by an external device. */
++    config_reg = PCA9535_CONFIG0 + (pin / 8);
++    if (!((s->regs[config_reg] >> (pin % 8)) & 0x1)) {
++        qemu_log_mask(LOG_UNIMP,
++                      "%s: pin %d is configured as output, ignoring set\n",
++                      s->description, pin);
++        return;
++    }
++
++    pca955x_set_ext_state(s, pin, state != PCA9552_PIN_LOW);
++}
++
+ static const VMStateDescription pca9552_vmstate = {
+     .name = "PCA9552",
+     .version_id = 0,
+@@ -485,15 +559,22 @@ static void pca9535_reset_hold(Object *obj, ResetType type)
+ static void pca955x_initfn(Object *obj)
+ {
+     PCA955xClass *k = PCA955X_GET_CLASS(obj);
+-    int led;
+ 
+     assert(k->pin_count <= PCA955X_PIN_COUNT_MAX);
+-    for (led = 0; led < k->pin_count; led++) {
++    for (int ix = 0; ix < k->pin_count; ix++) {
+         char *name;
+ 
+-        name = g_strdup_printf("led%d", led);
+-        object_property_add(obj, name, "bool", pca955x_get_led, pca955x_set_led,
+-                            NULL, NULL);
++        if (k->has_led_support) {
++            /* LED variant: expose the LED selector state as led%d. */
++            name = g_strdup_printf("led%d", ix);
++            object_property_add(obj, name, "bool",
++                                pca955x_get_led, pca955x_set_led, NULL, NULL);
++        } else {
++            /* GPIO variant: expose the pin logic level as pin%d. */
++            name = g_strdup_printf("pin%d", ix);
++            object_property_add(obj, name, "str",
++                                pca955x_get_pin, pca955x_set_pin, NULL, NULL);
++        }
+         g_free(name);
+     }
+ }
+-- 
+2.50.1
+

@@ -1,0 +1,44 @@
+From ab006d6cf676b66236d3e69b9ab3a4a237b94329 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 9 Jul 2026 17:23:41 +0200
+Subject: [PATCH 609/631] hw/gpio: pca9552: rename I2CSlave member to
+ parent_obj
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Use the conventional parent_obj name for the embedded I2CSlave instance.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Signed-off-by: Glenn Miles <milesg@linux.ibm.com>
+Link: https://lore.kernel.org/qemu-devel/20260709-catalina-upgrade-v1-3-814575bc076b@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ hw/gpio/pca9552.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/hw/gpio/pca9552.c b/hw/gpio/pca9552.c
+index 36bc4f86edb..da21e56aabd 100644
+--- a/hw/gpio/pca9552.c
++++ b/hw/gpio/pca9552.c
+@@ -34,7 +34,7 @@ OBJECT_DECLARE_TYPE(PCA955xState, PCA955xClass, PCA955X)
+ 
+ struct PCA955xState {
+     /*< private >*/
+-    I2CSlave i2c;
++    I2CSlave parent_obj;
+     /*< public >*/
+ 
+     uint8_t len;
+@@ -401,7 +401,7 @@ static const VMStateDescription pca9552_vmstate = {
+         VMSTATE_UINT8(pointer, PCA955xState),
+         VMSTATE_UINT8_ARRAY(regs, PCA955xState, PCA955X_NR_REGS),
+         VMSTATE_UINT8_ARRAY(ext_state, PCA955xState, PCA955X_PIN_COUNT_MAX),
+-        VMSTATE_I2C_SLAVE(i2c, PCA955xState),
++        VMSTATE_I2C_SLAVE(parent_obj, PCA955xState),
+         VMSTATE_END_OF_LIST()
+     }
+ };
+-- 
+2.50.1
+

@@ -1,0 +1,86 @@
+From e5d3f5ac8633de310066f14862b17e4cac8ef8a5 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 9 Jul 2026 17:23:17 +0200
+Subject: [PATCH 631/631] hw/arm: catalina: add NIC and FIO temperature sensors
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Model the temperature sensors described by the Catalina device tree that
+have existing QEMU device models but were not yet instantiated: the four
+IOB NIC TMP421 sensors behind the i2c0 PCA9546 muxes at 0x71 and 0x75, and
+the FIO remote TMP75 sensor at 0x4f on the i2c1 mux.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Reviewed-by: Cédric Le Goater <clg@redhat.com>
+Link: https://lore.kernel.org/qemu-devel/20260709-catalina-upgrade-v1-25-82a63fead90c@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ hw/arm/aspeed_ast2600_catalina.c | 30 +++++++++++++++++++++++-------
+ 1 file changed, 23 insertions(+), 7 deletions(-)
+
+diff --git a/hw/arm/aspeed_ast2600_catalina.c b/hw/arm/aspeed_ast2600_catalina.c
+index f3b22e9aa9a..f714c9d1b32 100644
+--- a/hw/arm/aspeed_ast2600_catalina.c
++++ b/hw/arm/aspeed_ast2600_catalina.c
+@@ -472,7 +472,16 @@ static void catalina_bmc_i2c_init(AspeedMachineState *bmc)
+ 
+     /* &i2c0 */
+     /* i2c-mux@71 (PCA9546) on i2c0 */
+-    i2c_slave_create_simple(i2c[0], TYPE_PCA9546, 0x71);
++    i2c_mux = i2c_slave_create_simple(i2c[0], TYPE_PCA9546, 0x71);
++
++    /* i2c0mux0ch0 */
++    /* IOB0 NIC0 temperature-sensor@1f - tmp421 */
++    i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 0),
++                            TYPE_TMP421, 0x1f);
++    /* i2c0mux0ch2 */
++    /* IOB0 NIC1 temperature-sensor@1f - tmp421 */
++    i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 2),
++                            TYPE_TMP421, 0x1f);
+ 
+     /* i2c-mux@72 (PCA9546) on i2c0 */
+     i2c_mux = i2c_slave_create_simple(i2c[0], TYPE_PCA9546, 0x72);
+@@ -489,7 +498,16 @@ static void catalina_bmc_i2c_init(AspeedMachineState *bmc)
+     i2c_slave_create_simple(i2c[0], TYPE_PCA9546, 0x73);
+ 
+     /* i2c-mux@75 (PCA9546) on i2c0 */
+-    i2c_slave_create_simple(i2c[0], TYPE_PCA9546, 0x75);
++    i2c_mux = i2c_slave_create_simple(i2c[0], TYPE_PCA9546, 0x75);
++
++    /* i2c0mux3ch0 */
++    /* IOB1 NIC0 temperature-sensor@1f - tmp421 */
++    i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 0),
++                            TYPE_TMP421, 0x1f);
++    /* i2c0mux3ch2 */
++    /* IOB1 NIC1 temperature-sensor@1f - tmp421 */
++    i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 2),
++                            TYPE_TMP421, 0x1f);
+ 
+     /* i2c-mux@76 (PCA9546) on i2c0 */
+     i2c_mux = i2c_slave_create_simple(i2c[0], TYPE_PCA9546, 0x76);
+@@ -544,6 +562,8 @@ static void catalina_bmc_i2c_init(AspeedMachineState *bmc)
+                           fio_eeprom, fio_eeprom_len);
+     /* temperature-sensor@4b - tmp75 */
+     i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 7), TYPE_TMP75, 0x4b);
++    /* temperature-sensor@4f - tmp75 (FIO remote) */
++    i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 7), TYPE_TMP75, 0x4f);
+ 
+     /* &i2c2 */
+     /* io_expander0 - pca9555@20 */
+@@ -564,11 +584,7 @@ static void catalina_bmc_i2c_init(AspeedMachineState *bmc)
+     /* eeprom@52 */
+     at24c_eeprom_init_rom(pca954x_i2c_get_bus(i2c_mux, 6), 0x52, 8 * KiB,
+                           hdd_eeprom, hdd_eeprom_len);
+-    /* i2c5mux0ch7 */
+-    /* ina230@40 - no model */
+-    /* ina230@41 - no model */
+-    /* ina230@44 - no model */
+-    /* ina230@45 - no model */
++    /* i2c5mux0ch7 - empty */
+ 
+     /* &i2c6 */
+     /* io_expander3 - pca9555@21 */
+-- 
+2.50.1
+

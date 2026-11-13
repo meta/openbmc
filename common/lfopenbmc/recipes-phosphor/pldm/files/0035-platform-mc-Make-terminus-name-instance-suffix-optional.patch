@@ -1,0 +1,198 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Pete O_o <pmb@meta.com>
+Date: Fri, 13 Nov 2026 09:05:26 -0800
+Subject: [PATCH] platform-mc: Make terminus name instance suffix optional
+
+Commit dfb79e8 ("platform-mc: add InstanceNo to terminus name")
+unconditionally appends "_<EntityInstanceNumber>" to terminus names
+taken from the Entity Auxiliary Names PDR. Every sensor and inventory
+object of such a terminus is renamed, e.g. SENTINEL_DOME_SLOT_6_MB_*
+becomes SENTINEL_DOME_SLOT_6_1_MB_*, which breaks existing consumers
+of those names.
+
+Add a terminus-name-instance-suffix option. It defaults to enabled,
+which keeps the upstream behavior; platforms that need stable names
+can disable it.
+---
+ meson.build                                |  4 ++++
+ meson.options                              |  8 ++++++++
+ platform-mc/terminus.cpp                   |  4 ++++
+ platform-mc/test/platform_manager_test.cpp | 12 ++++++++++--
+ platform-mc/test/terminus_manager_test.cpp | 19 ++++++++++++++++---
+ platform-mc/test/terminus_test.cpp         | 14 +++++++++++---
+ 6 files changed, 53 insertions(+), 8 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 01e2d4c..00344c1 100644
+--- a/meson.build
++++ b/meson.build
+@@ -140,6 +140,10 @@ conf_data.set(
+     'ENABLE_TERMINUS_DBUS',
+     get_option('enable-terminus-dbus').allowed(),
+ )
++conf_data.set(
++    'TERMINUS_NAME_INSTANCE_SUFFIX',
++    get_option('terminus-name-instance-suffix').allowed(),
++)
+ 
+ conf_data.set('SENSOR_POLLING_TIME', get_option('sensor-polling-time'))
+ 
+diff --git a/meson.options b/meson.options
+index 27c923a..b6e0712 100644
+--- a/meson.options
++++ b/meson.options
+@@ -195,6 +195,14 @@ option(
+     description: 'Expose terminus numeric sensors and inventory objects on D-Bus.',
+ )
+ 
++# Control whether the Entity Instance Number is appended to the terminus name.
++option(
++    'terminus-name-instance-suffix',
++    type: 'feature',
++    value: 'enabled',
++    description: 'Append "_<EntityInstanceNumber>" to terminus names taken from the Entity Auxiliary Names PDR.',
++)
++
+ ## Sensor Polling Options
+ option(
+     'sensor-polling-time',
+diff --git a/platform-mc/terminus.cpp b/platform-mc/terminus.cpp
+index 0c7ecd9..fee448d 100644
+--- a/platform-mc/terminus.cpp
++++ b/platform-mc/terminus.cpp
+@@ -284,8 +284,12 @@ void Terminus::parseTerminusPDRs()
+     {
+         lg2::info("Terminus {TID} has Auxiliary Name {NAME}.", "TID", tid,
+                   "NAME", tName.value());
++#ifdef TERMINUS_NAME_INSTANCE_SUFFIX
+         terminusName = std::format("{}_{}", tName.value(),
+                                    findTerminusEntityInstanceIdx());
++#else
++        terminusName = static_cast<std::string>(tName.value());
++#endif
+     }
+ 
+     if (terminusName.empty())
+diff --git a/platform-mc/test/platform_manager_test.cpp b/platform-mc/test/platform_manager_test.cpp
+index 39780e7..b9f18e4 100644
+--- a/platform-mc/test/platform_manager_test.cpp
++++ b/platform-mc/test/platform_manager_test.cpp
+@@ -8,6 +8,14 @@
+ 
+ #include <gtest/gtest.h>
+ 
++// The terminus name only carries the "_<EntityInstanceNumber>" suffix when
++// the terminus-name-instance-suffix option is enabled.
++#ifdef TERMINUS_NAME_INSTANCE_SUFFIX
++static constexpr auto expectedTerminusName = "S0_1";
++#else
++static constexpr auto expectedTerminusName = "S0";
++#endif
++
+ class PlatformManagerTest : public testing::Test
+ {
+   protected:
+@@ -195,7 +203,7 @@ TEST_F(PlatformManagerTest, initTerminusTest)
+     // defer tasks be run. May increase time when sensor num is large
+     utils::runEventLoopForSeconds(event, 1);
+     EXPECT_EQ(1, terminus->numericSensors.size());
+-    EXPECT_EQ("S0_1", terminus->getTerminusName().value());
++    EXPECT_EQ(expectedTerminusName, terminus->getTerminusName().value());
+ }
+ 
+ TEST_F(PlatformManagerTest, parseTerminusNameTest)
+@@ -358,7 +366,7 @@ TEST_F(PlatformManagerTest, parseTerminusNameTest)
+     stdexec::sync_wait(platformManager.initTerminus());
+     EXPECT_EQ(true, terminus->initialized);
+     EXPECT_EQ(2, terminus->pdrs.size());
+-    EXPECT_EQ("S0_1", terminus->getTerminusName().value());
++    EXPECT_EQ(expectedTerminusName, terminus->getTerminusName().value());
+ }
+ 
+ TEST_F(PlatformManagerTest, initTerminusDontSupportGetPDRTest)
+diff --git a/platform-mc/test/terminus_manager_test.cpp b/platform-mc/test/terminus_manager_test.cpp
+index 9c77078..4579399 100644
+--- a/platform-mc/test/terminus_manager_test.cpp
++++ b/platform-mc/test/terminus_manager_test.cpp
+@@ -18,6 +18,14 @@
+ #include <gmock/gmock.h>
+ #include <gtest/gtest.h>
+ 
++// The terminus name only carries the "_<EntityInstanceNumber>" suffix when
++// the terminus-name-instance-suffix option is enabled.
++#ifdef TERMINUS_NAME_INSTANCE_SUFFIX
++static constexpr auto expectedTerminusName = "S0_1";
++#else
++static constexpr auto expectedTerminusName = "S0";
++#endif
++
+ using ::testing::AtLeast;
+ using ::testing::Between;
+ using ::testing::Exactly;
+@@ -728,9 +736,14 @@ TEST_F(TerminusManagerTest, getActiveEidByNameTest)
+     EXPECT_EQ(true, terminus->initialized);
+     EXPECT_EQ(2, terminus->pdrs.size());
+     EXPECT_EQ(1, termini.size());
+-    EXPECT_EQ("S0_1", terminus->getTerminusName().value());
+-    EXPECT_EQ(10, terminusManager.getActiveEidByName("S0_1").value());
++    EXPECT_EQ(expectedTerminusName, terminus->getTerminusName().value());
++    EXPECT_EQ(10,
++              terminusManager.getActiveEidByName(expectedTerminusName).value());
+     EXPECT_EQ(false, terminusManager.getActiveEidByName("S1").has_value());
+-    EXPECT_EQ(false, terminusManager.getActiveEidByName("S0").has_value());
+     EXPECT_EQ(false, terminusManager.getActiveEidByName("S0_2").has_value());
++#ifdef TERMINUS_NAME_INSTANCE_SUFFIX
++    EXPECT_EQ(false, terminusManager.getActiveEidByName("S0").has_value());
++#else
++    EXPECT_EQ(false, terminusManager.getActiveEidByName("S0_1").has_value());
++#endif
+ }
+diff --git a/platform-mc/test/terminus_test.cpp b/platform-mc/test/terminus_test.cpp
+index 2027bad..e4052bd 100644
+--- a/platform-mc/test/terminus_test.cpp
++++ b/platform-mc/test/terminus_test.cpp
+@@ -18,6 +18,14 @@
+ #include <gmock/gmock.h>
+ #include <gtest/gtest.h>
+ 
++// The terminus name only carries the "_<EntityInstanceNumber>" suffix when
++// the terminus-name-instance-suffix option is enabled.
++#ifdef TERMINUS_NAME_INSTANCE_SUFFIX
++static constexpr auto expectedTerminusName = "S0_1";
++#else
++static constexpr auto expectedTerminusName = "S0";
++#endif
++
+ using namespace ::testing;
+ 
+ class TerminusTest : public testing::Test
+@@ -140,7 +148,7 @@ TEST_F(TerminusTest, parseSensorAuxiliaryNamesPDRTest)
+     EXPECT_EQ("en", names[0][0].first);
+     EXPECT_EQ("TEMP1", names[0][0].second);
+     EXPECT_EQ(2, t1.pdrs.size());
+-    EXPECT_EQ("S0_1", t1.getTerminusName().value());
++    EXPECT_EQ(expectedTerminusName, t1.getTerminusName().value());
+ }
+ 
+ TEST_F(TerminusTest, parseSensorAuxiliaryMultiNamesPDRTest)
+@@ -259,7 +267,7 @@ TEST_F(TerminusTest, parseSensorAuxiliaryMultiNamesPDRTest)
+     EXPECT_EQ("fr", names[0][2].first);
+     EXPECT_EQ("TEMP12", names[0][2].second);
+     EXPECT_EQ(2, t1.pdrs.size());
+-    EXPECT_EQ("S0_1", t1.getTerminusName().value());
++    EXPECT_EQ(expectedTerminusName, t1.getTerminusName().value());
+ }
+ 
+ TEST_F(TerminusTest, parseSensorAuxiliaryNamesMultiSensorsPDRTest)
+@@ -380,7 +388,7 @@ TEST_F(TerminusTest, parseSensorAuxiliaryNamesMultiSensorsPDRTest)
+     EXPECT_EQ("fr", names[1][1].first);
+     EXPECT_EQ("TEMP12", names[1][1].second);
+     EXPECT_EQ(2, t1.pdrs.size());
+-    EXPECT_EQ("S0_1", t1.getTerminusName().value());
++    EXPECT_EQ(expectedTerminusName, t1.getTerminusName().value());
+ }
+ 
+ TEST_F(TerminusTest, createPldmEntityTest)
+-- 
+2.53.1-Meta
+

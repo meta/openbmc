@@ -62,6 +62,15 @@ SRC_URI:append:openbmc-fb-lf = " \
     file://0216-platform-mc-NumericSensor-fix-rebase-of-useMetricInt.patch \
 "
 
+# Keep terminus names, and so every sensor and inventory object name, as they
+# were before upstream pldm dfb79e8 started appending "_<EntityInstanceNumber>":
+# SENTINEL_DOME_SLOT_6_MB_* rather than SENTINEL_DOME_SLOT_6_1_MB_*.
+# Applied after the 02xx patches because it updates tests they restructure.
+SRC_URI:append:openbmc-fb-lf = " \
+    file://0035-platform-mc-Make-terminus-name-instance-suffix-optional.patch \
+"
+EXTRA_OEMESON:append:openbmc-fb-lf = " -Dterminus-name-instance-suffix=disabled"
+
 # Must apply after common/lfopenbmc pldm patches.
 SRC_URI:append:yosemite4 = " \
     file://0100-yosemite4-pldm-remove-firmware-update-entry.patch \

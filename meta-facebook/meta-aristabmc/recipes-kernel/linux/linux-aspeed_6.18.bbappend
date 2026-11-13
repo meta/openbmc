@@ -18,11 +18,7 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/patches_6.18:"
 FILESEXTRAPATHS:prepend := "${THISDIR}/board_config:"
 
+# The AST2700 SoC patches come from common; this adds the board device tree.
 SRC_URI:append = " \
-    file://0000-jtag-aspeed-add-AST2700-support.patch \
-    file://0001-serial-8250-aspeed-add-AST2700-UART-and-UDMA-support.patch \
-    file://0002-soc-aspeed-add-AST2700-UART-routing-support.patch \
-    file://0003-arm64-dts-aspeed-update-AST2700-platform-peripherals.patch \
-    file://0004-pinctrl-aspeed-g7-add-split-UART-groups.patch \
     file://0005-arm64-dts-aspeed-add-arista-aristabmc-bmc-device-tree.patch \
     "

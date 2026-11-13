@@ -175,3 +175,17 @@ SRC_URI:append = " \
     file://2714-arm64-dts-aspeed-Add-AST2700-128MB-flash-layout.patch \
     file://2715-pinctrl-aspeed-Split-TRST-out-of-the-AST2700-SoC1-JT.patch \
 "
+
+#
+# AST2700 patches only FBOSS AST2700 builds take. 2716 changes the JTAG
+# ioctl ABI that user space on other ASPEED SoCs still uses; 2717-2720
+# change the 8250_aspeed UART driver, UART routing and AST2700 SoC device
+# tree that lf-openbmc machines also build.
+#
+SRC_URI:append:openbmc-fb-fboss:aspeed-g7 = " \
+    file://2716-jtag-aspeed-add-AST2700-support.patch \
+    file://2717-serial-8250-aspeed-add-AST2700-UART-and-UDMA-support.patch \
+    file://2718-soc-aspeed-add-AST2700-UART-routing-support.patch \
+    file://2719-arm64-dts-aspeed-update-AST2700-platform-peripherals.patch \
+    file://2720-pinctrl-aspeed-g7-add-split-UART-groups.patch \
+"

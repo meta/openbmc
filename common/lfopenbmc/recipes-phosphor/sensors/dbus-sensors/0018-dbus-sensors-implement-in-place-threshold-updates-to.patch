@@ -323,7 +323,7 @@ index 616c253..23549c4 100644
                  std::vector<thresholds::Threshold> sensorThresholds;
  
                  if (!parseThresholdsFromConfig(sensorData, sensorThresholds,
-@@ -518,6 +523,32 @@ void createSensors(
+@@ -518,6 +523,23 @@ void createSensors(
                          }
  
                          auto& sensor = sensors[sensorName];
@@ -342,15 +342,6 @@ index 616c253..23549c4 100644
 +                            }
 +                            thresholds::updateThresholds(sensor.get());
 +                            lg2::info("Extra sensor {NAME} updated in-place", "NAME", sensorName);
-+
-+                           for (auto it = sensorsChanged->begin(); it != sensorsChanged->end(); it++)
-+                           {
-+                               if (it->ends_with(findSensor->second->name))
-+                               {
-+                                   sensorsChanged->erase(it);
-+                                   break;
-+                               }
-+                           }
 +                            continue;
 +                        }
                          if (!activateOnly)

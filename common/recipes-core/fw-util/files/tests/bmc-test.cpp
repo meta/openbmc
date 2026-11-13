@@ -94,6 +94,33 @@ TEST(BmcComponentTest, MTDVersion) {
   delete b;
 }
 
+// TEST: Verify that when the version MTD (u-bootx) does not exist but the
+//       update MTD does, the BMC version is read from the image-meta blob at
+//       its fixed offset within that flash (flat flash1 layout without children).
+TEST(BmcComponentTest, NoUbootxPartitionMetaVersion) {
+  stringstream out, err;
+  SystemMock mock(out, err);
+  const string meta =
+    "{\"FBOBMC_IMAGE_META_VER\": 1, \"version_infos\": "
+    "{\"fw_ver\": \"fbtp-v42.0\", \"uboot_ver\": \"2019.04\"}}\n";
+  TmpFile flash(string(960 * 1024, '\xff') + meta);
+
+  EXPECT_CALL(mock, get_mtd_name(string("u-bootx"), _))
+    .Times(2)
+    .WillRepeatedly(Return(false));
+  EXPECT_CALL(mock, get_mtd_name(string("flash1"), _))
+    .Times(2)
+    .WillRepeatedly(DoAll(SetArgReferee<1>(flash.name), Return(true)));
+
+  BmcComponentBasicMock b("bmc_test", "altbmc_test", "flash1", "u-bootx");
+  EXPECT_CALL(b, sys())
+    .WillRepeatedly(ReturnRef(mock));
+
+  EXPECT_EQ(0, b.print_version());
+  EXPECT_EQ(out.str(), "ALTBMC_TEST Version: fbtp-v42.0\nALTBMC_TEST Version After Activated: fbtp-v42.0\n");
+  EXPECT_EQ(err.str(), "");
+}
+
 class BmcComponentMock : public BmcComponent {
   public:
     BmcComponentMock(const std::string& fru, const std::string& comp, const std::string& mtd, std::string vers = "", size_t w_offset = 0, size_t skip_offset = 0)

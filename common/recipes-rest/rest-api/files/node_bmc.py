@@ -100,7 +100,7 @@ def cache_uboot_version():
 
 def get_wdt_counter() -> int:
     addr = (
-        0x1E785010 if get_soc_model() != SocModelId.SOC_MODEL_ASPEED_G7 else 0x14C37410
+        0x1E785010 if get_soc_model() != SocModelId.SOC_MODEL_ASPEED_G7 else 0x14C37010
     )
     with open("/dev/mem", "rb") as f:
         with mmap.mmap(

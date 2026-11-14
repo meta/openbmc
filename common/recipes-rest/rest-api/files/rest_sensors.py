@@ -52,8 +52,9 @@ def get_sensors():
     try:
         data, _ = proc.communicate(timeout=DEFAULT_TIMEOUT_SEC)
         data = data.decode()
-    except proc.TimeoutError as ex:
-        data = ex.output
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        data, _ = proc.communicate()
         data = data.decode()
 
     data = re.sub(r"\(.+?\)", "", data)  # noqa: W605
@@ -92,8 +93,9 @@ def get_sensors_full():  # noqa: C901
     )
     try:
         data, _ = proc.communicate(timeout=DEFAULT_TIMEOUT_SEC)
-    except proc.TimeoutError as ex:
-        data = ex.output
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        data, _ = proc.communicate()
 
     # The output of sensors -u is a series of sections separated
     # by blank lines.  Each section looks like this:

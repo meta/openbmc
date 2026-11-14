@@ -23,9 +23,7 @@ SRC_URI:append:aristabmc = " \
     file://aristabmc.cfg \
     file://u-boot-env-ast2700-spi.txt \
     file://0001-ARM-uboot-dts-add-Facebook-aristabmc-dts.patch \
-    file://0002-ARM64-Aspeed2700-add-a-config-for-WDTA-timer-reload-.patch \
-    file://0003-net-ftgmac100-Use-calibrated-enable-delay-for-AST270.patch \
-    file://0004-ARM-aspeed-limit-Aristabmc-U-Boot-relocation.patch \
+    file://0002-net-ftgmac100-Use-calibrated-enable-delay-for-AST270.patch \
     "
 
 do_compile:prepend:aristabmc() {

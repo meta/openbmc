@@ -27,6 +27,10 @@ BRANCH = "aspeed-master-v2023.10"
 SRC_URI = "git://github.com/AspeedTech-BMC/u-boot.git;protocol=https;branch=${BRANCH} \
            file://0001-rsa-handle-OpenSSL-builds-without-ENGINE-support.patch \
 "
+SRC_URI:append:aspeed-g7 = " \
+    file://0500-ARM64-Aspeed2700-add-a-config-for-WDTA-timer-reload-.patch \
+    file://0501-ARM-aspeed-limit-AST2700-U-Boot-relocation.patch \
+"
 
 # Tag for v00.05.13
 SRCREV = "03a8c08746a657145b036ab61ba1d299394cce74"

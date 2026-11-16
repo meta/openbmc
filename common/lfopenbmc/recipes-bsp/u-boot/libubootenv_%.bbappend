@@ -11,10 +11,17 @@ ENV_CONFIG_FILE = "fw_env_flash_nor.config"
 ENV_CONFIG_FILE:df-phosphor-mmc = "${@bb.utils.contains('MACHINE_FEATURES', 'mf-ufs', \
                 'fw_env_ast2700_ufs.config', 'fw_env_ast2600_mmc.config', d)}"
 
+# AST2700 gets the generated default environment from u-boot-aspeed-env.
+LIBUBOOTENV_INSTALL_INITIAL_ENV = "1"
+# UNCOMMENT IN NEXT DIFF
+#LIBUBOOTENV_INSTALL_INITIAL_ENV:aspeed-g7 = "0"
+
 do_install:append () {
     install -d ${D}${sysconfdir}
     install -m 644 ${UNPACKDIR}/${ENV_CONFIG_FILE} ${D}${sysconfdir}/fw_env.config
-    install -m 644 ${UNPACKDIR}/u-boot-initial-env ${D}${sysconfdir}/u-boot-initial-env
+    if [ "${LIBUBOOTENV_INSTALL_INITIAL_ENV}" = "1" ]; then
+        install -m 644 ${UNPACKDIR}/u-boot-initial-env ${D}${sysconfdir}/u-boot-initial-env
+    fi
 
     # Compatibility links: meta-phosphor hardcodes /sbin/fw_printenv and
     # /sbin/fw_setenv (clear-once.service, phosphor-static-norootfs-init),

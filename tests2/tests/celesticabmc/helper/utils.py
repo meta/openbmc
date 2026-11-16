@@ -8,7 +8,7 @@ class BoardRevision:
     BRD_TYPE_ICETEA = 0x09
     BRD_TYPE_LADAKH800BCLS = 0x0D
     BRD_TYPE_LEH800BCLS = 0x0E
-    BRD_TYPE_M4061CLSC = 0x0F
+    BRD_TYPE_M4061CLSCL = 0x0F
 
     BRD_REV_EVT1 = 0x0
     BRD_REV_EVT2A = 0x1
@@ -27,7 +27,7 @@ class BoardRevision:
         BRD_TYPE_ICETEA: "ICETEA",
         BRD_TYPE_LADAKH800BCLS: "LADAKH800BCLS",
         BRD_TYPE_LEH800BCLS: "LEH800BCLS",
-        BRD_TYPE_M4061CLSC: "M4061CLSC",
+        BRD_TYPE_M4061CLSCL: "M4061CLSCL",
     }
 
     # Mapping of board revisions to their string representations

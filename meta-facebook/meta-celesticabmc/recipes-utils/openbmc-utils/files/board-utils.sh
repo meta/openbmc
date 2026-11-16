@@ -63,7 +63,7 @@ declare -A PRJ_BOARD_DATA=(
     [14,name]="LEH800BCLS"
     [14,revs]="EVT-1A & EVT-1B;EVT-2;PPVT;PVT;MP"
 
-    [15,name]="M4061CLSC"
+    [15,name]="M4061CLSCL"
     [15,revs]="EVT1;EVT2;DVT1;DVT2;PPVT;PVT;MP"
 )
 

@@ -22,6 +22,16 @@
 source /usr/local/bin/openbmc-utils.sh
 
 VERSION="0.10"
+COLLECTOR_TIMEOUT=180
+failed_collectors=0
+
+run_collector() {
+    if timeout -k 5 "$COLLECTOR_TIMEOUT" "$@"; then
+        return 0
+    fi
+    echo "ERROR: $* failed or timed out. Continuing..." >&2
+    failed_collectors=$((failed_collectors + 1))
+}
 
 echo "#################################"
 echo "##### SHOWTECH VERSION $VERSION #####"
@@ -47,7 +57,7 @@ bmc_version=$(cat /etc/issue)
 echo "$bmc_version"
 
 echo -e "\n##### All Firmware Versions #####"
-fw-util all --version
+run_collector fw-util all --version
 
 echo -e "\n##### Aspeed Chip Revision #####"
 aspeed_soc_chip_ver
@@ -61,13 +71,16 @@ echo "################################"
 if [ ! -f /usr/local/bin/mmcraw ]; then
 	echo "/usr/local/bin/mmcraw doesn't exist!"
 else
-	/usr/local/bin/mmcraw show-summary /dev/mmcblk0
-	/usr/local/bin/mmcraw read-cid /dev/mmcblk0
+	run_collector /usr/local/bin/mmcraw show-summary /dev/mmcblk0
+	run_collector /usr/local/bin/mmcraw read-cid /dev/mmcblk0
 fi
 
 echo -e  "\n##### Executing plugins in /etc/showtech/rules/ #####"
 for showtech_file in /etc/showtech/rules/*
 do
 	echo -e "\n##### Running $showtech_file #####"
-	$showtech_file || echo "ERROR: $showtech_file failed. Continuing..."
+	run_collector "$showtech_file"
 done
+
+echo "SHOWTECH_FAILED_COLLECTORS=$failed_collectors"
+exit 0

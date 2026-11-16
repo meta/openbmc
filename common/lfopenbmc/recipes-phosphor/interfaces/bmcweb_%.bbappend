@@ -76,3 +76,11 @@ SRC_URI:append = " \
     file://0441-Catch-update-events-committed-before-the-task-exists.patch \
     file://0442-Add-ResetRequired-event-to-task-messages.patch \
 "
+
+# Route StorageController requests by the requested storageId instead of the
+# hardcoded Storage/1, so the Controllers link of every Storage resolves.
+# 0450 is upstream https://gerrit.openbmc.org/c/openbmc/bmcweb/+/93194
+# (unmerged, patch set 8).
+SRC_URI:append = " \
+    file://0450-Fix-dynamic-storageId-for-controller-routes.patch \
+"

@@ -1,0 +1,45 @@
+From 2f2a940435ebe66c4191ed4311eb962f46577fd5 Mon Sep 17 00:00:00 2001
+From: Jagpal Singh Gill <jagpalgill@meta.com>
+Date: Mon, 16 Nov 2026 13:48:59 -0800
+Subject: [PATCH] registries: expose Power and Platform for downstream PDI
+ events
+
+The downstream PDI power-supply events map to the Power registry, and the CPER events map to Platform.PlatformErrorAtLocation. Include both registries so bmcweb can resolve their MessageIds and arguments.
+
+Add both names to the regeneration defaults so the generated selector keeps the downstream event coverage.
+
+Upstream-Status: Inappropriate [The added registries are based on downstream patches]
+---
+ redfish-core/include/registries_selector.hpp | 2 ++
+ scripts/parse_registries.py                  | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/redfish-core/include/registries_selector.hpp b/redfish-core/include/registries_selector.hpp
+index 7d0f0f84..760112d0 100644
+--- a/redfish-core/include/registries_selector.hpp
++++ b/redfish-core/include/registries_selector.hpp
+@@ -6,6 +6,8 @@
+ #include "registries/environmental_message_registry.hpp"
+ #include "registries/heartbeat_event_message_registry.hpp"
+ #include "registries/openbmc_message_registry.hpp"
++#include "registries/platform_message_registry.hpp"
++#include "registries/power_message_registry.hpp"
+ #include "registries/resource_event_message_registry.hpp"
+ #include "registries/sensor_event_message_registry.hpp"
+ #include "registries/task_event_message_registry.hpp"
+diff --git a/scripts/parse_registries.py b/scripts/parse_registries.py
+index 46942348..7ec39939 100755
+--- a/scripts/parse_registries.py
++++ b/scripts/parse_registries.py
+@@ -967,6 +967,8 @@ def main() -> None:
+         "environmental",
+         "heartbeat_event",
+         "openbmc",
++        "platform",
++        "power",
+         "privilege",
+         "resource_event",
+         "sensor_event",
+-- 
+2.53.1-Meta
+

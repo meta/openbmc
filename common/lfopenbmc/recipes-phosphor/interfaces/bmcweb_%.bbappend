@@ -25,6 +25,7 @@ SRC_URI:append = " \
     file://0203-Map-DBus-event-to-RF-MessageID-and-parse-args.patch \
     file://0204-Show-mapped-and-raw-Dbus-messages-in-Log-services.patch \
     file://0205-parse_registries-add-additional-registries.patch \
+    file://0206-registries-expose-Power-and-Platform-for-downstream-.patch \
 "
 
 # Dependency variables for PDI-generated Redfish Message Registries

@@ -1,4 +1,4 @@
-From 98aaa356aa29ddbc3ea3ec4d03f93c932dca9eef Mon Sep 17 00:00:00 2001
+From 4b3f31a9210564cfef169249668853ea32a4d81f Mon Sep 17 00:00:00 2001
 From: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
 Date: Tue, 26 May 2026 10:01:20 +0800
 Subject: [PATCH] aspeed: i2c: add i2c-clk-high-min-percent property
@@ -25,7 +25,7 @@ Signed-off-by: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
  1 file changed, 71 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/i2c/busses/i2c-ast2600.c b/drivers/i2c/busses/i2c-ast2600.c
-index b87d881caef1..772bd9fc48ee 100644
+index cfdeaa1ebe6f..0c93ff611f5e 100644
 --- a/drivers/i2c/busses/i2c-ast2600.c
 +++ b/drivers/i2c/busses/i2c-ast2600.c
 @@ -352,6 +352,7 @@ struct ast2600_i2c_bus {
@@ -172,7 +172,7 @@ index b87d881caef1..772bd9fc48ee 100644
  
  	if (i2c_bus->timeout) {
  		i2c_bus->timeout = min(i2c_bus->timeout, 255);
-@@ -3065,6 +3104,14 @@ static int ast2600_i2c_probe(struct platform_device *pdev)
+@@ -3088,6 +3127,14 @@ static int ast2600_i2c_probe(struct platform_device *pdev)
  
  	i2c_parse_fw_timings(i2c_bus->dev, &i2c_bus->timing_info, true);
  

@@ -747,25 +747,33 @@
         "fromUrl": "/redfish/v1/Chassis/EAM_0/Sensors/temperature_EAM_0_GPU_THERMAL_SENSOR_0",
         "toNamespace": "temperature",
         "toId": "EAM0_GPU_THERMAL_SENSOR0_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_0/Sensors/temperature_EAM_0_GPU_THERMAL_SENSOR_1",
         "toNamespace": "temperature",
         "toId": "EAM0_GPU_THERMAL_SENSOR1_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_0/Sensors/temperature_EAM_0_GPU_THERMAL_SENSOR_2",
         "toNamespace": "temperature",
         "toId": "EAM0_GPU_THERMAL_SENSOR2_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_0/Sensors/temperature_EAM_0_GPU_THERMAL_SENSOR_3",
         "toNamespace": "temperature",
         "toId": "EAM0_GPU_THERMAL_SENSOR3_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_0/Sensors/temperature_EAM_0_GPU_VDDAN_075_TEMP",
@@ -776,13 +784,17 @@
         "fromUrl": "/redfish/v1/Chassis/EAM_0/Sensors/temperature_GPU_0_DIE_TEMP",
         "toNamespace": "temperature",
         "toId": "EAM0_GPU0_DIE_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_0/Sensors/temperature_GPU_0_MEMORY_TEMP",
         "toNamespace": "temperature",
         "toId": "EAM0_GPU0_MEMORY_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_0/Sensors/temperature_EAM_0_IBC1_TEMP",
@@ -993,25 +1005,33 @@
         "fromUrl": "/redfish/v1/Chassis/EAM_1/Sensors/temperature_EAM_1_GPU_THERMAL_SENSOR_0",
         "toNamespace": "temperature",
         "toId": "EAM1_GPU_THERMAL_SENSOR0_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_1/Sensors/temperature_EAM_1_GPU_THERMAL_SENSOR_1",
         "toNamespace": "temperature",
         "toId": "EAM1_GPU_THERMAL_SENSOR1_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_1/Sensors/temperature_EAM_1_GPU_THERMAL_SENSOR_2",
         "toNamespace": "temperature",
         "toId": "EAM1_GPU_THERMAL_SENSOR2_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_1/Sensors/temperature_EAM_1_GPU_THERMAL_SENSOR_3",
         "toNamespace": "temperature",
         "toId": "EAM1_GPU_THERMAL_SENSOR3_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_1/Sensors/temperature_EAM_1_GPU_VDDAN_075_TEMP",
@@ -1022,13 +1042,17 @@
         "fromUrl": "/redfish/v1/Chassis/EAM_1/Sensors/temperature_GPU_1_DIE_TEMP",
         "toNamespace": "temperature",
         "toId": "EAM1_GPU1_DIE_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_1/Sensors/temperature_GPU_1_MEMORY_TEMP",
         "toNamespace": "temperature",
         "toId": "EAM1_GPU1_MEMORY_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_1/Sensors/temperature_EAM_1_IBC1_TEMP",
@@ -1239,25 +1263,33 @@
         "fromUrl": "/redfish/v1/Chassis/EAM_2/Sensors/temperature_EAM_2_GPU_THERMAL_SENSOR_0",
         "toNamespace": "temperature",
         "toId": "EAM2_GPU_THERMAL_SENSOR0_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_2/Sensors/temperature_EAM_2_GPU_THERMAL_SENSOR_1",
         "toNamespace": "temperature",
         "toId": "EAM2_GPU_THERMAL_SENSOR1_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_2/Sensors/temperature_EAM_2_GPU_THERMAL_SENSOR_2",
         "toNamespace": "temperature",
         "toId": "EAM2_GPU_THERMAL_SENSOR2_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_2/Sensors/temperature_EAM_2_GPU_THERMAL_SENSOR_3",
         "toNamespace": "temperature",
         "toId": "EAM2_GPU_THERMAL_SENSOR3_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_2/Sensors/temperature_EAM_2_GPU_VDDAN_075_TEMP",
@@ -1268,13 +1300,17 @@
         "fromUrl": "/redfish/v1/Chassis/EAM_2/Sensors/temperature_GPU_2_DIE_TEMP",
         "toNamespace": "temperature",
         "toId": "EAM2_GPU2_DIE_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_2/Sensors/temperature_GPU_2_MEMORY_TEMP",
         "toNamespace": "temperature",
         "toId": "EAM2_GPU2_MEMORY_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_2/Sensors/temperature_EAM_2_IBC1_TEMP",
@@ -1485,25 +1521,33 @@
         "fromUrl": "/redfish/v1/Chassis/EAM_3/Sensors/temperature_EAM_3_GPU_THERMAL_SENSOR_0",
         "toNamespace": "temperature",
         "toId": "EAM3_GPU_THERMAL_SENSOR0_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_3/Sensors/temperature_EAM_3_GPU_THERMAL_SENSOR_1",
         "toNamespace": "temperature",
         "toId": "EAM3_GPU_THERMAL_SENSOR1_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_3/Sensors/temperature_EAM_3_GPU_THERMAL_SENSOR_2",
         "toNamespace": "temperature",
         "toId": "EAM3_GPU_THERMAL_SENSOR2_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_3/Sensors/temperature_EAM_3_GPU_THERMAL_SENSOR_3",
         "toNamespace": "temperature",
         "toId": "EAM3_GPU_THERMAL_SENSOR3_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_3/Sensors/temperature_EAM_3_GPU_VDDAN_075_TEMP",
@@ -1514,13 +1558,17 @@
         "fromUrl": "/redfish/v1/Chassis/EAM_3/Sensors/temperature_GPU_3_DIE_TEMP",
         "toNamespace": "temperature",
         "toId": "EAM3_GPU3_DIE_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_3/Sensors/temperature_GPU_3_MEMORY_TEMP",
         "toNamespace": "temperature",
         "toId": "EAM3_GPU3_MEMORY_TEMP_C",
-        "hardShutdownHigh": 120
+        "thresholds": {
+          "hardShutdownHigh": 120
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/EAM_3/Sensors/temperature_EAM_3_IBC1_TEMP",

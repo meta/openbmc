@@ -258,10 +258,9 @@ void SensorHandler::updateSensor(sdbusplus::async::context& ctx,
 
     // mapper.toNamespace is validated against the supported namespaces when the
     // config is parsed, so it is passed through verbatim.
-    auto sensor = Sensor::create(ctx, mapper.toNamespace, mapper.toId,
-                                 config.associationPath,
-                                 mapper.hardShutdownHigh,
-                                 parsed);
+    auto sensor =
+        Sensor::create(ctx, mapper.toNamespace, mapper.toId,
+                       config.associationPath, parsed, mapper.thresholds);
     if (sensor)
     {
         sensors.emplace(mapper.fromUrl, std::move(sensor));

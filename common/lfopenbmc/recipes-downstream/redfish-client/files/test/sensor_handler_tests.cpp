@@ -4,6 +4,8 @@
 #include <redfish_client/core/config.hpp>
 #include <redfish_client/core/sensor.hpp>
 #include <redfish_client/core/sensor_handler.hpp>
+#include <xyz/openbmc_project/Sensor/Threshold/Critical/client.hpp>
+#include <xyz/openbmc_project/Sensor/Threshold/Warning/client.hpp>
 #include <xyz/openbmc_project/Sensor/Value/client.hpp>
 
 #include <format>
@@ -156,6 +158,57 @@ TEST_F(SensorHandlerTest, MetricReportBootstrapsThenUpdates)
         // its bare metric value (150) instead of another full read.
         co_await handler.load(ctx);
         EXPECT_EQ(150.0, co_await getSensorClient(kTemp0Path).value());
+
+        ctx.request_stop();
+        co_return;
+    }());
+    ctx.run();
+}
+
+TEST_F(SensorHandlerTest, ThresholdsFromTargetAndConfig)
+{
+    // The target reports UpperCaution and UpperCritical; the mapper's config
+    // forces CriticalHigh tighter.
+    SimpleTestHttpServer server(
+        [](const SimpleTestHttpServer::ReceivedHttpRequest&) {
+            return R"({
+  "Reading": 92.0,
+  "ReadingUnits": "Cel",
+  "Thresholds": {
+    "UpperCaution": {
+      "Reading": 85.0
+    },
+    "UpperCritical": {
+      "Reading": 95.0
+    }
+  }
+})";
+        },
+        {});
+    auto mapper = createMapper(kTemp0Url, "temperature", "Host0_Temp0");
+    mapper.thresholds.criticalHigh = {ThresholdOverride::Mode::Value, 90.0};
+    // SensorHandler keeps a reference to the config, so it must outlive it.
+    auto config = createConfig({mapper});
+    SensorHandler handler(std::format("localhost:{}", server.getPort()),
+                          config);
+
+    ctx.request_name(kServiceName);
+    ctx.spawn([&]() -> sdbusplus::async::task<> {
+        co_await handler.load(ctx);
+
+        auto warning = sdbusplus::client::xyz::openbmc_project::sensor::
+                           threshold::Warning<>(ctx)
+                               .service(kServiceName)
+                               .path(kTemp0Path);
+        EXPECT_EQ(85.0, co_await warning.warning_high());
+        EXPECT_TRUE(co_await warning.warning_alarm_high());
+
+        auto critical = sdbusplus::client::xyz::openbmc_project::sensor::
+                            threshold::Critical<>(ctx)
+                                .service(kServiceName)
+                                .path(kTemp0Path);
+        EXPECT_EQ(90.0, co_await critical.critical_high());
+        EXPECT_TRUE(co_await critical.critical_alarm_high());
 
         ctx.request_stop();
         co_return;

@@ -61,14 +61,50 @@ void from_json(const nlohmann::json& json, LogServiceConfig& config)
     }
 }
 
+namespace
+{
+
+void parseThresholdOverrideLimit(const nlohmann::json& json,
+                                 const std::string& key,
+                                 ThresholdOverride::Limit& limit)
+{
+    auto it = json.find(key);
+    if (it == json.end())
+    {
+        limit.mode = ThresholdOverride::Mode::Inherit;
+        return;
+    }
+    if (it->is_null())
+    {
+        limit.mode = ThresholdOverride::Mode::Disabled;
+        return;
+    }
+    limit.mode = ThresholdOverride::Mode::Value;
+    it->get_to(limit.value);
+}
+
+} // namespace
+
+void from_json(const nlohmann::json& json, ThresholdOverride& override)
+{
+    parseThresholdOverrideLimit(json, "warningHigh", override.warningHigh);
+    parseThresholdOverrideLimit(json, "warningLow", override.warningLow);
+    parseThresholdOverrideLimit(json, "criticalHigh", override.criticalHigh);
+    parseThresholdOverrideLimit(json, "criticalLow", override.criticalLow);
+    parseThresholdOverrideLimit(json, "hardShutdownHigh",
+                                override.hardShutdownHigh);
+    parseThresholdOverrideLimit(json, "hardShutdownLow",
+                                override.hardShutdownLow);
+}
+
 void from_json(const nlohmann::json& json, SensorMapper& mapper)
 {
     json.at("fromUrl").get_to(mapper.fromUrl);
     json.at("toNamespace").get_to(mapper.toNamespace);
     json.at("toId").get_to(mapper.toId);
-    if (auto it = json.find("hardShutdownHigh"); it != json.end())
+    if (auto it = json.find("thresholds"); it != json.end())
     {
-        mapper.hardShutdownHigh = it->get<double>();
+        it->get_to(mapper.thresholds);
     }
 }
 

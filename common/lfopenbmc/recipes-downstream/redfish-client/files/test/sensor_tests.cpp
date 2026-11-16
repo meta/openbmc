@@ -3,10 +3,13 @@
 #include <redfish-binding/Sensor_Sensor.hpp>
 #include <redfish_client/core/sensor.hpp>
 #include <xyz/openbmc_project/Association/Definitions/client.hpp>
+#include <xyz/openbmc_project/Sensor/Threshold/Critical/client.hpp>
 #include <xyz/openbmc_project/Sensor/Threshold/HardShutdown/client.hpp>
+#include <xyz/openbmc_project/Sensor/Threshold/Warning/client.hpp>
 #include <xyz/openbmc_project/Sensor/Value/client.hpp>
 
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <optional>
 
@@ -76,8 +79,13 @@ class SensorTest : public ::testing::Test
             json["ReadingRangeMax"] = maxValue.value();
         }
         auto parsed = redfish_binding::Sensor::parseSensor(json.dump());
-        return Sensor::create(ctx, ns, id, associationPath, hardShutdownHigh,
-                              parsed);
+        ThresholdOverride override;
+        if (hardShutdownHigh.has_value())
+        {
+            override.hardShutdownHigh = {ThresholdOverride::Mode::Value,
+                                         *hardShutdownHigh};
+        }
+        return Sensor::create(ctx, ns, id, associationPath, parsed, override);
     }
 
     auto getSensorClient()
@@ -94,11 +102,50 @@ class SensorTest : public ::testing::Test
         return AssociationClient(ctx).service(kBusName).path(kMetricPath);
     }
 
+    auto getWarningClient()
+    {
+        using WarningClient = sdbusplus::client::xyz::openbmc_project::sensor::
+            threshold::Warning<>;
+        return WarningClient(ctx).service(kBusName).path(kMetricPath);
+    }
+
+    auto getCriticalClient()
+    {
+        using CriticalClient = sdbusplus::client::xyz::openbmc_project::sensor::
+            threshold::Critical<>;
+        return CriticalClient(ctx).service(kBusName).path(kMetricPath);
+    }
+
     auto getHardShutdownClient()
     {
         using HardShutdownClient = sdbusplus::client::xyz::openbmc_project::
             sensor::threshold::HardShutdown<>;
         return HardShutdownClient(ctx).service(kBusName).path(kMetricPath);
+    }
+
+    // Threshold limits shared by every threshold test below.
+    static constexpr auto kThresholdUnit = "Cel";
+    static constexpr double kWarningHigh = 80.0;
+    static constexpr double kWarningLow = -10.0;
+    static constexpr double kCriticalHigh = 90.0;
+    static constexpr double kCriticalLow = -20.0;
+    static constexpr double kFatalHigh = 100.0;
+    static constexpr double kFatalLow = -30.0;
+
+    // Builds a Redfish sensor reading JSON with all six threshold directions
+    // populated at the kXxx limits above.
+    static nlohmann::json sensorJsonWithThresholds(double reading)
+    {
+        nlohmann::json json;
+        json["Reading"] = reading;
+        json["ReadingUnits"] = kThresholdUnit;
+        json["Thresholds"]["UpperCaution"] = {{"Reading", kWarningHigh}};
+        json["Thresholds"]["LowerCaution"] = {{"Reading", kWarningLow}};
+        json["Thresholds"]["UpperCritical"] = {{"Reading", kCriticalHigh}};
+        json["Thresholds"]["LowerCritical"] = {{"Reading", kCriticalLow}};
+        json["Thresholds"]["UpperFatal"] = {{"Reading", kFatalHigh}};
+        json["Thresholds"]["LowerFatal"] = {{"Reading", kFatalLow}};
+        return json;
     }
 
     // Tests that deal with lambdas can silently pass if the code that triggers
@@ -324,7 +371,7 @@ TEST_F(SensorTest, MissingUnitsIsNotCreated)
         json["Reading"] = 5.0;
         auto parsed = redfish_binding::Sensor::parseSensor(json.dump());
         auto sensorServer = Sensor::create(ctx, kSensorNamespace, kSensorId,
-                                           kAssociationPath, std::nullopt, parsed);
+                                           kAssociationPath, parsed);
         EXPECT_EQ(nullptr, sensorServer);
 
         // Nothing is published on the bus.
@@ -344,7 +391,7 @@ TEST_F(SensorTest, MissingReadingBecomesNan)
         json["ReadingUnits"] = "Cel";
         auto parsed = redfish_binding::Sensor::parseSensor(json.dump());
         auto sensorServer = Sensor::create(ctx, kSensorNamespace, kSensorId,
-                                           kAssociationPath, std::nullopt, parsed);
+                                           kAssociationPath, parsed);
         EXPECT_NE(nullptr, sensorServer);
 
         auto sensorClient = getSensorClient();
@@ -352,6 +399,216 @@ TEST_F(SensorTest, MissingReadingBecomesNan)
         // Cel gets per-unit default range.
         EXPECT_EQ(-128.0, co_await sensorClient.min_value());
         EXPECT_EQ(127.0, co_await sensorClient.max_value());
+
+        testBodyExecuted = true;
+        co_return;
+    }());
+}
+
+TEST_F(SensorTest, NoThresholdsNoInterfaces)
+{
+    ctx.spawn([this]() -> sdbusplus::async::task<> {
+        // No Thresholds field at all -> none of the three threshold
+        // interfaces are published, even though Value still is.
+        nlohmann::json json;
+        json["Reading"] = 25.0;
+        json["ReadingUnits"] = "Cel";
+        auto parsed = redfish_binding::Sensor::parseSensor(json.dump());
+        auto sensorServer = Sensor::create(ctx, kSensorNamespace, kSensorId,
+                                           kAssociationPath, parsed);
+        EXPECT_NE(nullptr, sensorServer);
+
+        auto sensorClient = getSensorClient();
+        EXPECT_EQ(25.0, co_await sensorClient.value());
+
+        EXPECT_THROW(co_await getWarningClient().warning_high(),
+                     DBusError::UnknownProperty);
+        EXPECT_THROW(co_await getCriticalClient().critical_high(),
+                     DBusError::UnknownProperty);
+        EXPECT_THROW(co_await getHardShutdownClient().hard_shutdown_high(),
+                     DBusError::UnknownProperty);
+
+        testBodyExecuted = true;
+        co_return;
+    }());
+}
+
+TEST_F(SensorTest, ThresholdsPublishedWithinRange)
+{
+    ctx.spawn([this]() -> sdbusplus::async::task<> {
+        // A reading well within every threshold: interfaces exist, limits
+        // match what was parsed, and no alarm is asserted.
+        auto json = sensorJsonWithThresholds(25.0);
+        auto parsed = redfish_binding::Sensor::parseSensor(json.dump());
+        auto sensorServer = Sensor::create(ctx, kSensorNamespace, kSensorId,
+                                           kAssociationPath, parsed);
+        EXPECT_NE(nullptr, sensorServer);
+
+        auto warningClient = getWarningClient();
+        EXPECT_EQ(kWarningHigh, co_await warningClient.warning_high());
+        EXPECT_EQ(kWarningLow, co_await warningClient.warning_low());
+        EXPECT_FALSE(co_await warningClient.warning_alarm_high());
+        EXPECT_FALSE(co_await warningClient.warning_alarm_low());
+
+        auto criticalClient = getCriticalClient();
+        EXPECT_EQ(kCriticalHigh, co_await criticalClient.critical_high());
+        EXPECT_EQ(kCriticalLow, co_await criticalClient.critical_low());
+        EXPECT_FALSE(co_await criticalClient.critical_alarm_high());
+        EXPECT_FALSE(co_await criticalClient.critical_alarm_low());
+
+        auto hardShutdownClient = getHardShutdownClient();
+        EXPECT_EQ(kFatalHigh, co_await hardShutdownClient.hard_shutdown_high());
+        EXPECT_EQ(kFatalLow, co_await hardShutdownClient.hard_shutdown_low());
+        EXPECT_FALSE(co_await hardShutdownClient.hard_shutdown_alarm_high());
+        EXPECT_FALSE(co_await hardShutdownClient.hard_shutdown_alarm_low());
+
+        testBodyExecuted = true;
+        co_return;
+    }());
+}
+
+TEST_F(SensorTest, AlarmAssertedAtCreation)
+{
+    ctx.spawn([this]() -> sdbusplus::async::task<> {
+        // Alarm must assert on the very first reading if it's already past
+        // the threshold, not only after a later updateValue().
+        auto json = sensorJsonWithThresholds(95.0);
+        auto parsed = redfish_binding::Sensor::parseSensor(json.dump());
+        auto sensorServer = Sensor::create(ctx, kSensorNamespace, kSensorId,
+                                           kAssociationPath, parsed);
+        EXPECT_NE(nullptr, sensorServer);
+
+        auto warningClient = getWarningClient();
+        EXPECT_TRUE(co_await warningClient.warning_alarm_high());
+
+        auto criticalClient = getCriticalClient();
+        EXPECT_TRUE(co_await criticalClient.critical_alarm_high());
+
+        auto hardShutdownClient = getHardShutdownClient();
+        EXPECT_FALSE(co_await hardShutdownClient.hard_shutdown_alarm_high());
+
+        testBodyExecuted = true;
+        co_return;
+    }());
+}
+
+TEST_F(SensorTest, UpdateValueTransitionsAlarm)
+{
+    ctx.spawn([this]() -> sdbusplus::async::task<> {
+        // Starts within range, then crosses warningHigh; the alarm should
+        // flip on updateValue() the same way it does at creation.
+        auto json = sensorJsonWithThresholds(25.0);
+        auto parsed = redfish_binding::Sensor::parseSensor(json.dump());
+        auto sensorServer = Sensor::create(ctx, kSensorNamespace, kSensorId,
+                                           kAssociationPath, parsed);
+        EXPECT_NE(nullptr, sensorServer);
+
+        auto warningClient = getWarningClient();
+        EXPECT_FALSE(co_await warningClient.warning_alarm_high());
+
+        co_await sensorServer->updateValue(85.0);
+        EXPECT_TRUE(co_await warningClient.warning_alarm_high());
+
+        // Recovering clears the alarm again.
+        co_await sensorServer->updateValue(25.0);
+        EXPECT_FALSE(co_await warningClient.warning_alarm_high());
+
+        testBodyExecuted = true;
+        co_return;
+    }());
+}
+
+TEST_F(SensorTest, ConfigOverridesTarget)
+{
+    ctx.spawn([this]() -> sdbusplus::async::task<> {
+        // Config overrides warningHigh to a stricter limit and disables
+        // hardShutdownHigh outright.
+        auto json = sensorJsonWithThresholds(25.0);
+        auto parsed = redfish_binding::Sensor::parseSensor(json.dump());
+
+        ThresholdOverride override;
+        override.warningHigh.mode = ThresholdOverride::Mode::Value;
+        override.warningHigh.value = 50.0;
+        override.hardShutdownHigh.mode = ThresholdOverride::Mode::Disabled;
+
+        auto sensorServer = Sensor::create(ctx, kSensorNamespace, kSensorId,
+                                           kAssociationPath, parsed, override);
+        EXPECT_NE(nullptr, sensorServer);
+
+        // Override wins: 50.0, not the target's 80.0.
+        auto warningClient = getWarningClient();
+        EXPECT_EQ(50.0, co_await warningClient.warning_high());
+
+        // Disabled: never alarms even far past the target's original 100.0.
+        co_await sensorServer->updateValue(150.0);
+        auto hardShutdownClient = getHardShutdownClient();
+        EXPECT_FALSE(co_await hardShutdownClient.hard_shutdown_alarm_high());
+
+        testBodyExecuted = true;
+        co_return;
+    }());
+}
+
+TEST_F(SensorTest, LimitsWrittenOverDBusTakeEffect)
+{
+    ctx.spawn([this]() -> sdbusplus::async::task<> {
+        // The target reports only UpperCaution, so Warning is published with
+        // WarningLow unset.
+        nlohmann::json json;
+        json["Reading"] = 25.0;
+        json["ReadingUnits"] = kThresholdUnit;
+        json["Thresholds"]["UpperCaution"] = {{"Reading", kWarningHigh}};
+        auto parsed = redfish_binding::Sensor::parseSensor(json.dump());
+        auto sensorServer = Sensor::create(ctx, kSensorNamespace, kSensorId,
+                                           kAssociationPath, parsed);
+        EXPECT_NE(nullptr, sensorServer);
+        auto warningClient = getWarningClient();
+
+        // A limit the target never reported, written over D-Bus.
+        co_await warningClient.warning_low(0.0);
+        co_await sensorServer->updateValue(-1.0);
+        EXPECT_TRUE(co_await warningClient.warning_alarm_low());
+
+        // Removing a limit (NaN) clears its asserted alarm.
+        co_await warningClient.warning_low(
+            std::numeric_limits<double>::quiet_NaN());
+        co_await sensorServer->updateValue(-2.0);
+        EXPECT_FALSE(co_await warningClient.warning_alarm_low());
+
+        // An alarm cleared over D-Bus re-asserts on the next reading while
+        // still past the limit, even if the reading did not change.
+        co_await sensorServer->updateValue(kWarningHigh + 1.0);
+        co_await warningClient.warning_alarm_high(false);
+        co_await sensorServer->updateValue(kWarningHigh + 1.0);
+        EXPECT_TRUE(co_await warningClient.warning_alarm_high());
+
+        testBodyExecuted = true;
+        co_return;
+    }());
+}
+
+TEST_F(SensorTest, NanReadingClearsAlarm)
+{
+    ctx.spawn([this]() -> sdbusplus::async::task<> {
+        // A reading that drops out (e.g. the host is off) clears the alarms,
+        // and a later real reading past the limit asserts them again.
+        auto json = sensorJsonWithThresholds(kCriticalHigh + 1.0);
+        auto parsed = redfish_binding::Sensor::parseSensor(json.dump());
+        auto sensorServer = Sensor::create(ctx, kSensorNamespace, kSensorId,
+                                           kAssociationPath, parsed);
+        EXPECT_NE(nullptr, sensorServer);
+        auto warningClient = getWarningClient();
+        auto criticalClient = getCriticalClient();
+        EXPECT_TRUE(co_await warningClient.warning_alarm_high());
+        EXPECT_TRUE(co_await criticalClient.critical_alarm_high());
+
+        co_await sensorServer->updateValue(
+            std::numeric_limits<double>::quiet_NaN());
+        EXPECT_FALSE(co_await warningClient.warning_alarm_high());
+        EXPECT_FALSE(co_await criticalClient.critical_alarm_high());
+
+        co_await sensorServer->updateValue(kCriticalHigh + 1.0);
+        EXPECT_TRUE(co_await criticalClient.critical_alarm_high());
 
         testBodyExecuted = true;
         co_return;

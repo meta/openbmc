@@ -9,12 +9,40 @@
 namespace redfish_client::core
 {
 
+struct ThresholdOverride
+{
+    // A single limit's override: inherit from the target (absent from
+    // config), forced off regardless of what the target reports (present as
+    // JSON null), or forced to a specific value (present as a number).
+    enum class Mode
+    {
+        Inherit,
+        Disabled,
+        Value,
+    };
+
+    struct Limit
+    {
+        Mode mode = Mode::Inherit;
+        double value = 0.0;
+    };
+
+    Limit warningHigh;
+    Limit warningLow;
+    Limit criticalHigh;
+    Limit criticalLow;
+    Limit hardShutdownHigh;
+    Limit hardShutdownLow;
+};
+
+void from_json(const nlohmann::json& json, ThresholdOverride& override);
+
 struct SensorMapper
 {
     std::string fromUrl;
     std::string toNamespace;
     std::string toId;
-    std::optional<double> hardShutdownHigh;
+    ThresholdOverride thresholds{};
 };
 
 void from_json(const nlohmann::json& json, SensorMapper& mapper);

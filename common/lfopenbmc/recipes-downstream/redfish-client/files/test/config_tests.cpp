@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 using redfish_client::core::Config;
+using redfish_client::core::ThresholdOverride;
 
 TEST(Config, FullConfig)
 {
@@ -22,7 +23,10 @@ TEST(Config, FullConfig)
         "fromUrl": "/redfish/v1/Chassis/Chassis_A/Sensors/Temp_0",
         "toNamespace": "temperature",
         "toId": "Chassis_A_Temp_0",
-        "hardShutdownHigh": 120.0
+        "thresholds": {
+          "hardShutdownHigh": 120.0,
+          "criticalHigh": null
+        }
       },
       {
         "fromUrl": "/redfish/v1/Chassis/Chassis_A/Sensors/Voltage_2",
@@ -75,13 +79,20 @@ TEST(Config, FullConfig)
               "/redfish/v1/Chassis/Chassis_A/Sensors/Temp_0");
     EXPECT_EQ(config.sensorConfig->mappers[0].toNamespace, "temperature");
     EXPECT_EQ(config.sensorConfig->mappers[0].toId, "Chassis_A_Temp_0");
-    ASSERT_TRUE(config.sensorConfig->mappers[0].hardShutdownHigh.has_value());
-    EXPECT_EQ(*config.sensorConfig->mappers[0].hardShutdownHigh, 120.0);
+    EXPECT_EQ(config.sensorConfig->mappers[0].thresholds.hardShutdownHigh.mode,
+              ThresholdOverride::Mode::Value);
+    EXPECT_EQ(config.sensorConfig->mappers[0].thresholds.hardShutdownHigh.value,
+              120.0);
+    EXPECT_EQ(config.sensorConfig->mappers[0].thresholds.criticalHigh.mode,
+              ThresholdOverride::Mode::Disabled);
+    EXPECT_EQ(config.sensorConfig->mappers[0].thresholds.warningHigh.mode,
+              ThresholdOverride::Mode::Inherit);
     EXPECT_EQ(config.sensorConfig->mappers[1].fromUrl,
               "/redfish/v1/Chassis/Chassis_A/Sensors/Voltage_2");
     EXPECT_EQ(config.sensorConfig->mappers[1].toNamespace, "voltage");
     EXPECT_EQ(config.sensorConfig->mappers[1].toId, "Chassis_A_Voltage_2");
-    EXPECT_FALSE(config.sensorConfig->mappers[1].hardShutdownHigh.has_value());
+    EXPECT_EQ(config.sensorConfig->mappers[1].thresholds.hardShutdownHigh.mode,
+              ThresholdOverride::Mode::Inherit);
     EXPECT_EQ(config.logServiceConfig.has_value(), true);
     EXPECT_EQ(config.logServiceConfig->urls.size(), 1);
     EXPECT_EQ(config.logServiceConfig->urls[0],

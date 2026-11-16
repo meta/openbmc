@@ -1,12 +1,12 @@
 #pragma once
 
-#include <redfish_client/core/config.hpp>
-
 #include <redfish-binding/Sensor_Sensor.hpp>
-
+#include <redfish_client/core/config.hpp>
 #include <sdbusplus/async.hpp>
 #include <xyz/openbmc_project/Association/Definitions/aserver.hpp>
+#include <xyz/openbmc_project/Sensor/Threshold/Critical/aserver.hpp>
 #include <xyz/openbmc_project/Sensor/Threshold/HardShutdown/aserver.hpp>
+#include <xyz/openbmc_project/Sensor/Threshold/Warning/aserver.hpp>
 #include <xyz/openbmc_project/Sensor/Value/aserver.hpp>
 #include <xyz/openbmc_project/Sensor/Value/common.hpp>
 
@@ -15,6 +15,7 @@
 #include <mutex>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace redfish_client::core
 {
@@ -23,12 +24,46 @@ using SensorValueIntf = sdbusplus::common::xyz::openbmc_project::sensor::Value;
 
 class Sensor;
 
+class WarningTag;
+using WarningInterface = sdbusplus::async::server_t<
+    WarningTag,
+    sdbusplus::aserver::xyz::openbmc_project::sensor::threshold::Warning>;
+
+class CriticalTag;
+using CriticalInterface = sdbusplus::async::server_t<
+    CriticalTag,
+    sdbusplus::aserver::xyz::openbmc_project::sensor::threshold::Critical>;
+
+class HardShutdownTag;
+using HardShutdownInterface = sdbusplus::async::server_t<
+    HardShutdownTag,
+    sdbusplus::aserver::xyz::openbmc_project::sensor::threshold::HardShutdown>;
+
+enum class ThresholdLevel
+{
+    Warning,
+    Critical,
+    HardShutdown,
+};
+
+enum class ThresholdDirection
+{
+    High,
+    Low,
+};
+
+struct Threshold
+{
+    ThresholdLevel level;
+    ThresholdDirection direction;
+    double value;
+};
+
 // A sensor also implements Association.Definitions, not just Value, so it can be
 // linked back to the chassis that owns it.
 using SensorInterfaces = sdbusplus::async::server_t<
     Sensor,
     sdbusplus::aserver::xyz::openbmc_project::association::Definitions,
-    sdbusplus::aserver::xyz::openbmc_project::sensor::threshold::HardShutdown,
     sdbusplus::aserver::xyz::openbmc_project::sensor::Value>;
 
 // The live D-Bus object for one Redfish sensor. Created lazily, only once a
@@ -49,23 +84,26 @@ class Sensor : public SensorInterfaces
     // namespace the objects actually live under.
     static constexpr auto rootPath = SensorValueIntf::namespace_path::value;
 
-    // The immutable half of a sensor: the unit and the range its value spans,
-    // both fixed once the object is published.
+    // Initial values for a new sensor. Unit and range are fixed after
+    // creation; threshold limits can be changed later over D-Bus.
     struct Metadata
     {
         SensorValueIntf::Unit unit;
         double minValue;
         double maxValue;
+        std::vector<Threshold> thresholds{};
     };
 
     // A sensor whose unit is absent or unrecognized cannot be represented
     // faithfully, so it is skipped (nullptr) rather than published under a
     // guessed unit. The object path is composed as rootPath/ns/id.
+    // Thresholds are taken from the target as reported, then the configured
+    // overrides are applied on top of them.
     static std::unique_ptr<Sensor> create(
         sdbusplus::async::context& ctx, const std::string& ns,
         const std::string& id, const std::string& associationPath,
-        const std::optional<double>& hardShutdownHigh,
-        redfish_binding::Sensor::Sensor& parsed);
+        redfish_binding::Sensor::Sensor& parsed,
+        const ThresholdOverride& thresholds = {});
 
     // Stays silent when the value barely moved, so continuous polling does not
     // flood the bus with PropertiesChanged signals.
@@ -83,13 +121,30 @@ class Sensor : public SensorInterfaces
   private:
     Sensor(sdbusplus::async::context& ctx, const std::string& objectPath,
            const std::string& associationPath, double reading,
-           const Metadata& metadata,
-           const std::optional<double>& hardShutdownHigh);
+           const Metadata& metadata);
 
-    void updateHardShutdownAlarm(double current);
     auto shouldSkipSignal(double current) -> bool;
 
+    void setThresholdLimit(sdbusplus::async::context& ctx,
+                           const std::string& objectPath,
+                           const Threshold& threshold);
+
+    template <bool EmitSignal = true>
+    bool checkThresholds(double current);
+    double thresholdLimit(ThresholdLevel level,
+                          ThresholdDirection direction) const;
+    bool thresholdAlarm(ThresholdLevel level,
+                        ThresholdDirection direction) const;
+    template <bool EmitSignal>
+    void setThresholdAlarm(ThresholdLevel level, ThresholdDirection direction,
+                           bool alarm, double current);
+
     std::mutex lock;
+
+    std::unique_ptr<WarningInterface> warningIntf;
+    std::unique_ptr<CriticalInterface> criticalIntf;
+    std::unique_ptr<HardShutdownInterface> hardShutdownIntf;
+
     double lastNotifiedValue = std::numeric_limits<double>::quiet_NaN();
 };
 

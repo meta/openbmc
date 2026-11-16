@@ -1,0 +1,77 @@
+From cd34779bfda47d22ed88980fcd6ec15cc1dc8b59 Mon Sep 17 00:00:00 2001
+From: Mik Lin <mik.lin@quantatw.com>
+Date: Tue, 20 Oct 2026 16:23:07 +0800
+Subject: [PATCH 4/5] sanmiguel: dbus-sensors: nvmemi: classify sensors by
+ config type
+
+Determine whether an NVMe-MI sensor is a temperature or status sensor
+from its configuration type instead of whether its threshold list is
+empty. This prevents a temperature sensor with no thresholds from being
+created under the drive sensor path.
+
+Upstream-Status: Inappropriate [downstream follow-up to 1001-Add-NVMeMI-sensor-service.patch; src/nvmemi does not exist upstream (imported from NVIDIA/dbus-sensors)]
+
+Signed-off-by: Mik Lin <mik.lin@quantatw.com>
+---
+ src/nvmemi/NVMeMiSensorMain.cpp | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/src/nvmemi/NVMeMiSensorMain.cpp b/src/nvmemi/NVMeMiSensorMain.cpp
+index 8ed694c..e7e8b82 100644
+--- a/src/nvmemi/NVMeMiSensorMain.cpp
++++ b/src/nvmemi/NVMeMiSensorMain.cpp
+@@ -282,6 +282,12 @@ static void handleSensorConfigurations(
+                nvmeDeviceMap.size());
+ 
+     // Store sensor configurations for later creation after MCTP discovery
++    enum class SensorKind
++    {
++        temperature,
++        status
++    };
++
+     struct SensorConfig
+     {
+         std::string interfacePath;
+@@ -289,6 +295,7 @@ static void handleSensorConfigurations(
+         uint8_t eid;
+         std::vector<thresholds::Threshold> thresholds;
+         uint8_t pollRate;
++        SensorKind kind;
+     };
+ 
+     std::vector<SensorConfig> pendingSensors;
+@@ -325,7 +332,8 @@ static void handleSensorConfigurations(
+                 getPollRate(sensorConfig, 1.0F)); // Default to 1 second
+ 
+             pendingSensors.emplace_back(interfacePath, *sensorName, eid,
+-                                        std::move(sensorThresholds), pollRate);
++                                        std::move(sensorThresholds), pollRate,
++                                        SensorKind::temperature);
+         }
+ 
+         auto statusSensorBase =
+@@ -349,7 +357,7 @@ static void handleSensorConfigurations(
+ 
+             pendingSensors.emplace_back(interfacePath, *sensorName, eid,
+                                         std::vector<thresholds::Threshold>{},
+-                                        pollRate);
++                                        pollRate, SensorKind::status);
+         }
+     }
+ 
+@@ -444,9 +452,9 @@ static void handleSensorConfigurations(
+                     // Create both temperature and status sensors for this EID
+                     for (const auto& sensorConfig : sensorConfigs)
+                     {
+-                        if (!sensorConfig.thresholds.empty())
++                        if (sensorConfig.kind == SensorKind::temperature)
+                         {
+-                            // Create temperature sensor (has thresholds)
++                            // Create temperature sensor
+                             auto thresholds =
+                                 sensorConfig.thresholds; // Make a copy
+                             std::shared_ptr<NVMeSensor> sensorPtr =
+-- 
+2.53.0
+

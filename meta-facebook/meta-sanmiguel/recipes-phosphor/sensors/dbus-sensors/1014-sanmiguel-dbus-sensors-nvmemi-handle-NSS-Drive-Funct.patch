@@ -1,0 +1,119 @@
+From a5cfda8ae7b05138758f521a54dd8e7985eb8a14 Mon Sep 17 00:00:00 2001
+From: Mik Lin <mik.lin@quantatw.com>
+Date: Wed, 28 Oct 2026 19:05:36 +0800
+Subject: [PATCH 5/5] sanmiguel: dbus-sensors: nvmemi: handle NSS Drive
+ Functional state
+
+During an SSD firmware update, the NSS field may briefly be read as zero.
+NSS bit 5 represents Drive Functional: a set bit indicates that the drive
+is functional, and a clear bit indicates that it is non-functional. Use
+this interpretation consistently for NVMe-MI temperature and status
+sensors.
+
+When the bit is clear, mark the temperature sensor non-functional and
+publish NaN rather than treating the temperature as a valid reading. Log
+only when the Drive Functional state changes to avoid flooding the
+journal during firmware updates or persistent drive failures.
+
+This also handles drives that remain non-functional; it is not limited to
+transient NSS == 0 reads.
+
+Upstream-Status: Inappropriate [downstream follow-up to 1001-Add-NVMeMI-sensor-service.patch; src/nvmemi does not exist upstream (imported from NVIDIA/dbus-sensors)]
+
+Signed-off-by: Mik Lin <mik.lin@quantatw.com>
+---
+ src/nvmemi/NVMeMiContext.cpp | 33 ++++++++++++++++++++++++++++-----
+ src/nvmemi/NVMeMiContext.hpp |  2 ++
+ 2 files changed, 30 insertions(+), 5 deletions(-)
+
+diff --git a/src/nvmemi/NVMeMiContext.cpp b/src/nvmemi/NVMeMiContext.cpp
+index 148c454..7093fb3 100644
+--- a/src/nvmemi/NVMeMiContext.cpp
++++ b/src/nvmemi/NVMeMiContext.cpp
+@@ -37,7 +37,7 @@ extern "C"
+ #include <boost/asio/write.hpp>
+ 
+ // NVMe-MI NSS (NVM Subsystem Status) constants
+-constexpr uint8_t nvmeMiNssDriveFault = (1 << 5); // Drive Fault Status
++constexpr uint8_t nvmeMiNssDriveFunctional = (1 << 5); // Drive Functional
+ 
+ // NVMe-MI CTEMP (Composite Temperature) constants
+ constexpr uint8_t nvmeMiCtempNoData = 0x80; // No temperature data or >5s old
+@@ -393,17 +393,41 @@ void NVMeMiContext::processResponse(void* msg, size_t len)
+ 
+     struct nvme_mi_nvm_ss_health_status* healthLog =
+         static_cast<struct nvme_mi_nvm_ss_health_status*>(msg);
++    const bool driveFunctional =
++        (healthLog->nss & nvmeMiNssDriveFunctional) != 0;
++
++    if (!lastDriveFunctional || *lastDriveFunctional != driveFunctional)
++    {
++        if (!driveFunctional)
++        {
++            lg2::error(
++                "NSS Drive Functional bit 5 is clear for EID {EID}; marking NVMe-MI sensor non-functional",
++                "EID", eid);
++        }
++        else if (lastDriveFunctional.has_value())
++        {
++            lg2::info("NSS Drive Functional bit 5 is set again for EID {EID}",
++                      "EID", eid);
++        }
++        lastDriveFunctional = driveFunctional;
++    }
+ 
+     // Process all sensors in this context
+     for (auto& sensorVariant : sensors)
+     {
+         std::visit(
+-            [healthLog](auto& sensor) {
++            [healthLog, driveFunctional](auto& sensor) {
+                 using SensorType = std::decay_t<decltype(sensor)>;
+ 
+                 if constexpr (std::is_same_v<SensorType,
+                                              std::shared_ptr<NVMeSensor>>)
+                 {
++                    if (!driveFunctional)
++                    {
++                        sensor->markFunctional(false);
++                        return;
++                    }
++
+                     // Update temperature sensor using health data
+                     double value = getTemperatureReading(healthLog);
+ 
+@@ -427,9 +451,8 @@ void NVMeMiContext::processResponse(void* msg, size_t len)
+                     bool functional = true;
+                     bool fault = false;
+ 
+-                    // Check for drive fault from bit 5 of NVM Subsystem Status
+-                    // (nss)
+-                    if (healthLog->nss & nvmeMiNssDriveFault)
++                    // A clear Drive Functional bit means the drive is faulty.
++                    if (!driveFunctional)
+                     {
+                         fault = true;
+                         functional = false;
+diff --git a/src/nvmemi/NVMeMiContext.hpp b/src/nvmemi/NVMeMiContext.hpp
+index ab6a979..827fd28 100644
+--- a/src/nvmemi/NVMeMiContext.hpp
++++ b/src/nvmemi/NVMeMiContext.hpp
+@@ -25,6 +25,7 @@
+ #include <cstddef>
+ #include <cstdint>
+ #include <memory>
++#include <optional>
+ 
+ class NVMeMiContext :
+     public NVMeContext,
+@@ -63,6 +64,7 @@ class NVMeMiContext :
+ 
+     uint8_t eid{0};
+     int consecutiveFailures{0};
++    std::optional<bool> lastDriveFunctional;
+     static constexpr int maxConsecutiveFailures = 3;
+     uint8_t pollRate{1}; // Default poll rate of 1 second
+ 
+-- 
+2.53.0
+

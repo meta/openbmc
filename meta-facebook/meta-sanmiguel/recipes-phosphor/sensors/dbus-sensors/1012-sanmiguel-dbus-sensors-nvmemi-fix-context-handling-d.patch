@@ -1,0 +1,213 @@
+From 4bf9f90c8b02e3daeafba12cd91ef57ea2780b3a Mon Sep 17 00:00:00 2001
+From: Mik Lin <mik.lin@quantatw.com>
+Date: Thu, 15 Oct 2026 15:47:27 +0800
+Subject: [PATCH 3/5] sanmiguel: dbus-sensors: nvmemi: fix context handling
+ during rediscovery
+
+handleSensorConfigurations() previously closed and cleared every context in
+nvmeDeviceMap before confirming that discovery for the new configuration
+would succeed.
+
+During boot, MCTP endpoints can be added in batches and Entity Manager
+configuration can be temporarily empty or partial. Repeated discovery in
+these conditions could remove working sensors, and a later discovery
+failure would leave them unavailable.
+
+Keep existing contexts for EIDs that remain configured, and skip their
+recreation during repeated discovery. When the configured EID set is
+non-empty, remove contexts for EIDs no longer present. Preserve existing
+contexts when the set is empty to avoid tearing them down during
+boot-time configuration gaps.
+
+Create new contexts locally and add them to nvmeDeviceMap only after
+NVMeMiManager::addContext() succeeds. If sensor creation fails, close the
+context and remove it from both the manager and nvmeDeviceMap so a later
+discovery can retry.
+
+A changed configuration for an EID that already has a context is not
+applied until the service restarts. If the configuration is empty, existing
+contexts are retained.
+
+Upstream-Status: Inappropriate [downstream follow-up to 1001-Add-NVMeMI-sensor-service.patch; src/nvmemi does not exist upstream (imported from NVIDIA/dbus-sensors)]
+
+Signed-off-by: Mik Lin <mik.lin@quantatw.com>
+---
+ src/nvmemi/NVMeMiSensorMain.cpp | 112 ++++++++++++++++----------------
+ 1 file changed, 55 insertions(+), 57 deletions(-)
+
+diff --git a/src/nvmemi/NVMeMiSensorMain.cpp b/src/nvmemi/NVMeMiSensorMain.cpp
+index 6908157..8ed694c 100644
+--- a/src/nvmemi/NVMeMiSensorMain.cpp
++++ b/src/nvmemi/NVMeMiSensorMain.cpp
+@@ -228,6 +228,9 @@ static EidPropertiesCreator handleEidProperties(
+             // Store the MCTP endpoint path for this EID
+             eidToMctpPath[eid] = path;
+ 
++            lg2::debug("EID {EID}: endpoint properties ok, path: {PATH}", "EID",
++                       static_cast<int>(eid), "PATH", path);
++
+             onMctpFound(eid, net);
+         };
+     };
+@@ -266,45 +269,17 @@ static MctpDiscoveryHandler handleMctpDiscovery(
+     };
+ }
+ 
+-static std::shared_ptr<NVMeContext> provideMiContext(
+-    boost::asio::io_context& io, NVMEMap& map, uint8_t eid)
+-{
+-    auto findRoot = map.find(eid);
+-    if (findRoot != map.end())
+-    {
+-        return findRoot->second;
+-    }
+-
+-    std::shared_ptr<NVMeContext> context =
+-        std::make_shared<NVMeMiContext>(io, eid);
+-    map[eid] = context;
+-
+-    return context;
+-}
+-
+ static void handleSensorConfigurations(
+     boost::asio::io_context& io, sdbusplus::asio::object_server& objectServer,
+     std::shared_ptr<sdbusplus::asio::connection>& dbusConnection,
+     const ManagedObjectType& sensorConfigurations)
+ {
+-    for (const auto& [_, nvmeContextPtr] : nvmeDeviceMap)
+-    {
+-        if (nvmeContextPtr)
+-        {
+-            nvmeContextPtr->close();
+-        }
+-    }
+-
+-    // Clear commManager contexts to release sensor references
+-    // This allows sensor destructors to run, which removes D-Bus interfaces
+-    if (commManager)
+-    {
+-        for (const auto& [eid, _] : nvmeDeviceMap)
+-        {
+-            commManager->removeContext(eid);
+-        }
+-    }
+-    nvmeDeviceMap.clear();
++    static uint32_t runCounter = 0;
++    const uint32_t runId = ++runCounter;
++    lg2::debug("Round {RUN}: handleSensorConfigurations begin, "
++               "configs={CFG}, existing contexts={CTX}",
++               "RUN", runId, "CFG", sensorConfigurations.size(), "CTX",
++               nvmeDeviceMap.size());
+ 
+     // Store sensor configurations for later creation after MCTP discovery
+     struct SensorConfig
+@@ -385,13 +360,37 @@ static void handleSensorConfigurations(
+         sensorsByEid[sensorConfig.eid].push_back(sensorConfig);
+     }
+ 
++    // Keep existing contexts when configuration is temporarily empty during
++    // startup, but remove contexts for EIDs no longer configured.
++    if (!sensorsByEid.empty())
++    {
++        for (auto contextIt = nvmeDeviceMap.begin();
++             contextIt != nvmeDeviceMap.end();)
++        {
++            if (sensorsByEid.find(contextIt->first) != sensorsByEid.end())
++            {
++                ++contextIt;
++                continue;
++            }
++
++            const uint8_t eid = contextIt->first;
++            contextIt->second->close();
++            if (commManager)
++            {
++                commManager->removeContext(eid);
++            }
++            pausedEids.erase(eid);
++            contextIt = nvmeDeviceMap.erase(contextIt);
++        }
++    }
++
+     // Start MCTP discovery for each unique EID
+     for (const auto& [eid, sensorConfigs] : sensorsByEid)
+     {
+         discoverMctpEndpoint(
+             eid, dbusConnection,
+-            [&io, &objectServer, &dbusConnection, sensorConfigs,
+-             eid](uint8_t discoveredEid, int net) {
++            [&io, &objectServer, &dbusConnection, sensorConfigs, eid,
++             runId](uint8_t discoveredEid, int net) {
+                 // Check if discovered EID matches expected EID
+                 if (discoveredEid != eid)
+                 {
+@@ -401,39 +400,32 @@ static void handleSensorConfigurations(
+                     return;
+                 }
+ 
+-                std::shared_ptr<NVMeContext> context =
+-                    provideMiContext(io, nvmeDeviceMap, discoveredEid);
++                if (nvmeDeviceMap.find(discoveredEid) != nvmeDeviceMap.end())
++                {
++                    lg2::debug(
++                        "Round {RUN}: eid {EID} already has context, skip",
++                        "RUN", runId, "EID", static_cast<int>(discoveredEid));
++                    return;
++                }
+ 
+                 auto nvmeContext =
+-                    std::static_pointer_cast<NVMeMiContext>(context);
++                    std::make_shared<NVMeMiContext>(io, discoveredEid);
+ 
+                 if (commManager)
+                 {
+                     if (!commManager->addContext(nvmeContext, net,
+                                                  discoveredEid))
+                     {
+-                        // If it already exists, we don't want to create
+-                        // duplicate sensors
+-                        auto existingContext =
+-                            nvmeDeviceMap.find(discoveredEid);
+-                        if (existingContext != nvmeDeviceMap.end() &&
+-                            existingContext->second != context)
+-                        {
+-                            // Context exists but it's different - this is the
+-                            // duplicate case
+-                            lg2::debug("Context for eid {EID} already exists",
+-                                       "EID", discoveredEid);
+-                        }
+-                        else
+-                        {
+-                            lg2::error(
+-                                "Failed to add context in NVMeMiManager for eid: {EID}",
+-                                "EID", discoveredEid);
+-                        }
++                        lg2::error(
++                            "Failed to add context in NVMeMiManager for eid: {EID}",
++                            "EID", discoveredEid);
+                         return;
+                     }
+                 }
+ 
++                std::shared_ptr<NVMeContext> context = nvmeContext;
++                nvmeDeviceMap[discoveredEid] = context;
++
+                 try
+                 {
+                     // Find minimum poll rate from all sensors for this EID
+@@ -491,6 +483,12 @@ static void handleSensorConfigurations(
+                 {
+                     lg2::error("Failed to add sensors for eid {EID} {ERROR}",
+                                "EID", discoveredEid, "ERROR", ex.what());
++                    context->close();
++                    if (commManager)
++                    {
++                        commManager->removeContext(discoveredEid);
++                    }
++                    nvmeDeviceMap.erase(discoveredEid);
+                 }
+             });
+     }
+-- 
+2.53.0
+

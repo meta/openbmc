@@ -1,0 +1,140 @@
+From 4e1beed159cc4bd27feb6f09869ab26f7b93204b Mon Sep 17 00:00:00 2001
+From: Potin Lai <potin.lai@quantatw.com>
+Date: Thu, 20 Aug 2026 14:06:06 +0800
+Subject: [PATCH 1/5] sanmiguel: dbus-sensors: nvmemi: poll unavailable sensors
+ as fallback
+
+When consecutiveFailures >= maxConsecutiveFailures is reached, NVMe-MI
+polling halts without updating sensor availability on D-Bus, leaving
+stale reading values published. Furthermore, the polling timer is completely
+stopped, meaning the sensor will not recover even after the drive is
+plugged back in.
+
+Fix this by iterating over all sensors in the context to mark NVMeSensor
+and NVMeStatusSensor as unavailable. In addition, keep the polling loop
+running with a slower fallback interval (nvmeMiOfflinePollRateSeconds)
+so it can recover automatically once the drive is restored.
+
+Upstream-Status: Inappropriate [downstream follow-up to 1001-Add-NVMeMI-sensor-service.patch; src/nvmemi does not exist upstream (imported from NVIDIA/dbus-sensors)]
+
+Signed-off-by: Potin Lai <potin.lai@quantatw.com>
+---
+ src/nvmemi/NVMeMiContext.cpp | 74 +++++++++++++++++++++++++++++-------
+ 1 file changed, 61 insertions(+), 13 deletions(-)
+
+diff --git a/src/nvmemi/NVMeMiContext.cpp b/src/nvmemi/NVMeMiContext.cpp
+index 1646f15..148c454 100644
+--- a/src/nvmemi/NVMeMiContext.cpp
++++ b/src/nvmemi/NVMeMiContext.cpp
+@@ -54,6 +54,7 @@ constexpr uint8_t nvmeMiCtempTwosCompStart =
+ #include <boost/asio/streambuf.hpp>
+ #include <phosphor-logging/lg2.hpp>
+ 
++#include <algorithm>
+ #include <array>
+ #include <chrono>
+ #include <cmath>
+@@ -68,6 +69,8 @@ constexpr uint8_t nvmeMiCtempTwosCompStart =
+ #include <variant>
+ #include <vector>
+ 
++constexpr uint32_t nvmeMiOfflinePollRateSeconds = 30;
++
+ NVMeMiContext::NVMeMiContext(boost::asio::io_context& io, uint8_t eid) :
+     NVMeContext::NVMeContext(io, eid), eid(eid), requestPipe(-1),
+     responsePipe(-1), requestStream(io), responseStream(io)
+@@ -137,8 +140,15 @@ void NVMeMiContext::readAndProcessNVMeSensor()
+ 
+ void NVMeMiContext::pollNVMeDevices()
+ {
+-    scanTimer.expires_after(
+-        std::chrono::milliseconds(static_cast<unsigned int>(pollRate * 1000)));
++    unsigned int currentPollRate = pollRate;
++
++    if (consecutiveFailures >= maxConsecutiveFailures)
++    {
++        currentPollRate =
++            std::max<unsigned int>(pollRate, nvmeMiOfflinePollRateSeconds);
++    }
++
++    scanTimer.expires_after(std::chrono::milliseconds(currentPollRate * 1000));
+     scanTimer.async_wait([weakSelf{weak_from_this()}](
+                              const boost::system::error_code errorCode) {
+         if (errorCode == boost::asio::error::operation_aborted)
+@@ -323,24 +333,62 @@ void NVMeMiContext::processResponse(void* msg, size_t len)
+ {
+     if (msg == nullptr || len < sizeof(struct nvme_mi_nvm_ss_health_status))
+     {
+-        consecutiveFailures++;
+-        lg2::debug("Consecutive failures for eid: {EID}: {FAILURES}/{MAX}",
+-                   "EID", eid, "FAILURES", consecutiveFailures, "MAX",
+-                   maxConsecutiveFailures);
+-
+-        if (consecutiveFailures >= maxConsecutiveFailures)
++        if (consecutiveFailures < maxConsecutiveFailures)
+         {
+-            lg2::error(
+-                "Max consecutive failures reached for eid: {EID}, stopping polling "
+-                "(device may be powered off or non-responsive)",
+-                "EID", eid);
+-            return;
++            consecutiveFailures++;
++            lg2::debug("Consecutive failures for eid: {EID}: {FAILURES}/{MAX}",
++                       "EID", eid, "FAILURES", consecutiveFailures, "MAX",
++                       maxConsecutiveFailures);
++
++            if (consecutiveFailures == maxConsecutiveFailures)
++            {
++                unsigned int fallbackPollRate = std::max<unsigned int>(
++                    pollRate, nvmeMiOfflinePollRateSeconds);
++                lg2::error(
++                    "Max consecutive failures reached for eid: {EID}, marking as unavailable "
++                    "and slowing down polling to {RATE} seconds",
++                    "EID", eid, "RATE", fallbackPollRate);
++
++                for (auto& sensorVariant : sensors)
++                {
++                    std::visit(
++                        [eid = eid](auto& sensor) {
++                            using SensorType = std::decay_t<decltype(sensor)>;
++                            if constexpr (std::is_same_v<
++                                              SensorType,
++                                              std::shared_ptr<NVMeSensor>>)
++                            {
++                                lg2::error(
++                                    "Set NVMeSensor {NAME} to unavailable for eid: {EID}",
++                                    "NAME", sensor->name, "EID", eid);
++                                sensor->markAvailable(false);
++                                sensor->updateValue(
++                                    std::numeric_limits<double>::quiet_NaN());
++                            }
++                            else if constexpr (std::is_same_v<
++                                                   SensorType,
++                                                   std::shared_ptr<
++                                                       NVMeStatusSensor>>)
++                            {
++                                lg2::error(
++                                    "Set NVMeStatusSensor {NAME} to unavailable for eid: {EID}",
++                                    "NAME", sensor->name, "EID", eid);
++                                sensor->updateStatus(false, false, false);
++                            }
++                        },
++                        sensorVariant);
++                }
++            }
+         }
+         pollNVMeDevices();
+         return;
+     }
+ 
+     // Reset failure counter on successful response
++    if (consecutiveFailures >= maxConsecutiveFailures)
++    {
++        lg2::info("EID {EID} recovered from failure", "EID", eid);
++    }
+     consecutiveFailures = 0;
+ 
+     struct nvme_mi_nvm_ss_health_status* healthLog =
+-- 
+2.53.0
+

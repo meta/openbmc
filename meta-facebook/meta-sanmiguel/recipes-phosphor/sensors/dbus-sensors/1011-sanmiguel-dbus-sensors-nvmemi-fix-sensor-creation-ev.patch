@@ -1,0 +1,173 @@
+From bd5d5d17a8ccc970569a30a2fda32890765d582a Mon Sep 17 00:00:00 2001
+From: Mik Lin <mik.lin@quantatw.com>
+Date: Thu, 15 Oct 2026 15:23:59 +0800
+Subject: [PATCH 2/5] sanmiguel: dbus-sensors: nvmemi: fix sensor creation
+ event loss
+
+When `createSensors()` is running and performing asynchronous MCTP
+endpoint discovery, the `createSensorsInProgress` flag is set to true.
+Previously, if a new MCTP endpoint was added (`InterfacesAdded`) or a
+sensor configuration changed (`PropertiesChanged`) during this window,
+the signal handler would check the flag and return early, completely
+dropping the event. This resulted in sensors sometimes failing to be
+created when EIDs were rapidly added or removed.
+
+This commit introduces a `createSensorsRequested` flag to queue these
+incoming requests. Instead of dropping events when a discovery is in
+progress, the signal handlers now set this flag. Once the active
+`createSensors()` cycle completes, it checks the flag and re-queues
+itself if new events were detected, ensuring no sensor creation events
+are missed.
+
+Upstream-Status: Inappropriate [downstream follow-up to 1001-Add-NVMeMI-sensor-service.patch; src/nvmemi does not exist upstream (imported from NVIDIA/dbus-sensors)]
+
+Signed-off-by: Mik Lin <mik.lin@quantatw.com>
+---
+ src/nvmemi/NVMeMiSensorMain.cpp | 89 +++++++++++++++------------------
+ 1 file changed, 41 insertions(+), 48 deletions(-)
+
+diff --git a/src/nvmemi/NVMeMiSensorMain.cpp b/src/nvmemi/NVMeMiSensorMain.cpp
+index 8fb62dd..6908157 100644
+--- a/src/nvmemi/NVMeMiSensorMain.cpp
++++ b/src/nvmemi/NVMeMiSensorMain.cpp
+@@ -72,6 +72,7 @@ static std::unique_ptr<NVMeMiManager> commManager;
+ static std::map<uint8_t, std::string> eidToMctpPath;
+ // Flag to prevent overlapping createSensors() execution
+ static std::atomic<bool> createSensorsInProgress{false};
++static std::atomic<bool> createSensorsRequested{false};
+ // Track endpoints that have been explicitly paused (Degraded state)
+ static std::set<uint8_t> pausedEids;
+ 
+@@ -505,14 +506,25 @@ void createSensors(boost::asio::io_context& io,
+ {
+     // Set flag at entry
+     createSensorsInProgress = true;
++    createSensorsRequested = false;
+ 
+     auto getter = std::make_shared<GetSensorConfiguration>(
+         dbusConnection, [&io, &objectServer, &dbusConnection](
+                             const ManagedObjectType& sensorConfigurations) {
+             handleSensorConfigurations(io, objectServer, dbusConnection,
+                                        sensorConfigurations);
+-            // Clear flag when sensor configuration handling completes
+-            createSensorsInProgress = false;
++
++            if (createSensorsRequested)
++            {
++                boost::asio::post(io, [&io, &objectServer, &dbusConnection]() {
++                    createSensors(io, objectServer, dbusConnection);
++                });
++            }
++            else
++            {
++                // Clear flag when sensor configuration handling completes
++                createSensorsInProgress = false;
++            }
+         });
+     getter->getConfiguration(std::vector<std::string_view>{
+         NVMeSensor::sensorType, NVMeStatusSensor::sensorType});
+@@ -682,47 +694,36 @@ int main()
+                       [&]() { createSensors(io, objectServer, systemBus); });
+ 
+     boost::asio::steady_timer filterTimer(io);
+-    std::function<void(sdbusplus::message_t&)> eventHandler = [&filterTimer,
+-                                                               &io,
+-                                                               &objectServer,
+-                                                               &systemBus](
+-                                                                  sdbusplus::
+-                                                                      message_t&) {
+-        // Check if createSensors is already in progress
+-        if (createSensorsInProgress.load())
+-        {
+-            lg2::debug(
+-                "createSensors already in progress, ignoring property change");
+-            return;
+-        }
++    std::function<void(sdbusplus::message_t&)> eventHandler =
++        [&filterTimer, &io, &objectServer, &systemBus](sdbusplus::message_t&) {
++            // this implicitly cancels the timer
++            filterTimer.expires_after(std::chrono::seconds(3));
+ 
+-        // this implicitly cancels the timer
+-        filterTimer.expires_after(std::chrono::seconds(3));
+-
+-        filterTimer.async_wait([&](const boost::system::error_code& ec) {
+-            if (ec == boost::asio::error::operation_aborted)
+-            {
+-                return; // we're being canceled
+-            }
++            filterTimer.async_wait([&](const boost::system::error_code& ec) {
++                if (ec == boost::asio::error::operation_aborted)
++                {
++                    return; // we're being canceled
++                }
+ 
+-            if (ec)
+-            {
+-                lg2::error("Error: {ERROR}", "ERROR", ec.message());
+-                return;
+-            }
++                if (ec)
++                {
++                    lg2::error("Error: {ERROR}", "ERROR", ec.message());
++                    return;
++                }
+ 
+-            // Check again before executing
+-            if (createSensorsInProgress.exchange(true))
+-            {
+-                lg2::debug("createSensors already queued, skipping");
+-                return;
+-            }
++                if (createSensorsInProgress.exchange(true))
++                {
++                    lg2::debug(
++                        "createSensors already running, queueing request");
++                    createSensorsRequested = true;
++                    return;
++                }
+ 
+-            boost::asio::post(io, [&io, &objectServer, &systemBus]() {
+-                createSensors(io, objectServer, systemBus);
++                boost::asio::post(io, [&io, &objectServer, &systemBus]() {
++                    createSensors(io, objectServer, systemBus);
++                });
+             });
+-        });
+-    };
++        };
+ 
+     // Debounce timers for MCTP endpoint add/remove events
+     boost::asio::steady_timer mctpEndpointAddedDebounceTimer(io);
+@@ -745,14 +746,6 @@ int main()
+         "codeconstruct/mctp1'",
+         [&mctpEndpointAddedDebounceTimer, &io, &objectServer,
+          &systemBus](sdbusplus::message_t&) {
+-            // Check if createSensors is already in progress
+-            if (createSensorsInProgress.load())
+-            {
+-                lg2::debug(
+-                    "createSensors already in progress, ignoring InterfacesAdded signal");
+-                return;
+-            }
+-
+             // Debounce: cancel any existing timer and start a new 3-second
+             // delay to collect multiple endpoint additions into a single
+             // discovery operation
+@@ -775,11 +768,11 @@ int main()
+                         return;
+                     }
+ 
+-                    // Check again before queueing work (defense in depth)
+                     if (createSensorsInProgress.exchange(true))
+                     {
+                         lg2::debug(
+-                            "createSensors already queued, skipping duplicate");
++                            "createSensors already running, queueing request");
++                        createSensorsRequested = true;
+                         return;
+                     }
+ 
+-- 
+2.53.0
+

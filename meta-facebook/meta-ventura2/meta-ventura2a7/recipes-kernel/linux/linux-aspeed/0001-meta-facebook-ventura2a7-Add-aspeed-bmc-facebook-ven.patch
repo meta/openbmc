@@ -28,7 +28,7 @@ new file mode 100644
 index 000000000..93c91817d
 --- /dev/null
 +++ b/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-ventura2a7.dts
-@@ -0,0 +1,2984 @@
+@@ -0,0 +1,2988 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +// Copyright (c) 2026 Facebook Inc.
 +
@@ -2808,6 +2808,10 @@ index 000000000..93c91817d
 +	use-ncsi;
 +	ncsi-ctrl,start-redo-probe;
 +	ncsi-package = <1>;
++};
++
++&pinctrl_rmii1_default {
++	drive-strength = <8>;
 +};
 +
 +&mdio0 {

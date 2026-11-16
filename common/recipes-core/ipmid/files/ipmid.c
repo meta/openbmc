@@ -195,6 +195,25 @@ static void ipmi_handle(unsigned char *request, unsigned char req_len,
        unsigned char *response, unsigned char *res_len);
 extern int bbv_power_cycle(int delay_time);
 
+
+uint8_t encode_major_revision(uint8_t rev)
+{
+  #ifdef CONFIG_FBTP
+    uint8_t platform_id = 0;
+    enum { FBTP_ODM_A = 0x0, FBTP_ODM_B = 0x1 };
+    extern int pal_get_platform_id(uint8_t *platform_id);
+    // First BIT of platform_id is the ODM. Use the workaround only for
+    // ODM - B
+    if (pal_get_platform_id(&platform_id) == 0 && (platform_id & 0x1) == FBTP_ODM_B) {
+      // Workaround for BIOS Bug which expect BCD encoding for CONFIG_FBTP
+      return (rev / 10) << 4 | (rev % 10);
+    }
+    return rev;
+  #else
+    return rev;
+  #endif
+}
+
 static struct watchdog_data *get_watchdog(int slot_id)
 {
   if (slot_id > MAX_NUM_FRUS)
@@ -613,7 +632,7 @@ app_get_device_id (unsigned char *request, unsigned char req_len,
   //TODO: Following data needs to be updated based on platform
   *data++ = 0x20;   // Device ID
   *data++ = 0x81;   // Device Revision
-  *data++ = fv_major & 0x7f;      // Firmware Revision Major
+  *data++ = encode_major_revision(fv_major) & 0x7f;  // Firmware Revision Major
   *data++ = ((fv_minor / 10) << 4) | (fv_minor % 10);      // Firmware Revision Minor
   *data++ = 0x02;   // IPMI Version
   *data++ = 0xBF;   // Additional Device Support

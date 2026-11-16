@@ -1,0 +1,126 @@
+From 68f71e50524f3e7e2fbddb75f1849c8f9418c6e8 Mon Sep 17 00:00:00 2001
+From: Carl Lee <carl.lee@amd.com>
+Date: Wed, 23 Sep 2026 14:41:53 +0800
+Subject: [PATCH 9/9] meta: add Anacapa init support
+
+Description:
+Add Meta Anacapa platform source to the Meson build and register
+the platform-specific init and CMOS reset handlers.
+
+Anacapa requires a platform init readiness notification so that
+dependent services can determine when initialization has completed.
+Also add the FM_CLR_CMOS_R_P0 GPIO handling required for CMOS reset
+flow on Anacapa platform.
+
+Tested:
+- journalctl -u xyz.openbmc_project.Software.Host.Updater0
+- platform CMOS reset flow
+- Redfish event log verification for successful CMOS reset
+
+Gerrit: https://gerrit.openbmc.org/c/openbmc/platform-init/+/95015
+
+Change-Id: I47434ef5a97f30bf8bc25b4eea1966f5a5230dc1
+Signed-off-by: Carl Lee <carl.lee@amd.com>
+---
+ meson.build                  |  1 +
+ platform.cpp                 |  4 +++-
+ platforms/meta/anacapa.cpp   | 38 ++++++++++++++++++++++++++++++++++++
+ platforms/meta/platforms.hpp |  2 ++
+ 4 files changed, 44 insertions(+), 1 deletion(-)
+ create mode 100644 platforms/meta/anacapa.cpp
+
+diff --git a/meson.build b/meson.build
+index 1f41751..4566948 100644
+--- a/meson.build
++++ b/meson.build
+@@ -23,6 +23,7 @@ i2c_dep = meson.get_compiler('cpp').find_library('i2c')
+ platform_srcs = files(
+     'platforms/intel/avcrp.cpp',
+     'platforms/intel/jncrp.cpp',
++    'platforms/meta/anacapa.cpp',
+     'platforms/meta/catalina.cpp',
+     'platforms/nvidia/gb200.cpp',
+     'platforms/nvidia/nvl32.cpp',
+diff --git a/platform.cpp b/platform.cpp
+index 4d5c069..22a29b0 100644
+--- a/platform.cpp
++++ b/platform.cpp
+@@ -26,6 +26,7 @@ constexpr auto init_functions =
+     std::to_array<std::pair<std::string_view, int (*)()>>(
+         {{"intel-avcrp", intel::init_avcrp},
+          {"intel-jncrp", intel::init_jncrp},
++         {"meta-anacapa", meta::init_anacapa_base},
+          {"meta-catalina", meta::init_catalina_base},
+          {"nvidia-gb200", nvidia::init_gb200_base},
+          {"nvidia-gb200-with-p2020", nvidia::init_gb200_with_p2020},
+@@ -35,7 +36,8 @@ constexpr auto init_functions =
+ constexpr auto cmos_reset_functions =
+     std::to_array<std::pair<std::string_view, sdbusplus::async::task<bool> (*)(
+                                                   sdbusplus::async::context&)>>(
+-        {{"meta-catalina", meta::catalina_cmos_reset}});
++        {{"meta-anacapa", meta::anacapa_cmos_reset},
++         {"meta-catalina", meta::catalina_cmos_reset}});
+ 
+ int init_sub_callback(const std::string& platform_name, CLI::App* sub)
+ {
+diff --git a/platforms/meta/anacapa.cpp b/platforms/meta/anacapa.cpp
+new file mode 100644
+index 0000000..279ef92
+--- /dev/null
++++ b/platforms/meta/anacapa.cpp
+@@ -0,0 +1,38 @@
++// SPDX-License-Identifier: Apache-2.0
++// SPDX-FileCopyrightText: Copyright OpenBMC Authors
++
++#include "gpio.hpp"
++#include "platforms.hpp"
++
++#include <systemd/sd-daemon.h>
++
++#include <chrono>
++
++namespace meta
++{
++
++sdbusplus::async::task<bool> anacapa_cmos_reset(sdbusplus::async::context& ctx)
++{
++    const char* cmosReset = "FM_CLR_CMOS_R_P0";
++    const size_t TIMEOUT = 5;
++
++    gpio::set(cmosReset, 1);
++    co_await sdbusplus::async::sleep_for(ctx, std::chrono::seconds(TIMEOUT));
++    gpio::set(cmosReset, 0);
++    co_return true;
++}
++
++int init_anacapa_base()
++{
++    info("Anacapa platform init");
++
++    int notify_rc = sd_notify(0, "READY=1\nSTATUS=Anacapa init complete");
++
++    if (notify_rc < 0)
++    {
++        error("sd_notify READY=1 failed: {RC}", "RC", notify_rc);
++        return EXIT_FAILURE;
++    }
++    return EXIT_SUCCESS;
++}
++} // namespace meta
+diff --git a/platforms/meta/platforms.hpp b/platforms/meta/platforms.hpp
+index 1aadd3c..33591df 100644
+--- a/platforms/meta/platforms.hpp
++++ b/platforms/meta/platforms.hpp
+@@ -12,7 +12,9 @@ namespace meta
+ {
+ 
+ // list your platform initialization callbacks here
++int init_anacapa_base();
+ int init_catalina_base();
++sdbusplus::async::task<bool> anacapa_cmos_reset(sdbusplus::async::context&);
+ sdbusplus::async::task<bool> catalina_cmos_reset(sdbusplus::async::context&);
+ 
+ } // namespace meta
+-- 
+2.34.1
+

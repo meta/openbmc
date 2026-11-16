@@ -1,0 +1,43 @@
+From 278741d9ec711224b905293104e49fa14614db54 Mon Sep 17 00:00:00 2001
+From: Oliver Brewka <oliver.brewka@9elements.com>
+Date: Sun, 14 Jun 2026 16:23:42 +0200
+Subject: [PATCH 2/9] Fix platform_init service file description
+
+The description is wrong and logs do not form properly. Fix the unit
+description as per systemd docs [1].
+
+Tested: Build a meta-catalina image.
+Verify the systemd logs are formed correctly:
+
+```
+Mar 13 08:35:34 catalina systemd[1]: Starting initializing the platform hardware...
+Mar 13 08:35:35 catalina platform-init[605]: Catalina platform init
+Mar 13 08:35:39 catalina systemd[1]: Started initializing the platform hardware.
+Mar 13 08:35:40 catalina systemd[1]: platform_init.service: Deactivated successfully.
+
+```
+
+[1] https://www.freedesktop.org/software/systemd/man/latest/systemd.unit.html#%5BUnit%5D%20Section%20Options
+
+Gerrit: https://gerrit.openbmc.org/c/openbmc/platform-init/+/91320/6
+
+Change-Id: Id314dc9a9691ec0894b1e8452e46e6aed01c6824
+Signed-off-by: Oliver Brewka <oliver.brewka@9elements.com>
+---
+ platform_init.service.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/platform_init.service.in b/platform_init.service.in
+index 5c6d77f..d5bae53 100644
+--- a/platform_init.service.in
++++ b/platform_init.service.in
+@@ -1,5 +1,5 @@
+ [Unit]
+-Description=Start up the platform hardware
++Description=init of platform hardware
+ Before=xyz.openbmc_project.FruDevice.service
+ 
+ [Service]
+-- 
+2.34.1
+

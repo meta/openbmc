@@ -1,0 +1,104 @@
+From c9d56204a1ab298c5c007d8f5dbec59dc0e85f96 Mon Sep 17 00:00:00 2001
+From: Oliver Brewka <oliver.brewka@9elements.com>
+Date: Sun, 14 Jun 2026 15:14:11 +0200
+Subject: [PATCH 1/9] Use CLI11 callback function for init sub
+
+Follow-up patch adds a new sub command. Using CLI11 callback function to
+have uniform code for sub command handling.
+
+Tested: Build a meta-catalina image.
+Upon boot, check the output of `systemctl status platform_init`.
+Confirmed the dummy init function for meta-catalina executed.
+
+Output of subcommand when running with unknown platform name:
+```
+root@catalina:/usr/libexec# ./platform init unknown
+No init function for unknown platform
+Initialize the platform and daemonize
+
+init [OPTIONS] platform_name
+
+POSITIONALS:
+  platform_name TEXT REQUIRED Name of the platform to init
+
+OPTIONS:
+  -h,     --help              Print this help message and exit
+```
+
+Gerrit: https://gerrit.openbmc.org/c/openbmc/platform-init/+/91318
+
+Change-Id: I71261b28ee60279c589b50a7ae5943cf3b1b9960
+Signed-off-by: Oliver Brewka <oliver.brewka@9elements.com>
+---
+ platform.cpp | 43 ++++++++++++++++++++++++++++++-------------
+ 1 file changed, 30 insertions(+), 13 deletions(-)
+
+diff --git a/platform.cpp b/platform.cpp
+index 71249a6..22e2f9a 100644
+--- a/platform.cpp
++++ b/platform.cpp
+@@ -28,6 +28,29 @@ constexpr auto init_functions =
+          {"nvidia-nvl32", nvidia::init_nvl32},
+          {"nvidia-vr-nvl", nvidia::init_vr_nvl}});
+ 
++int init_sub_callback(const std::string& platform_name, CLI::App* sub)
++{
++    const auto* it = std::ranges::find_if(
++        init_functions,
++        [&platform_name](const std::pair<std::string_view, int (*)()> val) {
++            return val.first == platform_name;
++        });
++    if (it == init_functions.end())
++    {
++        std::cerr << "No init function for " << platform_name << " platform\n";
++        std::cerr << sub->help() << "\n";
++        return EXIT_FAILURE;
++    }
++
++    int rc = it->second();
++    if (rc != EXIT_SUCCESS)
++    {
++        std::cerr << "init function failed\n";
++    }
++
++    return rc;
++}
++
+ int main(int argc, char** argv)
+ {
+     CLI::App app("Platform init CLI");
+@@ -37,24 +60,18 @@ int main(int argc, char** argv)
+     CLI::App* init_sub =
+         app.add_subcommand("init", "Initialize the platform and daemonize");
+     std::string platform_name;
++    int rc = EXIT_SUCCESS;
+     init_sub
+         ->add_option("platform_name", platform_name,
+                      "Name of the platform to init")
+         ->required();
+-    app.require_subcommand();
+ 
+-    CLI11_PARSE(app, argc, argv)
++    init_sub->callback([&platform_name, &rc, init_sub]() {
++        rc = init_sub_callback(platform_name, init_sub);
++    });
+ 
+-    const auto* it = std::ranges::find_if(
+-        init_functions,
+-        [&platform_name](const std::pair<std::string_view, int (*)()> val) {
+-            return val.first == platform_name;
+-        });
+-    if (it == init_functions.end())
+-    {
+-        std::cerr << init_sub->help() << "\n";
+-        return EXIT_FAILURE;
+-    }
++    app.require_subcommand();
++    CLI11_PARSE(app, argc, argv)
+ 
+-    return it->second();
++    return rc;
+ }
+-- 
+2.34.1
+

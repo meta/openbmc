@@ -1,0 +1,154 @@
+From bde144ce57d55d4f14a565937c7126acb04ade22 Mon Sep 17 00:00:00 2001
+From: Oliver Brewka <oliver.brewka@9elements.com>
+Date: Sun, 5 Apr 2026 22:11:26 +0200
+Subject: [PATCH 6/9] cmos-reset: Add event logs
+
+The Redfish request for a Bios.ResetBios action only initiates the
+reset and passes control to the service. A user should be able to check
+whether the reset was successful or not afterwards through Redfish
+EventLog log service.
+
+For that matter, a Common.FactoryReset.ResetFailure error and a
+Common.FactoryReset.ResetSuccess event have been added to PDI [1] to log
+either a failed or a successful reset.
+
+Tested: Build the image.
+Pass in a valid platform reset function to check the
+successful reset notification.
+
+Verify the according log entry has been created under
+xyz.openbmc_project.Logging.
+
+Output for successful reset upon request through Redfish:
+
+```
+$ curl -v -k  POST
+'https://'"${BMC}"':'"${BMC_WEBPORT}"'/redfish/v1/Systems/system/Bios/Actions/Bios.ResetBios' \
+        -H 'X-Auth-Token: '"$BMCWEB_SESSION_TOKEN_YV4"'' \
+        -H "Content-Type: application/json" -d "{${BODY}}"
+
+$ journalctl -u xyz.openbmc_project.Software.Host.Updater0
+...
+OPENBMC_MESSAGE_ID={"xyz.openbmc_project.Common.FactoryReset.ResetSuccess":{"RESET_CAUSE", "Manual CMOS reset", "SOURCE":"/xyz/openbmc_project/software","_SOURCE":{"COLUMN":77,"FILE":"../../../../../../../../../../openbmc/platform-init/cmos-reset/cmos_reset.cpp","FUNCTION":"sdbusplus::async::task<void> cmos::CmosReset::startReset()","LINE":35,"PID":397}}}
+...
+
+$ busctl introspect xyz.openbmc_project.Logging
+/xyz/openbmc_project/logging/entry/2
+
+...
+xyz.openbmc_project.Logging.Entry           interface -         -                                                                                                                                                                                                                                                -
+.GetEntry                                   method    -         h                                                                                                                                                                                                                                                -
+.AdditionalData                             property  a{ss}     6 "RESET_CAUSE" "Manual CMOS reset" "SOURCE" "/xyz/openbmc_project/software" "_CODE_FILE" "../../../../../../../../../../openbmc/platform-init/cmos-reset/cmos_reset.cpp" "_CODE_FUNC" "sdbusplus::async::task<void> cmos::CmosReset::startReset()" "_CODE_LINE" "29" "_PID" "382" emits-change writable
+.EventId                                    property  s         ""                                                                                                                                                                                                                                               emits-change writable
+.Id                                         property  u         2                                                                                                                                                                                                                                                emits-change writable
+.Message                                    property  s         "xyz.openbmc_project.Common.FactoryReset.ResetSuccess"                                                                                                                                                                                           emits-change writable
+.Resolution                                 property  s         ""                                                                                                                                                                                                                                               emits-change writable
+.Resolved                                   property  b         true                                                                                                                                                                                                                                             emits-change writable
+.ServiceProviderNotify                      property  s         "xyz.openbmc_project.Logging.Entry.Notify.NotSupported"                                                                                                                                                                                          emits-change writable
+.Severity                                   property  s         "xyz.openbmc_project.Logging.Entry.Level.Informational"                                                                                                                                                                                          emits-change writable
+.Timestamp                                  property  t         1775688249078                                                                                                                                                                                                                                    emits-change writable
+.UpdateTimestamp                            property  t         1775688249108                                                                                                                                                                                                                                    emits-change writable
+xyz.openbmc_project.Object.Delete           interface -         -                                                                                                                                                                                                                                                -
+.Delete                                     method    -         -                                                                                                                                                                                                                                                -
+xyz.openbmc_project.Software.Version        interface -         -                                                                                                                                                                                                                                                -
+.Purpose                                    property  s         "xyz.openbmc_project.Software.Version.VersionPurpose.BMC"                                                                                                                                                                                        emits-change writable
+.Version                                    property  s         "3.0.0-dev-2041-gac0738a32c-dirty"                                                                                                                                                                                                               emits-change writable
+```
+
+Output dbus log entry for failed reset by passing a nullptr to
+init_service:
+
+```
+$ busctl introspect xyz.openbmc_project.Logging
+/xyz/openbmc_project/logging/entry/4
+
+...
+xyz.openbmc_project.Logging.Entry           interface -         -                                                                                                                                                                                                                                                -
+.GetEntry                                   method    -         h                                                                                                                                                                                                                                                -
+.AdditionalData                             property  a{ss}     6 "RESET_CAUSE" "Manual CMOS reset" "SOURCE" "/xyz/openbmc_project/software" "_CODE_FILE" "../../../../../../../../../../openbmc/platform-init/cmos-reset/cmos_reset.cpp" "_CODE_FUNC" "sdbusplus::async::task<void> cmos::CmosReset::startReset()" "_CODE_LINE" "22" "_PID" "395" emits-change writable
+.EventId                                    property  s         ""                                                                                                                                                                                                                                               emits-change writable
+.Id                                         property  u         4                                                                                                                                                                                                                                                emits-change writable
+.Message                                    property  s         "xyz.openbmc_project.Common.FactoryReset.ResetFailure"                                                                                                                                                                                           emits-change writable
+.Resolution                                 property  s         ""                                                                                                                                                                                                                                               emits-change writable
+.Resolved                                   property  b         false                                                                                                                                                                                                                                            emits-change writable
+.ServiceProviderNotify                      property  s         "xyz.openbmc_project.Logging.Entry.Notify.NotSupported"                                                                                                                                                                                          emits-change writable
+.Severity                                   property  s         "xyz.openbmc_project.Logging.Entry.Level.Error"                                                                                                                                                                                                  emits-change writable
+.Timestamp                                  property  t         1775745905610                                                                                                                                                                                                                                    emits-change writable
+.UpdateTimestamp                            property  t         1775745905610                                                                                                                                                                                                                                    emits-change writable
+xyz.openbmc_project.Object.Delete           interface -         -                                                                                                                                                                                                                                                -
+.Delete                                     method    -         -                                                                                                                                                                                                                                                -
+xyz.openbmc_project.Software.Version        interface -         -                                                                                                                                                                                                                                                -
+.Purpose                                    property  s         "xyz.openbmc_project.Software.Version.VersionPurpose.BMC"                                                                                                                                                                                        emits-change writable
+.Version                                    property  s         "3.0.0-dev-2041-gac0738a32c-dirty"                                                                                                                                                                                                               emits-change writable
+
+```
+
+[1] https://gerrit.openbmc.org/c/openbmc/phosphor-dbus-interfaces/+/89047
+
+Gerrit: https://gerrit.openbmc.org/c/openbmc/platform-init/+/89046/19
+
+Change-Id: I4e6cd9492accfc3791e9921bf42624e427c84ba5
+Signed-off-by: Oliver Brewka <oliver.brewka@9elements.com>
+---
+ cmos-reset/cmos_reset.cpp | 9 +++++++++
+ cmos-reset/cmos_reset.hpp | 6 ++++++
+ 2 files changed, 15 insertions(+)
+
+diff --git a/cmos-reset/cmos_reset.cpp b/cmos-reset/cmos_reset.cpp
+index c8b72e2..8dee77a 100644
+--- a/cmos-reset/cmos_reset.cpp
++++ b/cmos-reset/cmos_reset.cpp
+@@ -3,6 +3,7 @@
+ 
+ #include "cmos_reset.hpp"
+ 
++#include <phosphor-logging/commit.hpp>
+ #include <phosphor-logging/lg2.hpp>
+ 
+ PHOSPHOR_LOG2_USING;
+@@ -19,10 +20,18 @@ sdbusplus::async::task<> CmosReset::startReset()
+     if (!success)
+     {
+         error("CMOS reset failed");
++        co_await lg2::commit(
++            ctx, ResetFailure("RESET_CAUSE", "Manual CMOS reset", "SOURCE",
++                              sdbusplus::object_path(softwarePath)));
+         co_return;
+     }
+ 
+     info("CMOS reset successful");
++    const auto logPath = co_await lg2::commit(
++        ctx, ResetSuccess("RESET_CAUSE", "Manual CMOS reset", "SOURCE",
++                          sdbusplus::object_path(softwarePath)));
++
++    co_await lg2::resolve(ctx, logPath);
+ }
+ 
+ sdbusplus::async::task<bool> CmosReset::doReset()
+diff --git a/cmos-reset/cmos_reset.hpp b/cmos-reset/cmos_reset.hpp
+index 73eb39c..23afc3b 100644
+--- a/cmos-reset/cmos_reset.hpp
++++ b/cmos-reset/cmos_reset.hpp
+@@ -3,6 +3,7 @@
+ 
+ #include <sdbusplus/bus.hpp>
+ #include <xyz/openbmc_project/Common/FactoryReset/aserver.hpp>
++#include <xyz/openbmc_project/Common/FactoryReset/event.hpp>
+ 
+ namespace cmos
+ {
+@@ -13,6 +14,11 @@ constexpr const char* busName = "xyz.openbmc_project.Software.Host.Updater0";
+ using CmosResetMethod =
+     std::function<sdbusplus::async::task<bool>(sdbusplus::async::context& ctx)>;
+ 
++using ResetFailure =
++    sdbusplus::error::xyz::openbmc_project::common::FactoryReset::ResetFailure;
++using ResetSuccess =
++    sdbusplus::event::xyz::openbmc_project::common::FactoryReset::ResetSuccess;
++
+ class CmosReset :
+     public sdbusplus::aserver::xyz::openbmc_project::common::FactoryReset<
+         CmosReset>
+-- 
+2.34.1
+

@@ -1,0 +1,62 @@
+From 179d74f27a03025c14e78500a164c7af7b6a42bc Mon Sep 17 00:00:00 2001
+From: Oliver Brewka <oliver.brewka@9elements.com>
+Date: Wed, 22 Jul 2026 15:57:48 +0200
+Subject: [PATCH 3/9] Add phosphor-logging and PDI deps
+
+Follow-up patches depend on phosphor-logging and
+phosphor-dbus-interfaces. This patch adds the wrap files and declares
+those packages as new meson dependencies.
+
+Gerrit: https://gerrit.openbmc.org/c/openbmc/platform-init/+/92640/5
+
+Change-Id: I6b21ed838b1c6cea62c9fc283010b5687d7bf755
+Signed-off-by: Oliver Brewka <oliver.brewka@9elements.com>
+---
+ meson.build                               | 3 ++-
+ subprojects/phosphor-dbus-interfaces.wrap | 6 ++++++
+ subprojects/phosphor-logging.wrap         | 6 ++++++
+ 3 files changed, 14 insertions(+), 1 deletion(-)
+ create mode 100644 subprojects/phosphor-dbus-interfaces.wrap
+ create mode 100644 subprojects/phosphor-logging.wrap
+
+diff --git a/meson.build b/meson.build
+index 2288d0a..daa3478 100644
+--- a/meson.build
++++ b/meson.build
+@@ -10,7 +10,8 @@ gpiodcxx_dep = dependency('libgpiodcxx', default_options: ['bindings=cxx'])
+ systemd_dep = dependency('systemd')
+ libsystemd_dep = dependency('libsystemd')
+ sdbusplus = dependency('sdbusplus', include_type: 'system')
+-
++phosphor_dbus_interfaces_dep = dependency('phosphor-dbus-interfaces')
++phosphor_logging_dep = dependency('phosphor-logging')
+ 
+ cli11_dep = dependency(
+     'CLI11',
+diff --git a/subprojects/phosphor-dbus-interfaces.wrap b/subprojects/phosphor-dbus-interfaces.wrap
+new file mode 100644
+index 0000000..346aa0c
+--- /dev/null
++++ b/subprojects/phosphor-dbus-interfaces.wrap
+@@ -0,0 +1,6 @@
++[wrap-git]
++url = https://github.com/openbmc/phosphor-dbus-interfaces.git
++revision = HEAD
++
++[provide]
++phosphor-dbus-interfaces = phosphor_dbus_interfaces_dep
+diff --git a/subprojects/phosphor-logging.wrap b/subprojects/phosphor-logging.wrap
+new file mode 100644
+index 0000000..71eee8b
+--- /dev/null
++++ b/subprojects/phosphor-logging.wrap
+@@ -0,0 +1,6 @@
++[wrap-git]
++url = https://github.com/openbmc/phosphor-logging.git
++revision = HEAD
++
++[provide]
++phosphor-logging = phosphor_logging_dep
+-- 
+2.34.1
+

@@ -1,0 +1,130 @@
+From c06f0ed640924a5a4f84c333f1200c93a9fab547 Mon Sep 17 00:00:00 2001
+From: Oliver Brewka <oliver.brewka@9elements.com>
+Date: Sat, 7 Feb 2026 01:13:56 +0100
+Subject: [PATCH 4/9] Add initial meta catalina
+
+Add the minimum requirement for meta catalina platform init
+
+Tested: Code compiles.
+Added a bbappend file to meta-facebook/meta-catalina to check if service
+appears in catalima qemu. It does appear and prints the expected log.
+
+Gerrit: https://gerrit.openbmc.org/c/openbmc/platform-init/+/88369/13
+
+Change-Id: I7fdfb31f4401a6af064ac29f4f33b667d360097b
+Signed-off-by: Oliver Brewka <oliver.brewka@9elements.com>
+---
+ meson.build                  | 12 ++++++++++--
+ platform.cpp                 |  2 ++
+ platforms/meta/catalina.cpp  | 24 ++++++++++++++++++++++++
+ platforms/meta/platforms.hpp | 16 ++++++++++++++++
+ 4 files changed, 52 insertions(+), 2 deletions(-)
+ create mode 100644 platforms/meta/catalina.cpp
+ create mode 100644 platforms/meta/platforms.hpp
+
+diff --git a/meson.build b/meson.build
+index daa3478..70a2dbc 100644
+--- a/meson.build
++++ b/meson.build
+@@ -23,16 +23,24 @@ i2c_dep = meson.get_compiler('cpp').find_library('i2c')
+ platform_srcs = files(
+     'platforms/intel/avcrp.cpp',
+     'platforms/intel/jncrp.cpp',
++    'platforms/meta/catalina.cpp',
+     'platforms/nvidia/gb200.cpp',
+     'platforms/nvidia/nvl32.cpp',
+     'platforms/nvidia/vr_nvl.cpp',
+ )
+ util_srcs = files('gpio.cpp', 'i2c.cpp', 'utilities.cpp')
+ 
+-exe = executable(
++executable(
+     'platform',
+     ['platform.cpp'] + platform_srcs + util_srcs,
+-    dependencies: [gpiodcxx_dep, libsystemd_dep, cli11_dep, i2c_dep, sdbusplus],
++    dependencies: [
++        gpiodcxx_dep,
++        libsystemd_dep,
++        cli11_dep,
++        i2c_dep,
++        sdbusplus,
++        phosphor_logging_dep,
++    ],
+     include_directories: ['.', 'platforms'],
+     install: true,
+     install_dir: get_option('libexecdir'),
+diff --git a/platform.cpp b/platform.cpp
+index 22e2f9a..9a9124b 100644
+--- a/platform.cpp
++++ b/platform.cpp
+@@ -4,6 +4,7 @@
+ #include "gpio.hpp"
+ #include "i2c.hpp"
+ #include "intel/platforms.hpp"
++#include "meta/platforms.hpp"
+ #include "nvidia/platforms.hpp"
+ #include "utilities.hpp"
+ 
+@@ -23,6 +24,7 @@ constexpr auto init_functions =
+     std::to_array<std::pair<std::string_view, int (*)()>>(
+         {{"intel-avcrp", intel::init_avcrp},
+          {"intel-jncrp", intel::init_jncrp},
++         {"meta-catalina", meta::init_catalina_base},
+          {"nvidia-gb200", nvidia::init_gb200_base},
+          {"nvidia-gb200-with-p2020", nvidia::init_gb200_with_p2020},
+          {"nvidia-nvl32", nvidia::init_nvl32},
+diff --git a/platforms/meta/catalina.cpp b/platforms/meta/catalina.cpp
+new file mode 100644
+index 0000000..e31bcbc
+--- /dev/null
++++ b/platforms/meta/catalina.cpp
+@@ -0,0 +1,24 @@
++// SPDX-License-Identifier: Apache-2.0
++// SPDX-FileCopyrightText: Copyright OpenBMC Authors
++
++#include "platforms.hpp"
++
++#include <systemd/sd-daemon.h>
++
++namespace meta
++{
++
++int init_catalina_base()
++{
++    info("Catalina platform init");
++
++    int notify_rc = sd_notify(0, "READY=1\nSTATUS=Catalina init complete");
++
++    if (notify_rc < 0)
++    {
++        error("sd_notify READY=1 failed: {RC}", "RC", notify_rc);
++        return EXIT_FAILURE;
++    }
++    return EXIT_SUCCESS;
++}
++} // namespace meta
+diff --git a/platforms/meta/platforms.hpp b/platforms/meta/platforms.hpp
+new file mode 100644
+index 0000000..35d2840
+--- /dev/null
++++ b/platforms/meta/platforms.hpp
+@@ -0,0 +1,16 @@
++// SPDX-License-Identifier: Apache-2.0
++// SPDX-FileCopyrightText: Copyright OpenBMC Authors
++
++#pragma once
++
++#include <phosphor-logging/lg2.hpp>
++
++PHOSPHOR_LOG2_USING;
++
++namespace meta
++{
++
++// list your platform initialization callbacks here
++int init_catalina_base();
++
++} // namespace meta
+-- 
+2.34.1
+

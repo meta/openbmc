@@ -1,0 +1,66 @@
+From fc4b1d0aaac252cbc731562bb004bd8a0c7c2f92 Mon Sep 17 00:00:00 2001
+From: Oliver Brewka <oliver.brewka@9elements.com>
+Date: Tue, 17 Mar 2026 18:16:09 +0100
+Subject: [PATCH 8/9] cmos-reset: Add ActivationBlocksTransition
+
+Analogous to a software update, add
+`xyz.openbmc_project.Software.ActionvationBlocksTransition` to the
+service before any reset. Remove the interface afterwards.
+
+Tested: Build an image and run it in qemu with a sleep of 25 seconds to
+increase the capture time for the interface added event.
+
+Observe the interface gets added before the reset, and verify it gets
+removed after the reset.
+
+Gerrit: https://gerrit.openbmc.org/c/openbmc/platform-init/+/88395/22
+
+Change-Id: I3e37f349c90d24ec18d3176a7c4fb628a6f2a947
+Signed-off-by: Oliver Brewka <oliver.brewka@9elements.com>
+---
+ cmos-reset/cmos_reset.cpp | 15 +++++++++++----
+ cmos-reset/cmos_reset.hpp |  1 +
+ 2 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/cmos-reset/cmos_reset.cpp b/cmos-reset/cmos_reset.cpp
+index 8050ff9..af8eccc 100644
+--- a/cmos-reset/cmos_reset.cpp
++++ b/cmos-reset/cmos_reset.cpp
+@@ -70,11 +70,18 @@ sdbusplus::async::task<bool> CmosReset::doReset()
+         restorePowerState = true;
+     }
+ 
+-    bool success = co_await resetMethod(ctx);
+-    if (!success)
+     {
+-        error("CMOS reset failed");
+-        co_return false;
++        auto abt = sdbusplus::aserver::xyz::openbmc_project::software::
++            ActivationBlocksTransition<CmosReset, void>(ctx, softwarePath);
++
++        abt.emit_added();
++
++        bool success = co_await resetMethod(ctx);
++        if (!success)
++        {
++            error("CMOS reset failed");
++            co_return false;
++        }
+     }
+ 
+     if (restorePowerState)
+diff --git a/cmos-reset/cmos_reset.hpp b/cmos-reset/cmos_reset.hpp
+index 23afc3b..b21c7e7 100644
+--- a/cmos-reset/cmos_reset.hpp
++++ b/cmos-reset/cmos_reset.hpp
+@@ -4,6 +4,7 @@
+ #include <sdbusplus/bus.hpp>
+ #include <xyz/openbmc_project/Common/FactoryReset/aserver.hpp>
+ #include <xyz/openbmc_project/Common/FactoryReset/event.hpp>
++#include <xyz/openbmc_project/Software/ActivationBlocksTransition/aserver.hpp>
+ 
+ namespace cmos
+ {
+-- 
+2.34.1
+

@@ -1,0 +1,281 @@
+From c913950f444a87fd2852f2c2a7eda974b350f6f5 Mon Sep 17 00:00:00 2001
+From: Oliver Brewka <oliver.brewka@9elements.com>
+Date: Tue, 17 Mar 2026 16:43:46 +0100
+Subject: [PATCH 7/9] cmos-reset: Add power control capabilities
+
+Ideally the host is powered off before any reset.
+Add functionality, to check if the host is running and to do state
+transitions accordingly.
+
+A sane default behavior is to restore the previously captured host state
+as is done in phosphor-bmc-code-mgmt repository.
+
+In addition to have more control over the transition timeouts, the
+'host-state-transition-timeout' option has been added with a default
+value of 60 seconds.
+
+The majority of the core power logic comes from phosphor-bmc-code-mgmt
+with slight adjustments made. The dbus match got removed, as well as
+some checks of CurrentHostState, which are now done inside the doReset()
+function.
+
+Tested:
+The logic has been tested on a tyan s8047 board.
+Triggered a cmos reset through redfish in both, the 'Off' and the
+'Running' state of the host.
+Validated that the service printed the correct logs as well as checked
+x86-power-control that it registered the correct state transitions.
+Made sure, that when the host initially was 'Running', that state got
+restored  after the reset.
+
+Output for a cmos reset, when host was initially running:
+
+```
+May 10 13:59:32 s8047 cmos-reset[318]: CMOS reset requested
+May 10 13:59:32 s8047 cmos-reset[318]: Host is running, transitioning to off
+May 10 13:59:33 s8047 cmos-reset[318]: Resetting cmos
+May 10 13:59:38 s8047 cmos-reset[318]: CMOS reset done
+May 10 13:59:39 s8047 cmos-reset[318]: CMOS reset successful
+May 10 13:59:39 s8047 cmos-reset[318]: Restoring previous host state
+May 10 13:59:39 s8047 cmos-reset[318]: Host state restored
+May 10 13:59:39 s8047 cmos-reset[318]: OPENBMC_MESSAGE_ID={"xyz.openbmc_project.Common.FactoryReset.ResetSuccess":{"RESET_CAUSE", "Manual CMOS reset", "SOURCE":"/xyz/openbmc_project/software","_SOURCE":{"COLUMN":77,"FILE":"../../../../../../../../../../openbmc/platform-init/cmos-reset/cmos_reset.cpp","FUNCTION":"sdbusplus::async::task<void> cmos::CmosReset::startReset()","LINE":36,"PID":318}}}
+
+```
+
+Gerrit: https://gerrit.openbmc.org/c/openbmc/platform-init/+/88371/23
+
+Change-Id: Ifbcd00d0443ba5292acf9e9a3380deeb16098f9d
+Signed-off-by: Oliver Brewka <oliver.brewka@9elements.com>
+---
+ cmos-reset/cmos_reset.cpp | 41 ++++++++++++++++++++++++++++++++
+ cmos-reset/host_power.cpp | 50 +++++++++++++++++++++++++++++++++++++++
+ cmos-reset/host_power.hpp | 45 +++++++++++++++++++++++++++++++++++
+ meson.build               | 10 +++++++-
+ meson.options             |  7 ++++++
+ 5 files changed, 152 insertions(+), 1 deletion(-)
+ create mode 100644 cmos-reset/host_power.cpp
+ create mode 100644 cmos-reset/host_power.hpp
+
+diff --git a/cmos-reset/cmos_reset.cpp b/cmos-reset/cmos_reset.cpp
+index 8dee77a..8050ff9 100644
+--- a/cmos-reset/cmos_reset.cpp
++++ b/cmos-reset/cmos_reset.cpp
+@@ -3,6 +3,8 @@
+ 
+ #include "cmos_reset.hpp"
+ 
++#include "host_power.hpp"
++
+ #include <phosphor-logging/commit.hpp>
+ #include <phosphor-logging/lg2.hpp>
+ 
+@@ -11,6 +13,8 @@ PHOSPHOR_LOG2_USING;
+ namespace cmos
+ {
+ 
++using namespace host_power;
++
+ sdbusplus::async::task<> CmosReset::startReset()
+ {
+     info("CMOS reset requested");
+@@ -42,6 +46,30 @@ sdbusplus::async::task<bool> CmosReset::doReset()
+         co_return false;
+     }
+ 
++    // NOLINTNEXTLINE(clang-analyzer-core.uninitialized.Branch)
++    auto powerstate = co_await HostPower::getState(ctx);
++
++    if (powerstate != stateOn && powerstate != stateOff)
++    {
++        error("Invalid host state {STATE}", "STATE", powerstate);
++        co_return false;
++    }
++
++    bool restorePowerState = false;
++    if (powerstate == stateOn)
++    {
++        info("Host is running, transitioning to off");
++        bool success = co_await HostPower::setState(ctx, stateOff);
++
++        if (!success)
++        {
++            error("Error host power off");
++            co_return false;
++        }
++
++        restorePowerState = true;
++    }
++
+     bool success = co_await resetMethod(ctx);
+     if (!success)
+     {
+@@ -49,6 +77,19 @@ sdbusplus::async::task<bool> CmosReset::doReset()
+         co_return false;
+     }
+ 
++    if (restorePowerState)
++    {
++        lg2::info("Restoring previous host state");
++        bool success = co_await HostPower::setState(ctx, stateOn);
++
++        if (!success)
++        {
++            error("Error restoring power state");
++            co_return false;
++        }
++        lg2::info("Host state restored successfully");
++    }
++
+     co_return true;
+ }
+ 
+diff --git a/cmos-reset/host_power.cpp b/cmos-reset/host_power.cpp
+new file mode 100644
+index 0000000..a621401
+--- /dev/null
++++ b/cmos-reset/host_power.cpp
+@@ -0,0 +1,50 @@
++#include "host_power.hpp"
++
++#include <phosphor-logging/lg2.hpp>
++
++PHOSPHOR_LOG2_USING;
++
++namespace host_power
++{
++
++sdbusplus::async::task<bool> HostPower::setState(sdbusplus::async::context& ctx,
++                                                 HostState state)
++{
++    auto client = sdbusplus::client::xyz::openbmc_project::state::Host(ctx)
++                      .service(hostStateService)
++                      .path(host0ObjectPath);
++
++    co_await client.requested_host_transition(
++        (state == stateOn) ? transitionOn : transitionOff);
++
++    debug("Requested host transition to {STATE}", "STATE", state);
++
++    for (size_t i = 0; i < HOST_STATE_TRANSITION_TIMEOUT; i++)
++    {
++        co_await sdbusplus::async::sleep_for(ctx, std::chrono::seconds(1));
++
++        if ((co_await client.current_host_state()) == state)
++        {
++            debug("Successfully achieved state {STATE}", "STATE", state);
++            co_return true;
++        }
++    }
++
++    error("Failed to achieve state {STATE} before the timeout of {TIMEOUT}s",
++          "STATE", state, "TIMEOUT", HOST_STATE_TRANSITION_TIMEOUT);
++
++    co_return false;
++}
++
++sdbusplus::async::task<HostState> HostPower::getState(
++    sdbusplus::async::context& ctx)
++{
++    auto client = sdbusplus::client::xyz::openbmc_project::state::Host(ctx)
++                      .service(hostStateService)
++                      .path(host0ObjectPath);
++
++    auto res = co_await client.current_host_state();
++
++    co_return res;
++}
++} // namespace host_power
+diff --git a/cmos-reset/host_power.hpp b/cmos-reset/host_power.hpp
+new file mode 100644
+index 0000000..5d84149
+--- /dev/null
++++ b/cmos-reset/host_power.hpp
+@@ -0,0 +1,45 @@
++#pragma once
++
++#include "config.h"
++
++#include <sdbusplus/async.hpp>
++#include <sdbusplus/async/context.hpp>
++#include <xyz/openbmc_project/State/Host/client.hpp>
++
++namespace host_power
++{
++
++const auto stateOn =
++    sdbusplus::client::xyz::openbmc_project::state::Host<>::HostState::Running;
++const auto stateOff =
++    sdbusplus::client::xyz::openbmc_project::state::Host<>::HostState::Off;
++const auto transitionOn =
++    sdbusplus::client::xyz::openbmc_project::state::Host<>::Transition::On;
++const auto transitionOff =
++    sdbusplus::client::xyz::openbmc_project::state::Host<>::Transition::Off;
++
++using HostState =
++    sdbusplus::client::xyz::openbmc_project::state::Host<>::HostState;
++
++using StateIntf =
++    sdbusplus::client::xyz::openbmc_project::state::Host<void, void>;
++
++const auto host0ObjectPath = sdbusplus::client::xyz::openbmc_project::state::
++                                 Host<>::namespace_path::value +
++                             std::string("/host0");
++
++constexpr const char* hostStateService = "xyz.openbmc_project.State.Host0";
++
++class HostPower
++{
++  public:
++    // @param state   desired powerstate
++    // @returns       true on success
++    static sdbusplus::async::task<bool> setState(sdbusplus::async::context& ctx,
++                                                 HostState state);
++
++    // @returns       host powerstate
++    static sdbusplus::async::task<HostState> getState(
++        sdbusplus::async::context& ctx);
++};
++}; // namespace host_power
+diff --git a/meson.build b/meson.build
+index a0991ca..1f41751 100644
+--- a/meson.build
++++ b/meson.build
+@@ -29,7 +29,7 @@ platform_srcs = files(
+     'platforms/nvidia/vr_nvl.cpp',
+ )
+ 
+-cmos_reset_srcs = files('cmos-reset/cmos_reset.cpp')
++cmos_reset_srcs = files('cmos-reset/cmos_reset.cpp', 'cmos-reset/host_power.cpp')
+ 
+ util_srcs = files('gpio.cpp', 'i2c.cpp', 'utilities.cpp')
+ 
+@@ -70,3 +70,11 @@ configure_file(
+         {'PLATFORM_NAME': get_option('platform-name')},
+     ),
+ )
++
++conf = configuration_data()
++conf.set(
++    'HOST_STATE_TRANSITION_TIMEOUT',
++    get_option('host-state-transition-timeout'),
++)
++configure_file(output: 'config.h', configuration: conf)
++
+diff --git a/meson.options b/meson.options
+index 9004923..fc45248 100644
+--- a/meson.options
++++ b/meson.options
+@@ -4,3 +4,10 @@ option(
+     value: 'nvidia-gb200',
+     description: 'Platform to init (Temporary)',
+ )
++
++option(
++    'host-state-transition-timeout',
++    type: 'integer',
++    value: 60,
++    description: 'Timeout for host state transition.',
++)
+-- 
+2.34.1
+

@@ -1,0 +1,157 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andrei Kozlov <akozlov@meta.com>
+Date: Wed, 11 Nov 2026 14:13:39 -0800
+Subject: [PATCH] hw/i2c/aspeed_i2c: serialize bus accesses across vCPUs
+
+A target bridged to another QEMU (i2c-netdev2) waits for its peer with
+the BQL dropped inside the guest's command write. The BQL then no longer
+keeps a second vCPU out of the bus: on a yosemite5a7 BMC the next
+i2ctransfer starts on another CPU while the first is still in that
+write, and the reentrancy guard turns its access into a bus error, so
+the kernel panics in ast2600_i2c_controller_xfer.
+
+Give each bus a lock around its register and buffer accesses. A second
+vCPU waits for the first, as it would behind a slow store on hardware,
+and the bus regions opt out of the reentrancy guard so it gets there.
+---
+ hw/i2c/aspeed_i2c.c         | 43 +++++++++++++++++++++++++++++++++++--
+ include/hw/i2c/aspeed_i2c.h |  3 +++
+ 2 files changed, 44 insertions(+), 2 deletions(-)
+
+diff --git a/hw/i2c/aspeed_i2c.c b/hw/i2c/aspeed_i2c.c
+index c50f64975e..60253c284a 100644
+--- a/hw/i2c/aspeed_i2c.c
++++ b/hw/i2c/aspeed_i2c.c
+@@ -25,6 +25,7 @@
+ #include "qemu/log.h"
+ #include "qemu/module.h"
+ #include "qemu/error-report.h"
++#include "qemu/main-loop.h"
+ #include "qapi/error.h"
+ #include "qapi/visitor.h"
+ #include "qapi/qapi-builtin-type-infos.h"
+@@ -212,14 +213,37 @@ static uint64_t aspeed_i2c_bus_new_read(AspeedI2CBus *bus, hwaddr offset,
+     return value;
+ }
+ 
++/*
++ * A target bridged to another QEMU (i2c-netdev2) waits for its peer with the
++ * BQL dropped inside a command write, so the BQL alone does not keep another
++ * vCPU out of this bus. That vCPU waits here instead, as it would behind a
++ * slow store on hardware. Blocking needs the BQL dropped too: the waiter in
++ * the bus may need it back to finish.
++ */
++static void aspeed_i2c_bus_lock(AspeedI2CBus *bus)
++{
++    if (qemu_mutex_trylock(&bus->lock) == 0) {
++        return;
++    }
++    bql_unlock();
++    qemu_mutex_lock(&bus->lock);
++    bql_lock();
++}
++
+ static uint64_t aspeed_i2c_bus_read(void *opaque, hwaddr offset,
+                                     unsigned size)
+ {
+     AspeedI2CBus *bus = opaque;
++    uint64_t value;
++
++    aspeed_i2c_bus_lock(bus);
+     if (aspeed_i2c_is_new_mode(bus->controller)) {
+-        return aspeed_i2c_bus_new_read(bus, offset, size);
++        value = aspeed_i2c_bus_new_read(bus, offset, size);
++    } else {
++        value = aspeed_i2c_bus_old_read(bus, offset, size);
+     }
+-    return aspeed_i2c_bus_old_read(bus, offset, size);
++    qemu_mutex_unlock(&bus->lock);
++    return value;
+ }
+ 
+ static void aspeed_i2c_set_state(AspeedI2CBus *bus, uint8_t state)
+@@ -1248,11 +1272,14 @@ static void aspeed_i2c_bus_write(void *opaque, hwaddr offset,
+                                      uint64_t value, unsigned size)
+ {
+     AspeedI2CBus *bus = opaque;
++
++    aspeed_i2c_bus_lock(bus);
+     if (aspeed_i2c_is_new_mode(bus->controller)) {
+         aspeed_i2c_bus_new_write(bus, offset, value, size);
+     } else {
+         aspeed_i2c_bus_old_write(bus, offset, value, size);
+     }
++    qemu_mutex_unlock(&bus->lock);
+ }
+ 
+ static uint64_t aspeed_i2c_ctrl_read(void *opaque, hwaddr offset,
+@@ -1360,9 +1387,11 @@ static uint64_t aspeed_i2c_bus_pool_read(void *opaque, hwaddr offset,
+     uint64_t ret = 0;
+     int i;
+ 
++    aspeed_i2c_bus_lock(s);
+     for (i = 0; i < size; i++) {
+         ret |= (uint64_t) s->pool[offset + i] << (8 * i);
+     }
++    qemu_mutex_unlock(&s->lock);
+ 
+     return ret;
+ }
+@@ -1373,9 +1402,11 @@ static void aspeed_i2c_bus_pool_write(void *opaque, hwaddr offset,
+     AspeedI2CBus *s = opaque;
+     int i;
+ 
++    aspeed_i2c_bus_lock(s);
+     for (i = 0; i < size; i++) {
+         s->pool[offset + i] = (value >> (8 * i)) & 0xFF;
+     }
++    qemu_mutex_unlock(&s->lock);
+ }
+ 
+ static const MemoryRegionOps aspeed_i2c_bus_pool_ops = {
+@@ -1912,6 +1943,7 @@ static void aspeed_i2c_bus_realize(DeviceState *dev, Error **errp)
+     aic = ASPEED_I2C_GET_CLASS(s->controller);
+ 
+     sysbus_init_irq(SYS_BUS_DEVICE(dev), &s->irq);
++    qemu_mutex_init(&s->lock);
+ 
+     /*
+      * If a bus hasn't been provided to the controller, create one from scratch.
+@@ -1930,6 +1962,13 @@ static void aspeed_i2c_bus_realize(DeviceState *dev, Error **errp)
+     memory_region_init_io(&s->mr_pool, OBJECT(s), &aspeed_i2c_bus_pool_ops,
+                           s, pool_name, aic->pool_size);
+     sysbus_init_mmio(SYS_BUS_DEVICE(dev), &s->mr_pool);
++
++    /*
++     * aspeed_i2c_bus_lock() queues a second vCPU; the reentrancy guard would
++     * give it a bus error before it got there.
++     */
++    s->mr.disable_reentrancy_guard = true;
++    s->mr_pool.disable_reentrancy_guard = true;
+ }
+ 
+ static const Property aspeed_i2c_bus_properties[] = {
+diff --git a/include/hw/i2c/aspeed_i2c.h b/include/hw/i2c/aspeed_i2c.h
+index 2a8b2d87dd..4a3d188a9f 100644
+--- a/include/hw/i2c/aspeed_i2c.h
++++ b/include/hw/i2c/aspeed_i2c.h
+@@ -23,6 +23,7 @@
+ #include "hw/i2c/i2c.h"
+ #include "hw/core/sysbus.h"
+ #include "hw/core/registerfields.h"
++#include "qemu/thread.h"
+ #include "qom/object.h"
+ 
+ #define TYPE_ASPEED_I2C "aspeed.i2c"
+@@ -259,6 +260,8 @@ struct AspeedI2CBus {
+ 
+     MemoryRegion mr;
+     MemoryRegion mr_pool;
++    /* Serializes register accesses; taken without the BQL, see bus_lock() */
++    QemuMutex lock;
+ 
+     I2CBus *bus;
+     char *name;
+-- 
+2.53.0-Meta
+

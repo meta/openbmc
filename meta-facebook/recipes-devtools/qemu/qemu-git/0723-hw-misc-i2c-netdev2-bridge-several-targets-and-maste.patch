@@ -1,0 +1,390 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Andrei Kozlov <akozlov@meta.com>
+Date: Wed, 11 Nov 2026 14:13:39 -0800
+Subject: [PATCH] hw/misc/i2c-netdev2: bridge several targets and master reads
+
+i2c-netdev2 answered one address, ACKed every START without asking the
+peer, and abort()ed on a master read. That is enough for MCTP, which
+only writes, but not for a register-style target such as the Ignis
+debugmon at 0x40.
+
+- addresses= lists the target addresses to bridge; without it, only
+  address as before.
+- sync=on returns the peer's ACK/NACK for a START, so a scan on the BMC
+  shows what the peer answers.
+- A master read sends a 5-byte request per byte, answered with 6 bytes
+  (byte, valid, 0, 0, 0, 0).
+
+Waiting for the peer drops the BQL, so it needs the per-bus lock in the
+Aspeed I2C model. A reply that comes after its 1 s timeout is dropped
+rather than taken for the next request's answer, and a new request
+first waits until such late replies have come or expired.
+---
+ hw/misc/i2c-netdev2.c | 252 +++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 238 insertions(+), 14 deletions(-)
+
+diff --git a/hw/misc/i2c-netdev2.c b/hw/misc/i2c-netdev2.c
+index 1c7f7449cb..67587b5f57 100644
+--- a/hw/misc/i2c-netdev2.c
++++ b/hw/misc/i2c-netdev2.c
+@@ -1,16 +1,29 @@
+ #include "qemu/osdep.h"
+ #include "qemu/main-loop.h"
++#include "qemu/bitmap.h"
++#include "qemu/cutils.h"
++#include "qemu/error-report.h"
++#include "qemu/timer.h"
+ #include "qapi/error.h"
++#include "hw/core/cpu.h"
+ #include "hw/i2c/i2c.h"
+ #include "hw/core/qdev-properties.h"
+ #include "net/net.h"
+ #include "net/eth.h"
+ #include "qemu/aio.h"
+ 
++/*
++ * Packets are told apart by length. START carries (address << 1 | R/W). The
++ * peer ACKs every START and DATA we send with {ack, 0}. A master read sends
++ * READ_REQ per byte; the peer answers READ_DATA {byte, valid, 0, 0, 0, 0}.
++ */
+ #define DATA_LEN 1
+ #define ACK_LEN 2
+ #define START_LEN 3
+ #define STOP_LEN 4
++#define READ_REQ_LEN 5
++#define READ_DATA_LEN 6
++#define REPLY_TIMEOUT_MS 1000
+ #define DEBUG 0
+ 
+ #if !DEBUG
+@@ -29,6 +42,31 @@ struct I2CNetdev2 {
+     NICState *nic;
+     QEMUBH *bh;
+ 
++    /* Comma-separated target addresses; empty means just "address". */
++    char *addresses;
++    /* Return the peer's ACK/NACK for a START instead of ACKing locally. */
++    bool sync;
++    DECLARE_BITMAP(addr_map, 128);
++    uint8_t cur_addr;
++
++    /* Replies to our master transfers. Waiters hold reply_lock without the BQL. */
++    QemuMutex reply_lock;
++    QemuCond reply_cond;
++    unsigned acks_pending;
++    uint8_t last_ack;
++    bool read_pending;
++    bool read_valid;
++    uint8_t read_byte;
++    /*
++     * Replies carry no request id and arrive in order, so the late replies to
++     * requests that timed out are dropped before the next ones are credited.
++     * Past abandoned_expiry they count as lost. A new request waits for them
++     * first (i2c_netdev2_drain()), so a lost reply costs one timeout.
++     */
++    unsigned acks_abandoned;
++    unsigned reads_abandoned;
++    int64_t abandoned_expiry;
++
+     uint8_t rx_buf[10];
+     int rx_len;
+     bool rx_ack_pending;
+@@ -50,6 +88,23 @@ static void print_bytes(const uint8_t *buf, size_t len)
+ 
+ static ssize_t i2c_netdev2_nic_receive(NetClientState *nc, const uint8_t *buf, size_t len);
+ 
++/* Called with reply_lock held. */
++static void i2c_netdev2_abandon(I2CNetdev2 *s, unsigned acks, unsigned reads)
++{
++    s->acks_abandoned += acks;
++    s->reads_abandoned += reads;
++    s->abandoned_expiry = qemu_clock_get_ms(QEMU_CLOCK_REALTIME) + REPLY_TIMEOUT_MS;
++}
++
++/* Called with reply_lock held. */
++static void i2c_netdev2_expire_abandoned(I2CNetdev2 *s)
++{
++    if (qemu_clock_get_ms(QEMU_CLOCK_REALTIME) >= s->abandoned_expiry) {
++        s->acks_abandoned = 0;
++        s->reads_abandoned = 0;
++    }
++}
++
+ static void i2c_netdev2_nic_cleanup(NetClientState *nc)
+ {
+     I2CNetdev2 *s = I2C_NETDEV2(qemu_get_nic_opaque(nc));
+@@ -73,6 +128,31 @@ static ssize_t i2c_netdev2_nic_receive(NetClientState *nc, const uint8_t *buf, s
+     I2CNetdev2 *s = I2C_NETDEV2(qemu_get_nic_opaque(nc));
+ 
+     if (len == ACK_LEN) {
++        qemu_mutex_lock(&s->reply_lock);
++        i2c_netdev2_expire_abandoned(s);
++        if (s->acks_abandoned) {
++            s->acks_abandoned--;
++        } else if (s->acks_pending) {
++            s->acks_pending--;
++            s->last_ack = buf[0];
++        }
++        qemu_cond_broadcast(&s->reply_cond);
++        qemu_mutex_unlock(&s->reply_lock);
++        return len;
++    }
++
++    if (len == READ_DATA_LEN) {
++        qemu_mutex_lock(&s->reply_lock);
++        i2c_netdev2_expire_abandoned(s);
++        if (s->reads_abandoned) {
++            s->reads_abandoned--;
++        } else if (s->read_pending) {
++            s->read_byte = buf[0];
++            s->read_valid = buf[1];
++            s->read_pending = false;
++        }
++        qemu_cond_broadcast(&s->reply_cond);
++        qemu_mutex_unlock(&s->reply_lock);
+         return len;
+     }
+ 
+@@ -158,7 +238,28 @@ static void i2c_netdev2_slave_mode_rx(void *opaque)
+ static void i2c_netdev2_realize(DeviceState *dev, Error **errp)
+ {
+     I2CNetdev2 *s = I2C_NETDEV2(dev);
++    I2CSlave *i2c = I2C_SLAVE(dev);
++
++    bitmap_zero(s->addr_map, 128);
++    if (s->addresses && *s->addresses) {
++        g_auto(GStrv) addrs = g_strsplit(s->addresses, ",", -1);
+ 
++        for (char **a = addrs; *a; a++) {
++            unsigned int addr;
++
++            if (qemu_strtoui(g_strstrip(*a), NULL, 0, &addr) || addr >= 128) {
++                error_setg(errp, "i2c-netdev2: bad address '%s' in addresses", *a);
++                return;
++            }
++            set_bit(addr, s->addr_map);
++        }
++    } else {
++        set_bit(i2c->address, s->addr_map);
++    }
++    s->cur_addr = i2c->address;
++
++    qemu_mutex_init(&s->reply_lock);
++    qemu_cond_init(&s->reply_cond);
+     s->bus = I2C_BUS(qdev_get_parent_bus(dev));
+     s->nic = qemu_new_nic(&i2c_netdev2_client_info, &s->nic_conf, TYPE_I2C_NETDEV2,
+                           dev->id, &dev->mem_reentrancy_guard, s);
+@@ -166,32 +267,134 @@ static void i2c_netdev2_realize(DeviceState *dev, Error **errp)
+     s->rx_len = 0;
+ }
+ 
++static bool i2c_netdev2_acks_done(I2CNetdev2 *s)
++{
++    return s->acks_pending == 0;
++}
++
++static bool i2c_netdev2_read_done(I2CNetdev2 *s)
++{
++    return !s->read_pending;
++}
++
++static bool i2c_netdev2_drained(I2CNetdev2 *s)
++{
++    i2c_netdev2_expire_abandoned(s);
++    return !s->acks_abandoned && !s->reads_abandoned;
++}
++
++/*
++ * Wait for the peer's reply. It arrives through the main loop, which needs the
++ * BQL, so drop it meanwhile. Only a vCPU (the guest driving the controller)
++ * may wait; from the main loop the reply could never arrive.
++ */
++static void i2c_netdev2_wait(I2CNetdev2 *s, bool (*done)(I2CNetdev2 *s))
++{
++    int64_t deadline = qemu_clock_get_ms(QEMU_CLOCK_REALTIME) + REPLY_TIMEOUT_MS;
++
++    if (!current_cpu) {
++        warn_report_once("i2c-netdev2: only a vCPU can wait for the peer; "
++                         "transfers from elsewhere fail");
++        return;
++    }
++    bql_unlock();
++    qemu_mutex_lock(&s->reply_lock);
++    while (!done(s)) {
++        int64_t left = deadline - qemu_clock_get_ms(QEMU_CLOCK_REALTIME);
++
++        if (left <= 0) {
++            break;
++        }
++        qemu_cond_timedwait(&s->reply_cond, &s->reply_lock, left);
++    }
++    qemu_mutex_unlock(&s->reply_lock);
++    bql_lock();
++}
++
++/* Wait out the late replies to timed-out requests before sending another. */
++static void i2c_netdev2_drain(I2CNetdev2 *s)
++{
++    bool drained;
++
++    qemu_mutex_lock(&s->reply_lock);
++    drained = i2c_netdev2_drained(s);
++    qemu_mutex_unlock(&s->reply_lock);
++    if (drained) {
++        return;
++    }
++    i2c_netdev2_wait(s, i2c_netdev2_drained);
++    qemu_mutex_lock(&s->reply_lock);
++    i2c_netdev2_expire_abandoned(s);
++    qemu_mutex_unlock(&s->reply_lock);
++}
++
++/* Send a packet the peer ACKs; with wait, return whether it ACKed. */
++static bool i2c_netdev2_send_acked(I2CNetdev2 *s, const uint8_t *buf, size_t len, bool wait)
++{
++    bool acked;
++
++    i2c_netdev2_drain(s);
++    qemu_mutex_lock(&s->reply_lock);
++    s->acks_pending++;
++    qemu_mutex_unlock(&s->reply_lock);
++    qemu_send_packet(qemu_get_queue(s->nic), buf, len);
++    if (!wait) {
++        return true;
++    }
++    i2c_netdev2_wait(s, i2c_netdev2_acks_done);
++    qemu_mutex_lock(&s->reply_lock);
++    if (s->acks_pending) {
++        i2c_netdev2_abandon(s, s->acks_pending, 0);
++        s->acks_pending = 0;
++        acked = false;
++    } else {
++        acked = s->last_ack;
++    }
++    qemu_mutex_unlock(&s->reply_lock);
++    return acked;
++}
++
++static bool i2c_netdev2_match(I2CSlave *candidate, uint8_t address, bool broadcast,
++                              I2CNodeList *current_devs)
++{
++    I2CNetdev2 *s = I2C_NETDEV2(candidate);
++    I2CNode *node;
++
++    if (broadcast || address >= 128 || !test_bit(address, s->addr_map)) {
++        return false;
++    }
++    s->cur_addr = address;
++    node = g_new(struct I2CNode, 1);
++    node->elt = candidate;
++    QLIST_INSERT_HEAD(current_devs, node, next);
++    return true;
++}
++
+ static int i2c_netdev2_handle_event(I2CSlave *i2c, enum i2c_event event)
+ {
+     I2CNetdev2 *s = I2C_NETDEV2(i2c);
+     NetClientState *netdev = qemu_get_queue(s->nic);
+-    uint8_t tx_addr = i2c->address << 1;
+     uint8_t start_msg[START_LEN];
+     uint8_t stop_msg[STOP_LEN];
+ 
+     // printf("%s: %d\n", __func__, event);
+ 
+     switch (event) {
+-    case I2C_START_RECV:
+-        printf("%s: RECV UNIMPLEMENTED\n", __func__);
+-        abort();
+     case I2C_START_SEND_ASYNC:
+         printf("%s: SEND ASYNC UNIMPLEMENTED\n", __func__);
+         abort();
+     case I2C_START_SEND:
+-        // printf("%s: SENDING START MESSAGE PACKET\n", __func__);
++    case I2C_START_RECV:
+         memset(start_msg, 0, sizeof(start_msg));
+-        start_msg[0] = tx_addr;
+-        qemu_send_packet(netdev, start_msg, sizeof(start_msg));
++        start_msg[0] = (s->cur_addr << 1) | (event == I2C_START_RECV);
+         printf("%s: tx ", __FILE__);
+         print_bytes(start_msg, sizeof(start_msg));
+         printf("\n");
+-        //sleep(1);
++        /* A read always waits: its data comes from the peer anyway. */
++        if (!i2c_netdev2_send_acked(s, start_msg, sizeof(start_msg),
++                                    s->sync || event == I2C_START_RECV)) {
++            return 1;
++        }
+         break;
+     case I2C_FINISH:
+         memset(stop_msg, 0, sizeof(stop_msg));
+@@ -202,8 +405,8 @@ static int i2c_netdev2_handle_event(I2CSlave *i2c, enum i2c_event event)
+         //sleep(1);
+         break;
+     case I2C_NACK:
+-        printf("%s: NACK UNIMPLEMENTED\n", __func__);
+-        abort();
++        /* The master NACKs the last byte of a read; STOP follows. */
++        break;
+     }
+ 
+     return 0;
+@@ -211,17 +414,35 @@ static int i2c_netdev2_handle_event(I2CSlave *i2c, enum i2c_event event)
+ 
+ static uint8_t i2c_netdev2_handle_recv(I2CSlave *i2c)
+ {
+-    printf("%s: unimplemented\n", __func__);
+-    abort();
++    I2CNetdev2 *s = I2C_NETDEV2(i2c);
++    uint8_t req[READ_REQ_LEN] = {0};
++    uint8_t byte;
++
++    i2c_netdev2_drain(s);
++    qemu_mutex_lock(&s->reply_lock);
++    s->read_pending = true;
++    s->read_valid = false;
++    qemu_mutex_unlock(&s->reply_lock);
++    qemu_send_packet(qemu_get_queue(s->nic), req, sizeof(req));
++    i2c_netdev2_wait(s, i2c_netdev2_read_done);
++    qemu_mutex_lock(&s->reply_lock);
++    if (s->read_pending) {
++        i2c_netdev2_abandon(s, 0, 1);
++        s->read_pending = false;
++        byte = 0xff;
++    } else {
++        byte = s->read_valid ? s->read_byte : 0xff;
++    }
++    qemu_mutex_unlock(&s->reply_lock);
++    return byte;
+ }
+ 
+ static int i2c_netdev2_handle_send(I2CSlave *i2c, uint8_t byte)
+ {
+     I2CNetdev2 *s = I2C_NETDEV2(i2c);
+-    NetClientState *netdev = qemu_get_queue(s->nic);
+     uint8_t data_msg[DATA_LEN] = {byte};
+ 
+-    qemu_send_packet(netdev, data_msg, sizeof(data_msg));
++    i2c_netdev2_send_acked(s, data_msg, sizeof(data_msg), false);
+     printf("%s: tx ", __FILE__);
+     print_bytes(data_msg, sizeof(data_msg));
+     printf("\n");
+@@ -232,6 +453,8 @@ static int i2c_netdev2_handle_send(I2CSlave *i2c, uint8_t byte)
+ 
+ static const Property i2c_netdev2_props[] = {
+     DEFINE_NIC_PROPERTIES(I2CNetdev2, nic_conf),
++    DEFINE_PROP_STRING("addresses", I2CNetdev2, addresses),
++    DEFINE_PROP_BOOL("sync", I2CNetdev2, sync, false),
+ };
+ 
+ static void i2c_netdev2_class_init(ObjectClass *cls, const void *data)
+@@ -242,6 +465,7 @@ static void i2c_netdev2_class_init(ObjectClass *cls, const void *data)
+     dc->realize = i2c_netdev2_realize;
+     device_class_set_props(dc, i2c_netdev2_props);
+ 
++    sc->match_and_add = i2c_netdev2_match;
+     sc->event = i2c_netdev2_handle_event;
+     sc->recv = i2c_netdev2_handle_recv;
+     sc->send = i2c_netdev2_handle_send;
+-- 
+2.53.0-Meta
+

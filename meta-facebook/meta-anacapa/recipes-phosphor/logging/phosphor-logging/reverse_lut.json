@@ -1,37 +1,37 @@
 {
-  "version": "1.1.0",
-  "generated_at": "2026-09-29 21:13:58.134300",
+  "version": "1.2.0",
+  "generated_at": "2026-11-11 16:06:51.582061",
   "fallthrough_afid": 12999,
   "fallthrough_afid_description": "Unidentified Event",
   "rackUnitPosition": "AMD:RACK_ID",
   "schema": "#AMD_Message.v1_0_0.AMD_Message",
   "lookup": {
     "xyz.openbmc_project.State.Power.PowerRailFault": {
-      "POWER_RAIL=/xyz/openbmc_project/inventory/system/board/Anacapa_MB/AMCROT_BMC_S5_RDY_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/AMC_RDY_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/AMC_STBY_PGOOD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/DIMM_PMIC_PG_TIMEOUT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/EAM0_CPU_MOD_PWR_GD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/EAM1_CPU_MOD_PWR_GD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/EAM2_CPU_MOD_PWR_GD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/EAM3_CPU_MOD_PWR_GD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_CPU0_DIMM_AH_P12V_EN_R_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_CPU0_DIMM_IP_P12V_EN_R_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_DIMM_AH_FAIL|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_DIMM_IP_FAIL|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_MAIN_PWREN_RMC_EN_ISO|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDD18_S5_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDD33_S5_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDDCR_CPU0_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDDCR_CPU1_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDDCR_SOC_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDDIO_MEM_S3_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDDIO_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PWRGD_CPU0_PWROK|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_RST_CPU0_RESET_N|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/P12V_DDR_AH_PWRGD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/P12V_DDR_IP_PWRGD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDD18_S5_P0_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDD33_S5_P0_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDDCR_CPU0_P0|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDDCR_CPU1_P0|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDDCR_SOC_P0|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDDIO_MEM_S3_P0|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDDIO_P0": {
+      "POWER_RAIL=/xyz/openbmc_project/inventory/system/board/Anacapa_MB/AMCROT_BMC_S5_RDY_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/AMC_RDY_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/AMC_STBY_PGOOD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/DIMM_PMIC_PG_TIMEOUT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/EAM0_CPU_MOD_PWR_GD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/EAM1_CPU_MOD_PWR_GD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/EAM2_CPU_MOD_PWR_GD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/EAM3_CPU_MOD_PWR_GD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/EDSFF_BOOT_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_CPU0_DIMM_AH_P12V_EN_R_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_CPU0_DIMM_IP_P12V_EN_R_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_DIMM_AH_FAIL|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_DIMM_IP_FAIL|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_MAIN_PWREN_RMC_EN_ISO|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDD18_S5_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDD33_S5_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDDCR_CPU0_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDDCR_CPU1_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDDCR_SOC_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDDIO_MEM_S3_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PVDDIO_P0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_PWRGD_CPU0_PWROK|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_RST_CPU0_RESET_N|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/L_EDSFF0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/L_EDSFF1_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/P12V_DDR_AH_PWRGD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/P12V_DDR_IP_PWRGD_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_CHAD_CPU0_FPGA|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_CHEH_CPU0_FPGA|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_CHIL_CPU0_FPGA|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_CHMP_CPU0_FPGA|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDD18_S5_P0_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDD33_S5_P0_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDDCR_CPU0_P0|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDDCR_CPU1_P0|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDDCR_SOC_P0|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDDIO_MEM_S3_P0|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PVDDIO_P0|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/R_EDSFF2_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/R_EDSFF3_FLT": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12021,
         "description": "MB PowerRailFault",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
-      "POWER_RAIL=/xyz/openbmc_project/inventory/system/board/Anacapa_MB/HPM_PWR_FAIL|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/HPM_STBY_RST_N|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PDB_P12V_VRM0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_P12V_VRM0_CPLD_PG_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_P1V0_STBY|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_P3V3|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PDB_HSC4_CPLD_PG_R|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FAN0_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FAN1_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FAN2_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FAN3_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FAN4_R2_PG": {
+      "POWER_RAIL=/xyz/openbmc_project/inventory/system/board/Anacapa_MB/HPM_PWR_FAIL|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/HPM_STBY_RST_N|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PDB_P12V_VRM0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_P12V_VRM0_CPLD_PG_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_P1V0_STBY|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_P3V3|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_PDB_HSC4_CPLD_PG_R|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FAN0_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FAN1_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FAN2_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FAN3_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FAN4_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FUSE0_TVS1|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FUSE0_TVS2|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FUSE1_TVS1|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FUSE1_TVS2|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/LPDB_P50V_FUSE5_TVS1": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12022,
         "description": "PDB_L PowerRailFault",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
-      "POWER_RAIL=/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_P3V3_EN_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PDB_MAIN_EN_R_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PDB_P12V_VRM1_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_P12V_VRM1_CPLD_PG_R|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/RPDB_P50V_FAN5_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/RPDB_P50V_FAN6_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/RPDB_P50V_FAN7_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/RPDB_P50V_FAN8_R2_PG": {
+      "POWER_RAIL=/xyz/openbmc_project/inventory/system/board/Anacapa_MB/FM_P3V3_EN_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PDB_MAIN_EN_R_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PDB_P12V_VRM1_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/PWRGD_P12V_VRM1_CPLD_PG_R|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/RPDB_P50V_FAN5_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/RPDB_P50V_FAN6_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/RPDB_P50V_FAN7_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/RPDB_P50V_FAN8_R2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/RPDB_P50V_FUSE2_TVS1|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/RPDB_P50V_FUSE2_TVS2|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/RPDB_P50V_FUSE3_TVS1|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/RPDB_P50V_FUSE3_TVS2|/xyz/openbmc_project/inventory/system/board/Anacapa_PDB/RPDB_P50V_FUSE4_TVS1": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12023,
         "description": "PDB_R PowerRailFault",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
-      "POWER_RAIL=/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/L_EDSFF0_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/L_EDSFF1_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/BRIDGE_L_STBY_PG_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/L_BNIC0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/L_BNIC1_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/L_BNIC2_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/L_BNIC3_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/L_FNIC_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/L_RTM_SW_FLT": {
+      "POWER_RAIL=/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/BRIDGE_L_STBY_PG_R|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/L_BNIC0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/L_BNIC1_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/L_BNIC2_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/L_BNIC3_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/L_EDSFF0_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/L_EDSFF1_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/L_FNIC_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/L_RTM_SW_FLT": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_L",
         "afid": 12019,
         "description": "BRB_L PowerRailFault",
         "redfishMapping": "/redfish/v1/Chassis/BRB_L"
       },
-      "POWER_RAIL=/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/HPM_EDSFF_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/R_EDSFF2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/R_EDSFF3_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/BRIDGE_R_STBY_PG_R|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/R_BNIC0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/R_BNIC1_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/R_BNIC2_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/R_BNIC3_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_MB/R_RTM_SW_FLT": {
+      "POWER_RAIL=/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/BRIDGE_R_STBY_PG_R|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/HPM_EDSFF_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/R_BNIC0_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/R_BNIC1_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/R_BNIC2_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/R_BNIC3_FLT|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/R_EDSFF2_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/R_EDSFF3_PG|/xyz/openbmc_project/inventory/system/board/Anacapa_BRB/R_RTM_SW_FLT": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_R",
         "afid": 12020,
         "description": "BRB_R PowerRailFault",
@@ -264,199 +264,199 @@
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/SCM_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12068,
-        "description": "SCM ReadingAboveLowerSoftShutdownThreshold",
+        "description": "SCM ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/INLET_SCM_TEMP_C|/xyz/openbmc_project/sensors/temperature/SCM_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12067,
-        "description": "SCM ReadingAboveLowerSoftShutdownThreshold",
+        "description": "SCM ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/MB_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12065,
-        "description": "MB ReadingAboveLowerSoftShutdownThreshold",
+        "description": "MB ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/MB_VR_CPU_PVDD*_P0_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12063,
-        "description": "MB ReadingAboveLowerSoftShutdownThreshold",
+        "description": "MB ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/MB_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12066,
-        "description": "MB ReadingAboveLowerSoftShutdownThreshold",
+        "description": "MB ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/MB_*_TEMP_C|/xyz/openbmc_project/sensors/temperature/E1S*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12064,
-        "description": "MB ReadingAboveLowerSoftShutdownThreshold",
+        "description": "MB ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_L",
         "afid": 12051,
-        "description": "BRB_L ReadingAboveLowerSoftShutdownThreshold",
+        "description": "BRB_L ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC0_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12306,
-        "description": "OCP_NIC_0 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC1_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12303,
-        "description": "OCP_NIC_1 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC3_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12303,
-        "description": "OCP_NIC_3 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC5_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12303,
-        "description": "OCP_NIC_5 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC7_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12303,
-        "description": "OCP_NIC_7 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC0_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12305,
-        "description": "OCP_NIC_0 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC0_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12307,
-        "description": "OCP_NIC_0 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC1_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12302,
-        "description": "OCP_NIC_1 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC1_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12304,
-        "description": "OCP_NIC_1 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC3_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12302,
-        "description": "OCP_NIC_3 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC3_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12304,
-        "description": "OCP_NIC_3 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC5_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12302,
-        "description": "OCP_NIC_5 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC5_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12304,
-        "description": "OCP_NIC_5 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC7_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12302,
-        "description": "OCP_NIC_7 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC7_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12304,
-        "description": "OCP_NIC_7 ReadingAboveLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_R",
         "afid": 12052,
-        "description": "BRB_R ReadingAboveLowerSoftShutdownThreshold",
+        "description": "BRB_R ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12053,
-        "description": "PDB_L ReadingAboveLowerSoftShutdownThreshold",
+        "description": "PDB_L ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN4"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_L_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12054,
-        "description": "PDB_L ReadingAboveLowerSoftShutdownThreshold",
+        "description": "PDB_L ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_L_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12057,
-        "description": "PDB_L ReadingAboveLowerSoftShutdownThreshold",
+        "description": "PDB_L ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12055,
-        "description": "PDB_L ReadingAboveLowerSoftShutdownThreshold",
+        "description": "PDB_L ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_L_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12056,
-        "description": "PDB_L ReadingAboveLowerSoftShutdownThreshold",
+        "description": "PDB_L ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_R_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12061,
-        "description": "PDB_R ReadingAboveLowerSoftShutdownThreshold",
+        "description": "PDB_R ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12060,
-        "description": "PDB_R ReadingAboveLowerSoftShutdownThreshold",
+        "description": "PDB_R ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12058,
-        "description": "PDB_R ReadingAboveLowerSoftShutdownThreshold",
+        "description": "PDB_R ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN8"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_R_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12059,
-        "description": "PDB_R ReadingAboveLowerSoftShutdownThreshold",
+        "description": "PDB_R ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_R_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12062,
-        "description": "PDB_R ReadingAboveLowerSoftShutdownThreshold",
+        "description": "PDB_R ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       }
     },
@@ -464,199 +464,199 @@
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/SCM_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12068,
-        "description": "SCM ReadingAboveLowerHardShutdownThreshold",
+        "description": "SCM ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/INLET_SCM_TEMP_C|/xyz/openbmc_project/sensors/temperature/SCM_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12067,
-        "description": "SCM ReadingAboveLowerHardShutdownThreshold",
+        "description": "SCM ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/MB_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12065,
-        "description": "MB ReadingAboveLowerHardShutdownThreshold",
+        "description": "MB ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/MB_VR_CPU_PVDD*_P0_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12063,
-        "description": "MB ReadingAboveLowerHardShutdownThreshold",
+        "description": "MB ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/MB_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12066,
-        "description": "MB ReadingAboveLowerHardShutdownThreshold",
+        "description": "MB ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/MB_*_TEMP_C|/xyz/openbmc_project/sensors/temperature/E1S*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12064,
-        "description": "MB ReadingAboveLowerHardShutdownThreshold",
+        "description": "MB ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_L",
         "afid": 12051,
-        "description": "BRB_L ReadingAboveLowerHardShutdownThreshold",
+        "description": "BRB_L ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC0_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12306,
-        "description": "OCP_NIC_0 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC1_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12303,
-        "description": "OCP_NIC_1 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC3_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12303,
-        "description": "OCP_NIC_3 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC5_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12303,
-        "description": "OCP_NIC_5 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC7_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12303,
-        "description": "OCP_NIC_7 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC0_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12305,
-        "description": "OCP_NIC_0 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC0_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12307,
-        "description": "OCP_NIC_0 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC1_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12302,
-        "description": "OCP_NIC_1 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC1_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12304,
-        "description": "OCP_NIC_1 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC3_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12302,
-        "description": "OCP_NIC_3 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC3_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12304,
-        "description": "OCP_NIC_3 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC5_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12302,
-        "description": "OCP_NIC_5 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC5_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12304,
-        "description": "OCP_NIC_5 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC7_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12302,
-        "description": "OCP_NIC_7 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC7_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12304,
-        "description": "OCP_NIC_7 ReadingAboveLowerHardShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_R",
         "afid": 12052,
-        "description": "BRB_R ReadingAboveLowerHardShutdownThreshold",
+        "description": "BRB_R ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12053,
-        "description": "PDB_L ReadingAboveLowerHardShutdownThreshold",
+        "description": "PDB_L ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN4"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_L_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12054,
-        "description": "PDB_L ReadingAboveLowerHardShutdownThreshold",
+        "description": "PDB_L ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_L_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12057,
-        "description": "PDB_L ReadingAboveLowerHardShutdownThreshold",
+        "description": "PDB_L ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12055,
-        "description": "PDB_L ReadingAboveLowerHardShutdownThreshold",
+        "description": "PDB_L ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_L_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12056,
-        "description": "PDB_L ReadingAboveLowerHardShutdownThreshold",
+        "description": "PDB_L ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_R_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12061,
-        "description": "PDB_R ReadingAboveLowerHardShutdownThreshold",
+        "description": "PDB_R ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12060,
-        "description": "PDB_R ReadingAboveLowerHardShutdownThreshold",
+        "description": "PDB_R ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12058,
-        "description": "PDB_R ReadingAboveLowerHardShutdownThreshold",
+        "description": "PDB_R ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN8"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_R_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12059,
-        "description": "PDB_R ReadingAboveLowerHardShutdownThreshold",
+        "description": "PDB_R ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_R_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12062,
-        "description": "PDB_R ReadingAboveLowerHardShutdownThreshold",
+        "description": "PDB_R ReadingAboveLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       }
     },
@@ -664,199 +664,199 @@
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/SCM_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12095,
-        "description": "SCM ReadingAboveUpperWarningThreshold",
+        "description": "SCM ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/INLET_SCM_TEMP_C|/xyz/openbmc_project/sensors/temperature/SCM_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12094,
-        "description": "SCM ReadingAboveUpperWarningThreshold",
+        "description": "SCM ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/MB_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12091,
-        "description": "MB ReadingAboveUpperWarningThreshold",
+        "description": "MB ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/MB_VR_CPU_PVDD*_P0_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12093,
-        "description": "MB ReadingAboveUpperWarningThreshold",
+        "description": "MB ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/MB_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12092,
-        "description": "MB ReadingAboveUpperWarningThreshold",
+        "description": "MB ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/MB_*_TEMP_C|/xyz/openbmc_project/sensors/temperature/E1S*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12090,
-        "description": "MB ReadingAboveUpperWarningThreshold",
+        "description": "MB ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_L",
         "afid": 12078,
-        "description": "BRB_L ReadingAboveUpperWarningThreshold",
+        "description": "BRB_L ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC0_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12312,
-        "description": "OCP_NIC_0 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_0 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC1_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12309,
-        "description": "OCP_NIC_1 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_1 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC3_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12309,
-        "description": "OCP_NIC_3 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_3 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC5_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12309,
-        "description": "OCP_NIC_5 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_5 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC7_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12309,
-        "description": "OCP_NIC_7 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_7 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC0_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12311,
-        "description": "OCP_NIC_0 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_0 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC0_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12313,
-        "description": "OCP_NIC_0 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_0 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC1_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12308,
-        "description": "OCP_NIC_1 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_1 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC1_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12310,
-        "description": "OCP_NIC_1 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_1 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC3_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12308,
-        "description": "OCP_NIC_3 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_3 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC3_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12310,
-        "description": "OCP_NIC_3 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_3 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC5_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12308,
-        "description": "OCP_NIC_5 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_5 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC5_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12310,
-        "description": "OCP_NIC_5 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_5 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC7_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12308,
-        "description": "OCP_NIC_7 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_7 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC7_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12310,
-        "description": "OCP_NIC_7 ReadingAboveUpperWarningThreshold",
+        "description": "OCP_NIC_7 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_R",
         "afid": 12079,
-        "description": "BRB_R ReadingAboveUpperWarningThreshold",
+        "description": "BRB_R ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12080,
-        "description": "PDB_L ReadingAboveUpperWarningThreshold",
+        "description": "PDB_L ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN4"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_L_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12081,
-        "description": "PDB_L ReadingAboveUpperWarningThreshold",
+        "description": "PDB_L ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_L_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12084,
-        "description": "PDB_L ReadingAboveUpperWarningThreshold",
+        "description": "PDB_L ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12082,
-        "description": "PDB_L ReadingAboveUpperWarningThreshold",
+        "description": "PDB_L ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_L_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12083,
-        "description": "PDB_L ReadingAboveUpperWarningThreshold",
+        "description": "PDB_L ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_R_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12088,
-        "description": "PDB_R ReadingAboveUpperWarningThreshold",
+        "description": "PDB_R ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12087,
-        "description": "PDB_R ReadingAboveUpperWarningThreshold",
+        "description": "PDB_R ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12085,
-        "description": "PDB_R ReadingAboveUpperWarningThreshold",
+        "description": "PDB_R ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN8"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_R_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12086,
-        "description": "PDB_R ReadingAboveUpperWarningThreshold",
+        "description": "PDB_R ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_R_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12089,
-        "description": "PDB_R ReadingAboveUpperWarningThreshold",
+        "description": "PDB_R ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       }
     },
@@ -864,199 +864,199 @@
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/SCM_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12095,
-        "description": "SCM ReadingAboveUpperPerformanceLossThreshold",
+        "description": "SCM ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/INLET_SCM_TEMP_C|/xyz/openbmc_project/sensors/temperature/SCM_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12094,
-        "description": "SCM ReadingAboveUpperPerformanceLossThreshold",
+        "description": "SCM ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/MB_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12091,
-        "description": "MB ReadingAboveUpperPerformanceLossThreshold",
+        "description": "MB ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/MB_VR_CPU_PVDD*_P0_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12093,
-        "description": "MB ReadingAboveUpperPerformanceLossThreshold",
+        "description": "MB ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/MB_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12092,
-        "description": "MB ReadingAboveUpperPerformanceLossThreshold",
+        "description": "MB ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/MB_*_TEMP_C|/xyz/openbmc_project/sensors/temperature/E1S*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12090,
-        "description": "MB ReadingAboveUpperPerformanceLossThreshold",
+        "description": "MB ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_L",
         "afid": 12078,
-        "description": "BRB_L ReadingAboveUpperPerformanceLossThreshold",
+        "description": "BRB_L ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC0_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12312,
-        "description": "OCP_NIC_0 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_0 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC1_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12309,
-        "description": "OCP_NIC_1 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_1 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC3_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12309,
-        "description": "OCP_NIC_3 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_3 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC5_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12309,
-        "description": "OCP_NIC_5 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_5 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC7_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12309,
-        "description": "OCP_NIC_7 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_7 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC0_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12311,
-        "description": "OCP_NIC_0 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_0 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC0_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12313,
-        "description": "OCP_NIC_0 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_0 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC1_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12308,
-        "description": "OCP_NIC_1 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_1 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC1_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12310,
-        "description": "OCP_NIC_1 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_1 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC3_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12308,
-        "description": "OCP_NIC_3 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_3 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC3_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12310,
-        "description": "OCP_NIC_3 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_3 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC5_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12308,
-        "description": "OCP_NIC_5 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_5 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC5_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12310,
-        "description": "OCP_NIC_5 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_5 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC7_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12308,
-        "description": "OCP_NIC_7 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_7 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC7_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12310,
-        "description": "OCP_NIC_7 ReadingAboveUpperPerformanceLossThreshold",
+        "description": "OCP_NIC_7 ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_R",
         "afid": 12079,
-        "description": "BRB_R ReadingAboveUpperPerformanceLossThreshold",
+        "description": "BRB_R ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12080,
-        "description": "PDB_L ReadingAboveUpperPerformanceLossThreshold",
+        "description": "PDB_L ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN4"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_L_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12081,
-        "description": "PDB_L ReadingAboveUpperPerformanceLossThreshold",
+        "description": "PDB_L ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_L_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12084,
-        "description": "PDB_L ReadingAboveUpperPerformanceLossThreshold",
+        "description": "PDB_L ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12082,
-        "description": "PDB_L ReadingAboveUpperPerformanceLossThreshold",
+        "description": "PDB_L ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_L_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12083,
-        "description": "PDB_L ReadingAboveUpperPerformanceLossThreshold",
+        "description": "PDB_L ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_R_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12088,
-        "description": "PDB_R ReadingAboveUpperPerformanceLossThreshold",
+        "description": "PDB_R ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12087,
-        "description": "PDB_R ReadingAboveUpperPerformanceLossThreshold",
+        "description": "PDB_R ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12085,
-        "description": "PDB_R ReadingAboveUpperPerformanceLossThreshold",
+        "description": "PDB_R ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN8"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_R_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12086,
-        "description": "PDB_R ReadingAboveUpperPerformanceLossThreshold",
+        "description": "PDB_R ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_R_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12089,
-        "description": "PDB_R ReadingAboveUpperPerformanceLossThreshold",
+        "description": "PDB_R ReadingAboveUpperCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       }
     },
@@ -1264,199 +1264,199 @@
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/SCM_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12149,
-        "description": "SCM ReadingAboveUpperSoftShutdownThreshold",
+        "description": "SCM ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/INLET_SCM_TEMP_C|/xyz/openbmc_project/sensors/temperature/SCM_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12148,
-        "description": "SCM ReadingAboveUpperSoftShutdownThreshold",
+        "description": "SCM ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/MB_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12145,
-        "description": "MB ReadingAboveUpperSoftShutdownThreshold",
+        "description": "MB ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/MB_VR_CPU_PVDD*_P0_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12147,
-        "description": "MB ReadingAboveUpperSoftShutdownThreshold",
+        "description": "MB ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/MB_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12146,
-        "description": "MB ReadingAboveUpperSoftShutdownThreshold",
+        "description": "MB ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/MB_*_TEMP_C|/xyz/openbmc_project/sensors/temperature/E1S*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12144,
-        "description": "MB ReadingAboveUpperSoftShutdownThreshold",
+        "description": "MB ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_L",
         "afid": 12132,
-        "description": "BRB_L ReadingAboveUpperSoftShutdownThreshold",
+        "description": "BRB_L ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC0_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12324,
-        "description": "OCP_NIC_0 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC1_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12321,
-        "description": "OCP_NIC_1 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC3_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12321,
-        "description": "OCP_NIC_3 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC5_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12321,
-        "description": "OCP_NIC_5 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC7_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12321,
-        "description": "OCP_NIC_7 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC0_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12323,
-        "description": "OCP_NIC_0 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC0_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12325,
-        "description": "OCP_NIC_0 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC1_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12320,
-        "description": "OCP_NIC_1 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC1_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12322,
-        "description": "OCP_NIC_1 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC3_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12320,
-        "description": "OCP_NIC_3 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC3_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12322,
-        "description": "OCP_NIC_3 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC5_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12320,
-        "description": "OCP_NIC_5 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC5_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12322,
-        "description": "OCP_NIC_5 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC7_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12320,
-        "description": "OCP_NIC_7 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC7_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12322,
-        "description": "OCP_NIC_7 ReadingAboveUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_R",
         "afid": 12133,
-        "description": "BRB_R ReadingAboveUpperSoftShutdownThreshold",
+        "description": "BRB_R ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12134,
-        "description": "PDB_L ReadingAboveUpperSoftShutdownThreshold",
+        "description": "PDB_L ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN4"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_L_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12135,
-        "description": "PDB_L ReadingAboveUpperSoftShutdownThreshold",
+        "description": "PDB_L ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_L_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12138,
-        "description": "PDB_L ReadingAboveUpperSoftShutdownThreshold",
+        "description": "PDB_L ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12136,
-        "description": "PDB_L ReadingAboveUpperSoftShutdownThreshold",
+        "description": "PDB_L ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_L_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12137,
-        "description": "PDB_L ReadingAboveUpperSoftShutdownThreshold",
+        "description": "PDB_L ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_R_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12142,
-        "description": "PDB_R ReadingAboveUpperSoftShutdownThreshold",
+        "description": "PDB_R ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12141,
-        "description": "PDB_R ReadingAboveUpperSoftShutdownThreshold",
+        "description": "PDB_R ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12139,
-        "description": "PDB_R ReadingAboveUpperSoftShutdownThreshold",
+        "description": "PDB_R ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN8"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_R_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12140,
-        "description": "PDB_R ReadingAboveUpperSoftShutdownThreshold",
+        "description": "PDB_R ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_R_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12143,
-        "description": "PDB_R ReadingAboveUpperSoftShutdownThreshold",
+        "description": "PDB_R ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       }
     },
@@ -1464,199 +1464,199 @@
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/SCM_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12149,
-        "description": "SCM ReadingAboveUpperHardShutdownThreshold",
+        "description": "SCM ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/INLET_SCM_TEMP_C|/xyz/openbmc_project/sensors/temperature/SCM_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12148,
-        "description": "SCM ReadingAboveUpperHardShutdownThreshold",
+        "description": "SCM ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/MB_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12145,
-        "description": "MB ReadingAboveUpperHardShutdownThreshold",
+        "description": "MB ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/MB_VR_CPU_PVDD*_P0_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12147,
-        "description": "MB ReadingAboveUpperHardShutdownThreshold",
+        "description": "MB ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/MB_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12146,
-        "description": "MB ReadingAboveUpperHardShutdownThreshold",
+        "description": "MB ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/MB_*_TEMP_C|/xyz/openbmc_project/sensors/temperature/E1S*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12144,
-        "description": "MB ReadingAboveUpperHardShutdownThreshold",
+        "description": "MB ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_L",
         "afid": 12132,
-        "description": "BRB_L ReadingAboveUpperHardShutdownThreshold",
+        "description": "BRB_L ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC0_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12324,
-        "description": "OCP_NIC_0 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC1_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12321,
-        "description": "OCP_NIC_1 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC3_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12321,
-        "description": "OCP_NIC_3 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC5_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12321,
-        "description": "OCP_NIC_5 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC7_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12321,
-        "description": "OCP_NIC_7 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC0_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12323,
-        "description": "OCP_NIC_0 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC0_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12325,
-        "description": "OCP_NIC_0 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC1_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12320,
-        "description": "OCP_NIC_1 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC1_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12322,
-        "description": "OCP_NIC_1 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC3_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12320,
-        "description": "OCP_NIC_3 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC3_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12322,
-        "description": "OCP_NIC_3 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC5_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12320,
-        "description": "OCP_NIC_5 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC5_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12322,
-        "description": "OCP_NIC_5 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC7_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12320,
-        "description": "OCP_NIC_7 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC7_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12322,
-        "description": "OCP_NIC_7 ReadingAboveUpperHardShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_R",
         "afid": 12133,
-        "description": "BRB_R ReadingAboveUpperHardShutdownThreshold",
+        "description": "BRB_R ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12134,
-        "description": "PDB_L ReadingAboveUpperHardShutdownThreshold",
+        "description": "PDB_L ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN4"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_L_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12135,
-        "description": "PDB_L ReadingAboveUpperHardShutdownThreshold",
+        "description": "PDB_L ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_L_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12138,
-        "description": "PDB_L ReadingAboveUpperHardShutdownThreshold",
+        "description": "PDB_L ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12136,
-        "description": "PDB_L ReadingAboveUpperHardShutdownThreshold",
+        "description": "PDB_L ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_L_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12137,
-        "description": "PDB_L ReadingAboveUpperHardShutdownThreshold",
+        "description": "PDB_L ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_R_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12142,
-        "description": "PDB_R ReadingAboveUpperHardShutdownThreshold",
+        "description": "PDB_R ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12141,
-        "description": "PDB_R ReadingAboveUpperHardShutdownThreshold",
+        "description": "PDB_R ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12139,
-        "description": "PDB_R ReadingAboveUpperHardShutdownThreshold",
+        "description": "PDB_R ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN8"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_R_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12140,
-        "description": "PDB_R ReadingAboveUpperHardShutdownThreshold",
+        "description": "PDB_R ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_R_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12143,
-        "description": "PDB_R ReadingAboveUpperHardShutdownThreshold",
+        "description": "PDB_R ReadingAboveUpperFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       }
     },
@@ -1664,199 +1664,199 @@
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/SCM_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12176,
-        "description": "SCM ReadingBelowLowerWarningThreshold",
+        "description": "SCM ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/INLET_SCM_TEMP_C|/xyz/openbmc_project/sensors/temperature/SCM_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12175,
-        "description": "SCM ReadingBelowLowerWarningThreshold",
+        "description": "SCM ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/MB_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12172,
-        "description": "MB ReadingBelowLowerWarningThreshold",
+        "description": "MB ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/MB_VR_CPU_PVDD*_P0_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12174,
-        "description": "MB ReadingBelowLowerWarningThreshold",
+        "description": "MB ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/MB_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12173,
-        "description": "MB ReadingBelowLowerWarningThreshold",
+        "description": "MB ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/MB_*_TEMP_C|/xyz/openbmc_project/sensors/temperature/E1S*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12171,
-        "description": "MB ReadingBelowLowerWarningThreshold",
+        "description": "MB ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_L",
         "afid": 12159,
-        "description": "BRB_L ReadingBelowLowerWarningThreshold",
+        "description": "BRB_L ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC0_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12330,
-        "description": "OCP_NIC_0 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_0 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC1_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12327,
-        "description": "OCP_NIC_1 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_1 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC3_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12327,
-        "description": "OCP_NIC_3 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_3 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC5_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12327,
-        "description": "OCP_NIC_5 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_5 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC7_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12327,
-        "description": "OCP_NIC_7 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_7 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC0_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12329,
-        "description": "OCP_NIC_0 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_0 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC0_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12331,
-        "description": "OCP_NIC_0 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_0 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC1_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12326,
-        "description": "OCP_NIC_1 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_1 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC1_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12328,
-        "description": "OCP_NIC_1 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_1 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC3_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12326,
-        "description": "OCP_NIC_3 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_3 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC3_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12328,
-        "description": "OCP_NIC_3 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_3 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC5_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12326,
-        "description": "OCP_NIC_5 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_5 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC5_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12328,
-        "description": "OCP_NIC_5 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_5 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC7_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12326,
-        "description": "OCP_NIC_7 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_7 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC7_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12328,
-        "description": "OCP_NIC_7 ReadingBelowLowerWarningThreshold",
+        "description": "OCP_NIC_7 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_R",
         "afid": 12160,
-        "description": "BRB_R ReadingBelowLowerWarningThreshold",
+        "description": "BRB_R ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12161,
-        "description": "PDB_L ReadingBelowLowerWarningThreshold",
+        "description": "PDB_L ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN4"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_L_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12162,
-        "description": "PDB_L ReadingBelowLowerWarningThreshold",
+        "description": "PDB_L ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_L_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12165,
-        "description": "PDB_L ReadingBelowLowerWarningThreshold",
+        "description": "PDB_L ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12163,
-        "description": "PDB_L ReadingBelowLowerWarningThreshold",
+        "description": "PDB_L ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_L_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12164,
-        "description": "PDB_L ReadingBelowLowerWarningThreshold",
+        "description": "PDB_L ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_R_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12169,
-        "description": "PDB_R ReadingBelowLowerWarningThreshold",
+        "description": "PDB_R ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12168,
-        "description": "PDB_R ReadingBelowLowerWarningThreshold",
+        "description": "PDB_R ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12166,
-        "description": "PDB_R ReadingBelowLowerWarningThreshold",
+        "description": "PDB_R ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN8"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_R_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12167,
-        "description": "PDB_R ReadingBelowLowerWarningThreshold",
+        "description": "PDB_R ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_R_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12170,
-        "description": "PDB_R ReadingBelowLowerWarningThreshold",
+        "description": "PDB_R ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       }
     },
@@ -1864,199 +1864,199 @@
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/SCM_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12176,
-        "description": "SCM ReadingBelowLowerPerformanceLossThreshold",
+        "description": "SCM ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/INLET_SCM_TEMP_C|/xyz/openbmc_project/sensors/temperature/SCM_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12175,
-        "description": "SCM ReadingBelowLowerPerformanceLossThreshold",
+        "description": "SCM ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/MB_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12172,
-        "description": "MB ReadingBelowLowerPerformanceLossThreshold",
+        "description": "MB ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/MB_VR_CPU_PVDD*_P0_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12174,
-        "description": "MB ReadingBelowLowerPerformanceLossThreshold",
+        "description": "MB ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/MB_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12173,
-        "description": "MB ReadingBelowLowerPerformanceLossThreshold",
+        "description": "MB ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/MB_*_TEMP_C|/xyz/openbmc_project/sensors/temperature/E1S*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12171,
-        "description": "MB ReadingBelowLowerPerformanceLossThreshold",
+        "description": "MB ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_L",
         "afid": 12159,
-        "description": "BRB_L ReadingBelowLowerPerformanceLossThreshold",
+        "description": "BRB_L ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC0_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12330,
-        "description": "OCP_NIC_0 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_0 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC1_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12327,
-        "description": "OCP_NIC_1 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_1 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC3_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12327,
-        "description": "OCP_NIC_3 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_3 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC5_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12327,
-        "description": "OCP_NIC_5 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_5 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC7_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12327,
-        "description": "OCP_NIC_7 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_7 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC0_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12329,
-        "description": "OCP_NIC_0 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_0 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC0_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12331,
-        "description": "OCP_NIC_0 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_0 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC1_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12326,
-        "description": "OCP_NIC_1 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_1 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC1_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12328,
-        "description": "OCP_NIC_1 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_1 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC3_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12326,
-        "description": "OCP_NIC_3 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_3 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC3_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12328,
-        "description": "OCP_NIC_3 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_3 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC5_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12326,
-        "description": "OCP_NIC_5 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_5 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC5_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12328,
-        "description": "OCP_NIC_5 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_5 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC7_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12326,
-        "description": "OCP_NIC_7 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_7 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC7_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12328,
-        "description": "OCP_NIC_7 ReadingBelowLowerPerformanceLossThreshold",
+        "description": "OCP_NIC_7 ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_R",
         "afid": 12160,
-        "description": "BRB_R ReadingBelowLowerPerformanceLossThreshold",
+        "description": "BRB_R ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12161,
-        "description": "PDB_L ReadingBelowLowerPerformanceLossThreshold",
+        "description": "PDB_L ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN4"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_L_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12162,
-        "description": "PDB_L ReadingBelowLowerPerformanceLossThreshold",
+        "description": "PDB_L ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_L_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12165,
-        "description": "PDB_L ReadingBelowLowerPerformanceLossThreshold",
+        "description": "PDB_L ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12163,
-        "description": "PDB_L ReadingBelowLowerPerformanceLossThreshold",
+        "description": "PDB_L ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_L_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12164,
-        "description": "PDB_L ReadingBelowLowerPerformanceLossThreshold",
+        "description": "PDB_L ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_R_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12169,
-        "description": "PDB_R ReadingBelowLowerPerformanceLossThreshold",
+        "description": "PDB_R ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12168,
-        "description": "PDB_R ReadingBelowLowerPerformanceLossThreshold",
+        "description": "PDB_R ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12166,
-        "description": "PDB_R ReadingBelowLowerPerformanceLossThreshold",
+        "description": "PDB_R ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN8"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_R_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12167,
-        "description": "PDB_R ReadingBelowLowerPerformanceLossThreshold",
+        "description": "PDB_R ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_R_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12170,
-        "description": "PDB_R ReadingBelowLowerPerformanceLossThreshold",
+        "description": "PDB_R ReadingBelowLowerCautionThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       }
     },
@@ -2264,199 +2264,199 @@
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/SCM_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12230,
-        "description": "SCM ReadingBelowLowerSoftShutdownThreshold",
+        "description": "SCM ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/INLET_SCM_TEMP_C|/xyz/openbmc_project/sensors/temperature/SCM_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12229,
-        "description": "SCM ReadingBelowLowerSoftShutdownThreshold",
+        "description": "SCM ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/MB_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12226,
-        "description": "MB ReadingBelowLowerSoftShutdownThreshold",
+        "description": "MB ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/MB_VR_CPU_PVDD*_P0_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12228,
-        "description": "MB ReadingBelowLowerSoftShutdownThreshold",
+        "description": "MB ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/MB_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12227,
-        "description": "MB ReadingBelowLowerSoftShutdownThreshold",
+        "description": "MB ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/MB_*_TEMP_C|/xyz/openbmc_project/sensors/temperature/E1S*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12225,
-        "description": "MB ReadingBelowLowerSoftShutdownThreshold",
+        "description": "MB ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_L",
         "afid": 12213,
-        "description": "BRB_L ReadingBelowLowerSoftShutdownThreshold",
+        "description": "BRB_L ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC0_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12342,
-        "description": "OCP_NIC_0 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC1_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12339,
-        "description": "OCP_NIC_1 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC3_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12339,
-        "description": "OCP_NIC_3 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC5_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12339,
-        "description": "OCP_NIC_5 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC7_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12339,
-        "description": "OCP_NIC_7 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC0_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12341,
-        "description": "OCP_NIC_0 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC0_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12343,
-        "description": "OCP_NIC_0 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC1_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12338,
-        "description": "OCP_NIC_1 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC1_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12340,
-        "description": "OCP_NIC_1 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC3_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12338,
-        "description": "OCP_NIC_3 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC3_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12340,
-        "description": "OCP_NIC_3 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC5_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12338,
-        "description": "OCP_NIC_5 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC5_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12340,
-        "description": "OCP_NIC_5 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC7_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12338,
-        "description": "OCP_NIC_7 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC7_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12340,
-        "description": "OCP_NIC_7 ReadingBelowLowerSoftShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_R",
         "afid": 12214,
-        "description": "BRB_R ReadingBelowLowerSoftShutdownThreshold",
+        "description": "BRB_R ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12215,
-        "description": "PDB_L ReadingBelowLowerSoftShutdownThreshold",
+        "description": "PDB_L ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN4"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_L_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12219,
-        "description": "PDB_L ReadingBelowLowerSoftShutdownThreshold",
+        "description": "PDB_L ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_L_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12218,
-        "description": "PDB_L ReadingBelowLowerSoftShutdownThreshold",
+        "description": "PDB_L ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12216,
-        "description": "PDB_L ReadingBelowLowerSoftShutdownThreshold",
+        "description": "PDB_L ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_L_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12217,
-        "description": "PDB_L ReadingBelowLowerSoftShutdownThreshold",
+        "description": "PDB_L ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_R_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12223,
-        "description": "PDB_R ReadingBelowLowerSoftShutdownThreshold",
+        "description": "PDB_R ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12222,
-        "description": "PDB_R ReadingBelowLowerSoftShutdownThreshold",
+        "description": "PDB_R ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12220,
-        "description": "PDB_R ReadingBelowLowerSoftShutdownThreshold",
+        "description": "PDB_R ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN8"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_R_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12221,
-        "description": "PDB_R ReadingBelowLowerSoftShutdownThreshold",
+        "description": "PDB_R ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_R_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12224,
-        "description": "PDB_R ReadingBelowLowerSoftShutdownThreshold",
+        "description": "PDB_R ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       }
     },
@@ -2464,199 +2464,199 @@
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/SCM_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12230,
-        "description": "SCM ReadingBelowLowerHardShutdownThreshold",
+        "description": "SCM ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/INLET_SCM_TEMP_C|/xyz/openbmc_project/sensors/temperature/SCM_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12229,
-        "description": "SCM ReadingBelowLowerHardShutdownThreshold",
+        "description": "SCM ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/MB_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12226,
-        "description": "MB ReadingBelowLowerHardShutdownThreshold",
+        "description": "MB ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/MB_VR_CPU_PVDD*_P0_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12228,
-        "description": "MB ReadingBelowLowerHardShutdownThreshold",
+        "description": "MB ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/MB_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12227,
-        "description": "MB ReadingBelowLowerHardShutdownThreshold",
+        "description": "MB ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/MB_*_TEMP_C|/xyz/openbmc_project/sensors/temperature/E1S*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12225,
-        "description": "MB ReadingBelowLowerHardShutdownThreshold",
+        "description": "MB ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_L",
         "afid": 12213,
-        "description": "BRB_L ReadingBelowLowerHardShutdownThreshold",
+        "description": "BRB_L ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC0_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12342,
-        "description": "OCP_NIC_0 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC1_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12339,
-        "description": "OCP_NIC_1 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC3_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12339,
-        "description": "OCP_NIC_3 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC5_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12339,
-        "description": "OCP_NIC_5 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC7_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12339,
-        "description": "OCP_NIC_7 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC0_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12341,
-        "description": "OCP_NIC_0 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC0_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12343,
-        "description": "OCP_NIC_0 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC1_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12338,
-        "description": "OCP_NIC_1 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC1_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12340,
-        "description": "OCP_NIC_1 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC3_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12338,
-        "description": "OCP_NIC_3 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC3_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12340,
-        "description": "OCP_NIC_3 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC5_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12338,
-        "description": "OCP_NIC_5 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC5_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12340,
-        "description": "OCP_NIC_5 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC7_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12338,
-        "description": "OCP_NIC_7 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC7_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12340,
-        "description": "OCP_NIC_7 ReadingBelowLowerHardShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_R",
         "afid": 12214,
-        "description": "BRB_R ReadingBelowLowerHardShutdownThreshold",
+        "description": "BRB_R ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12215,
-        "description": "PDB_L ReadingBelowLowerHardShutdownThreshold",
+        "description": "PDB_L ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN4"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_L_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12219,
-        "description": "PDB_L ReadingBelowLowerHardShutdownThreshold",
+        "description": "PDB_L ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_L_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12218,
-        "description": "PDB_L ReadingBelowLowerHardShutdownThreshold",
+        "description": "PDB_L ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12216,
-        "description": "PDB_L ReadingBelowLowerHardShutdownThreshold",
+        "description": "PDB_L ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_L_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12217,
-        "description": "PDB_L ReadingBelowLowerHardShutdownThreshold",
+        "description": "PDB_L ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_R_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12223,
-        "description": "PDB_R ReadingBelowLowerHardShutdownThreshold",
+        "description": "PDB_R ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12222,
-        "description": "PDB_R ReadingBelowLowerHardShutdownThreshold",
+        "description": "PDB_R ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12220,
-        "description": "PDB_R ReadingBelowLowerHardShutdownThreshold",
+        "description": "PDB_R ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN8"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_R_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12221,
-        "description": "PDB_R ReadingBelowLowerHardShutdownThreshold",
+        "description": "PDB_R ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_R_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12224,
-        "description": "PDB_R ReadingBelowLowerHardShutdownThreshold",
+        "description": "PDB_R ReadingBelowLowerFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       }
     },
@@ -2864,199 +2864,199 @@
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/SCM_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12284,
-        "description": "SCM ReadingBelowUpperSoftShutdownThreshold",
+        "description": "SCM ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/INLET_SCM_TEMP_C|/xyz/openbmc_project/sensors/temperature/SCM_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12283,
-        "description": "SCM ReadingBelowUpperSoftShutdownThreshold",
+        "description": "SCM ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/MB_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12280,
-        "description": "MB ReadingBelowUpperSoftShutdownThreshold",
+        "description": "MB ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/MB_VR_CPU_PVDD*_P0_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12282,
-        "description": "MB ReadingBelowUpperSoftShutdownThreshold",
+        "description": "MB ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/MB_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12281,
-        "description": "MB ReadingBelowUpperSoftShutdownThreshold",
+        "description": "MB ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/MB_*_TEMP_C|/xyz/openbmc_project/sensors/temperature/E1S*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12279,
-        "description": "MB ReadingBelowUpperSoftShutdownThreshold",
+        "description": "MB ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_L",
         "afid": 12267,
-        "description": "BRB_L ReadingBelowUpperSoftShutdownThreshold",
+        "description": "BRB_L ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC0_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12354,
-        "description": "OCP_NIC_0 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC1_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12351,
-        "description": "OCP_NIC_1 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC3_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12351,
-        "description": "OCP_NIC_3 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC5_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12351,
-        "description": "OCP_NIC_5 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC7_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12351,
-        "description": "OCP_NIC_7 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC0_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12353,
-        "description": "OCP_NIC_0 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC0_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12355,
-        "description": "OCP_NIC_0 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC1_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12350,
-        "description": "OCP_NIC_1 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC1_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12352,
-        "description": "OCP_NIC_1 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC3_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12350,
-        "description": "OCP_NIC_3 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC3_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12352,
-        "description": "OCP_NIC_3 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC5_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12350,
-        "description": "OCP_NIC_5 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC5_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12352,
-        "description": "OCP_NIC_5 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC7_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12350,
-        "description": "OCP_NIC_7 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC7_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12352,
-        "description": "OCP_NIC_7 ReadingBelowUpperSoftShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_R",
         "afid": 12268,
-        "description": "BRB_R ReadingBelowUpperSoftShutdownThreshold",
+        "description": "BRB_R ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12269,
-        "description": "PDB_L ReadingBelowUpperSoftShutdownThreshold",
+        "description": "PDB_L ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN4"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_L_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12273,
-        "description": "PDB_L ReadingBelowUpperSoftShutdownThreshold",
+        "description": "PDB_L ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_L_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12272,
-        "description": "PDB_L ReadingBelowUpperSoftShutdownThreshold",
+        "description": "PDB_L ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12270,
-        "description": "PDB_L ReadingBelowUpperSoftShutdownThreshold",
+        "description": "PDB_L ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_L_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12271,
-        "description": "PDB_L ReadingBelowUpperSoftShutdownThreshold",
+        "description": "PDB_L ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_R_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12277,
-        "description": "PDB_R ReadingBelowUpperSoftShutdownThreshold",
+        "description": "PDB_R ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12276,
-        "description": "PDB_R ReadingBelowUpperSoftShutdownThreshold",
+        "description": "PDB_R ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12274,
-        "description": "PDB_R ReadingBelowUpperSoftShutdownThreshold",
+        "description": "PDB_R ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN8"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_R_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12275,
-        "description": "PDB_R ReadingBelowUpperSoftShutdownThreshold",
+        "description": "PDB_R ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_R_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12278,
-        "description": "PDB_R ReadingBelowUpperSoftShutdownThreshold",
+        "description": "PDB_R ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       }
     },
@@ -3064,199 +3064,199 @@
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/SCM_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12284,
-        "description": "SCM ReadingBelowUpperHardShutdownThreshold",
+        "description": "SCM ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/INLET_SCM_TEMP_C|/xyz/openbmc_project/sensors/temperature/SCM_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/SCM",
         "afid": 12283,
-        "description": "SCM ReadingBelowUpperHardShutdownThreshold",
+        "description": "SCM ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/SCM"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/MB_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12280,
-        "description": "MB ReadingBelowUpperHardShutdownThreshold",
+        "description": "MB ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/MB_VR_CPU_PVDD*_P0_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12282,
-        "description": "MB ReadingBelowUpperHardShutdownThreshold",
+        "description": "MB ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/MB_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12281,
-        "description": "MB ReadingBelowUpperHardShutdownThreshold",
+        "description": "MB ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/MB_*_TEMP_C|/xyz/openbmc_project/sensors/temperature/E1S*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
         "afid": 12279,
-        "description": "MB ReadingBelowUpperHardShutdownThreshold",
+        "description": "MB ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/MB"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_L",
         "afid": 12267,
-        "description": "BRB_L ReadingBelowUpperHardShutdownThreshold",
+        "description": "BRB_L ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC0_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12354,
-        "description": "OCP_NIC_0 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC1_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12351,
-        "description": "OCP_NIC_1 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC3_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12351,
-        "description": "OCP_NIC_3 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC5_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12351,
-        "description": "OCP_NIC_5 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/NIC7_*_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12351,
-        "description": "OCP_NIC_7 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC0_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12353,
-        "description": "OCP_NIC_0 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC0_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_0",
         "afid": 12355,
-        "description": "OCP_NIC_0 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_0 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_0"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC1_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12350,
-        "description": "OCP_NIC_1 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC1_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_1",
         "afid": 12352,
-        "description": "OCP_NIC_1 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_1 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_1"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC3_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12350,
-        "description": "OCP_NIC_3 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC3_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_3",
         "afid": 12352,
-        "description": "OCP_NIC_3 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_3 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_3"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC5_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12350,
-        "description": "OCP_NIC_5 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC5_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_5",
         "afid": 12352,
-        "description": "OCP_NIC_5 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_5 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_5"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/NIC7_*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12350,
-        "description": "OCP_NIC_7 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/NIC7_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/OCP_NIC_7",
         "afid": 12352,
-        "description": "OCP_NIC_7 ReadingBelowUpperHardShutdownThreshold",
+        "description": "OCP_NIC_7 ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/OCP_NIC_7"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/BRB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/BRB_R",
         "afid": 12268,
-        "description": "BRB_R ReadingBelowUpperHardShutdownThreshold",
+        "description": "BRB_R ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/BRB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN0_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN1_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN2_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN3_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN4_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12269,
-        "description": "PDB_L ReadingBelowUpperHardShutdownThreshold",
+        "description": "PDB_L ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN4"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_L_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12273,
-        "description": "PDB_L ReadingBelowUpperHardShutdownThreshold",
+        "description": "PDB_L ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_L_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12272,
-        "description": "PDB_L ReadingBelowUpperHardShutdownThreshold",
+        "description": "PDB_L ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_L_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12270,
-        "description": "PDB_L ReadingBelowUpperHardShutdownThreshold",
+        "description": "PDB_L ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_L_P*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_L",
         "afid": 12271,
-        "description": "PDB_L ReadingBelowUpperHardShutdownThreshold",
+        "description": "PDB_L ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_L"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/voltage/PDB_R_*_VOLT_V": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12277,
-        "description": "PDB_R ReadingBelowUpperHardShutdownThreshold",
+        "description": "PDB_R ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/temperature/PDB_R_*_TEMP_C": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12276,
-        "description": "PDB_R ReadingBelowUpperHardShutdownThreshold",
+        "description": "PDB_R ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN5_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN6_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN7_TACH_OL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_IL_SPEED_RPM|/xyz/openbmc_project/sensors/fan_tach/FAN8_TACH_OL_SPEED_RPM": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12274,
-        "description": "PDB_R ReadingBelowUpperHardShutdownThreshold",
+        "description": "PDB_R ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/FAN8"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/current/PDB_R_P*_CURR_A": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12275,
-        "description": "PDB_R ReadingBelowUpperHardShutdownThreshold",
+        "description": "PDB_R ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       },
       "SENSOR_NAME=/xyz/openbmc_project/sensors/power/PDB_R_P50V_HSC*_PWR_W": {
         "originOfCondition": "/xyz/openbmc_project/inventory/system/board/PDB_R",
         "afid": 12278,
-        "description": "PDB_R ReadingBelowUpperHardShutdownThreshold",
+        "description": "PDB_R ReadingBelowFatalThreshold",
         "redfishMapping": "/redfish/v1/Chassis/PDB_R"
       }
     },
@@ -3328,6 +3328,28 @@
         "afid": 12357,
         "description": "MB UnifiedSELEvent",
         "redfishMapping": "/redfish/v1/Chassis/MB"
+      }
+    },
+    "xyz.openbmc_project.State.Thermal.DeviceOverOperatingTemperatureFault": {
+      "Device=/xyz/openbmc_project/State/Thermal/amc": {
+        "originOfCondition": "/xyz/openbmc_project/inventory/system/board/AMD_AMC",
+        "afid": 12358,
+        "description": "AMD_AMC DeviceOverOperatingTemperatureFault",
+        "redfishMapping": "/redfish/v1/Chassis/AMD_AMC"
+      },
+      "Device=/xyz/openbmc_project/State/Thermal/cpu0": {
+        "originOfCondition": "/xyz/openbmc_project/inventory/system/board/MB",
+        "afid": 12359,
+        "description": "MB DeviceOverOperatingTemperatureFault",
+        "redfishMapping": "/redfish/v1/Chassis/MB"
+      }
+    },
+    "xyz.openbmc_project.State.SMC.SMCFailed": {
+      "Identifier=/xyz/openbmc_project/inventory/system/board/AMD_AMC": {
+        "originOfCondition": "/xyz/openbmc_project/inventory/system/board/AMD_AMC",
+        "afid": 12360,
+        "description": "AMD_AMC SMCFailed",
+        "redfishMapping": "/redfish/v1/Chassis/AMD_AMC"
       }
     }
   }

@@ -44,7 +44,11 @@ if [ -z "$mtd" ]; then
     exit 1
 fi
 
-dd if=/dev/"$mtd" of=/tmp/."$1"_meta bs=1K skip="$START_OFFSET_KB" count="$LEN_KB"
+if ! dd if="/dev/$mtd" of="/tmp/.${1}_meta" \
+    bs=1K skip="$START_OFFSET_KB" count="$LEN_KB"; then
+    echo "Failed to read metadata from /dev/$mtd" >&2
+    exit 1
+fi
 # Images without an image-meta partition (e.g. yamp) have unrelated data
 # here, which strings would print as noise.
 if ! grep -q FBOBMC_IMAGE_META_VER /tmp/."$1"_meta; then

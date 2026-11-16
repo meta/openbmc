@@ -218,7 +218,7 @@ class RackmonInterface:
         if not os.path.exists("/var/run/rackmond.sock"):
             raise ModbusException()
         client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        client.settimeout(30)
+        client.settimeout(120)
         client.connect("/var/run/rackmond.sock")
         req_header = struct.pack("@I", len(request))
         client.sendall(req_header + request)

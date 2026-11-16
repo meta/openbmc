@@ -57,7 +57,6 @@
 #define FORCE_BOOT_BIOS_SETUP_VALID_FLAG (1U << 2)
 //#define CHASSIS_GET_BOOT_OPTION_SUPPORT
 //#define CHASSIS_SET_BOOT_OPTION_SUPPORT
-#define CONFIG_FBTP 1
 
 #define OBMC_DUMP_STAT_KEY "obmc_dump_stat"
 
@@ -1638,7 +1637,6 @@ storage_clr_sel (unsigned char *request, unsigned char *response,
   return;
 }
 
-#if defined(CONFIG_FBTTN) || defined(CONFIG_FBTP)
 static void
 storage_get_sel_time (unsigned char *response, unsigned char *res_len)
 {
@@ -1652,7 +1650,6 @@ storage_get_sel_time (unsigned char *response, unsigned char *res_len)
 
   return;
 }
-#endif
 
 #if defined(CONFIG_FBY2_ND)
 static void
@@ -1732,13 +1729,11 @@ ipmi_handle_storage (unsigned char *request, unsigned char req_len,
     case CMD_STORAGE_CLR_SEL:
       storage_clr_sel (request, response, res_len);
       break;
-#if defined(CONFIG_FBTTN) || defined(CONFIG_FBTP)
      // To avoid BIOS using this command to update RTC
      // TBD: Respond only if BMC's time has synced with NTP
     case CMD_STORAGE_GET_SEL_TIME:
       storage_get_sel_time (response, res_len);
       break;
-#endif
 #if defined(CONFIG_FBY2_ND)
     case CMD_STORAGE_SET_SEL_TIME:
       storage_set_sel_time (request, response, req_len);

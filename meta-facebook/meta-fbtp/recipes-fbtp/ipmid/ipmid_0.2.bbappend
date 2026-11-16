@@ -18,6 +18,7 @@
 DEPENDS += "libipmi libipmb libfruid update-rc.d-native"
 RDEPENDS:${PN} += "libipmi libfruid libipmb "
 LDFLAGS += "-lfruid -lipmb"
+CFLAGS:prepend = " -DCONFIG_FBTP"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 LOCAL_URI += " \

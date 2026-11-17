@@ -1,0 +1,362 @@
+From ff8bbaf43fc241155d63b865f0519e649f927ceb Mon Sep 17 00:00:00 2001
+From: Manoj Kumar Prabakaran <manojkumar.prabakaran@arm.com>
+Date: Thu, 29 Oct 2026 15:23:19 +0530
+Subject: [PATCH] platform-mc: harden PLDM file transfer socket handling
+
+The socket writer uses FD_SET without checking FD_SETSIZE, which can
+corrupt the stack for high-numbered descriptors. Partial writes restart
+at the beginning of the buffer, and a closed reader can raise SIGPIPE.
+Unhandled transfer task errors can also terminate pldmd.
+
+Use poll() and send(MSG_NOSIGNAL), advance the buffer after partial
+writes, and report closed or zero-write sockets as transfer errors.
+Reject missing multipart payloads and avoid null pointer arithmetic
+for empty payloads.
+
+Convert task exceptions and cancellation to PLDM_ERROR so completion
+closes the server socket. Preserve read failures when DfClose succeeds.
+
+Retain the original D-Bus Open descriptor until the next successful
+Open or object destruction, since sd-bus duplicates it for the reply.
+Internal transfer callers retain ownership of their returned descriptor.
+
+Upstream-Status: Submitted [https://gerrit.openbmc.org/c/openbmc/pldm/+/96501]
+
+Change-Id: Ief5485d6d59a633acf8b4074f1d5bc5c4ae35f87
+Signed-off-by: Manoj Kumar Prabakaran <manojkumar.prabakaran@arm.com>
+---
+ platform-mc/file_descriptor.cpp | 175 ++++++++++++++++++++++++--------
+ platform-mc/file_descriptor.hpp |   9 +-
+ 2 files changed, 135 insertions(+), 49 deletions(-)
+
+diff --git a/platform-mc/file_descriptor.cpp b/platform-mc/file_descriptor.cpp
+index 84cf6e4..db16261 100644
+--- a/platform-mc/file_descriptor.cpp
++++ b/platform-mc/file_descriptor.cpp
+@@ -4,6 +4,7 @@
+ 
+ #include <libpldm/edac.h>
+ #include <libpldm/entity.h>
++#include <poll.h>
+ #include <sys/socket.h>
+ #include <unistd.h>
+ 
+@@ -33,8 +34,8 @@ using PurposeType =
+ // consumer drains a large file-transfer stream.
+ constexpr auto MAX_SOCKET_POLL_RETRY = 120;
+ 
+-// Timeout in microsecond used in select() for the server socket.
+-constexpr auto SOCKET_SELECT_TIMEOUT_US = 50000;
++// Timeout in milliseconds used in poll() for the server socket.
++constexpr auto SOCKET_POLL_TIMEOUT_MS = 50;
+ 
+ // Local socket buffer used between the PLDM transfer task and its consumer.
+ constexpr int FILE_TRANSFER_SOCKET_BUFFER_SIZE = 1024 * 1024;
+@@ -113,10 +114,8 @@ void FileDescriptor::setPurpose(FileClassification classification)
+ }
+ 
+ exec::task<int> FileDescriptor::writeDataToSocket(
+-    size_t dataSize, const uint8_t* const data, int socket, int maxFd)
++    size_t dataSize, const uint8_t* const data, int socket)
+ {
+-    fd_set wfd;
+-    struct timeval tv;
+     uint8_t retries = 0;
+     size_t remaining = dataSize;
+ 
+@@ -129,49 +128,69 @@ exec::task<int> FileDescriptor::writeDataToSocket(
+                 "TID", tid, "ID", identifier, "RETRY", retries);
+             co_return PLDM_ERROR;
+         }
+-        FD_ZERO(&wfd);
+-        FD_SET(socket, &wfd);
+-        tv.tv_sec = 0;
+-        tv.tv_usec = SOCKET_SELECT_TIMEOUT_US;
+-
+-        int retval = select(maxFd + 1, nullptr, &wfd, nullptr, &tv);
++        pollfd pollFd{socket, POLLOUT, 0};
++        int retval = poll(&pollFd, 1, SOCKET_POLL_TIMEOUT_MS);
+         if (retval < 0)
+         {
++            if (errno == EINTR)
++            {
++                continue;
++            }
+             lg2::error(
+-                "Failed to select output socket for terminus ID {TID}, FileIdentifier {ID}, error number - {ERR}.",
++                "Failed to poll output socket for terminus ID {TID}, FileIdentifier {ID}, error number - {ERR}.",
+                 "TID", tid, "ID", identifier, "ERR", errno);
+             co_return PLDM_ERROR;
+         }
+         if (retval == 0)
+         {
+             lg2::error(
+-                "Select timeout for terminus ID {TID}, FileIdentifier {ID}, error number - {ERR}.",
+-                "TID", tid, "ID", identifier, "ERR", errno);
++                "Socket poll timeout for terminus ID {TID}, FileIdentifier {ID}.",
++                "TID", tid, "ID", identifier);
+             retries++;
+             continue;
+         }
+-        if ((retval > 0) && (FD_ISSET(socket, &wfd)))
++        if (pollFd.revents & (POLLERR | POLLHUP | POLLNVAL))
+         {
+-            int bytes = write(socket, data, remaining);
++            lg2::error(
++                "Output socket closed for terminus ID {TID}, FileIdentifier {ID}, events {EVENTS}.",
++                "TID", tid, "ID", identifier, "EVENTS", pollFd.revents);
++            co_return PLDM_ERROR;
++        }
++        if (pollFd.revents & POLLOUT)
++        {
++            auto bytes = send(socket, data + (dataSize - remaining), remaining,
++                              MSG_NOSIGNAL);
+             if (bytes < 0)
+             {
+-                lg2::error(
+-                    "Failed to write to output socket for terminus ID {TID}, FileIdentifier {ID}, error number - {ERR}.",
+-                    "TID", tid, "ID", identifier, "ERR", errno);
+-                if (errno == EAGAIN || errno == EWOULDBLOCK)
++                const int sendErrno = errno;
++                if (sendErrno == EINTR)
++                {
++                    continue;
++                }
++                if (sendErrno == EAGAIN || sendErrno == EWOULDBLOCK)
+                 {
+                     retries++;
+                     continue;
+                 }
++                lg2::error(
++                    "Failed to write to output socket for terminus ID {TID}, FileIdentifier {ID}, error number - {ERR}.",
++                    "TID", tid, "ID", identifier, "ERR", sendErrno);
++                co_return PLDM_ERROR;
++            }
++            if (bytes == 0)
++            {
++                lg2::error(
++                    "Zero-byte socket write for terminus ID {TID}, FileIdentifier {ID}.",
++                    "TID", tid, "ID", identifier);
+                 co_return PLDM_ERROR;
+             }
+-            remaining -= bytes;
++            remaining -= static_cast<size_t>(bytes);
+             retries = 0;
+         }
+         else
+         {
+             lg2::debug(
+-                "Write socket FD is not set for terminus ID {TID}, FileIdentifier {ID}.",
++                "Output socket is not writable for terminus ID {TID}, FileIdentifier {ID}.",
+                 "TID", tid, "ID", identifier);
+             retries++;
+             continue;
+@@ -195,10 +214,6 @@ exec::task<int> FileDescriptor::readFileBySection(
+ 
+     bool isEnd = false;
+ 
+-    int maxFd = (sockets[SERVER_IDX] > sockets[CLIENT_IDX])
+-                    ? sockets[SERVER_IDX]
+-                    : sockets[CLIENT_IDX];
+-
+     while (!isEnd)
+     {
+         Checksum dataIntegrityChecksum = 0;
+@@ -221,8 +236,18 @@ exec::task<int> FileDescriptor::readFileBySection(
+         }
+ 
+         std::vector<uint8_t> buffer;
+-        buffer.insert(buffer.end(), respData.data.ptr,
+-                      respData.data.ptr + respData.data.length);
++        if (respData.data.length > 0)
++        {
++            if (respData.data.ptr == nullptr)
++            {
++                lg2::error(
++                    "MultipartReceive returned a missing payload for terminus ID {TID}, file descriptor {FD}.",
++                    "TID", tid, "FD", fd);
++                co_return PLDM_ERROR;
++            }
++            buffer.insert(buffer.end(), respData.data.ptr,
++                          respData.data.ptr + respData.data.length);
++        }
+ 
+         if (buffer.size())
+         {
+@@ -249,7 +274,7 @@ exec::task<int> FileDescriptor::readFileBySection(
+             }
+ 
+             rc = co_await writeDataToSocket(buffer.size(), buffer.data(),
+-                                            sockets[SERVER_IDX], maxFd);
++                                            sockets[SERVER_IDX]);
+             if (rc)
+             {
+                 lg2::error(
+@@ -416,17 +441,18 @@ exec::task<int> FileDescriptor::readTask(size_t offset, size_t length,
+ 
+     FileSize fileSize = getFileSize();
+ 
++    int readRc = PLDM_SUCCESS;
+     if (fileSize > 0)
+     {
+         auto readLength = (length > 0) ? length : fileSize;
+ 
+-        rc = co_await readFileByLength(curFd, offset, readLength);
+-        if (rc)
++        readRc = co_await readFileByLength(curFd, offset, readLength);
++        if (readRc)
+         {
+             lg2::error(
+                 "Failed to read {LEN} bytes at offset {OFF} for terminus ID {TID}, FileIdentifier {ID}, error {RC}.",
+                 "LEN", readLength, "OFF", offset, "TID", tid, "ID", identifier,
+-                "RC", rc);
++                "RC", readRc);
+             // No return here as we still need to call DfClose.
+         }
+     }
+@@ -441,7 +467,7 @@ exec::task<int> FileDescriptor::readTask(size_t offset, size_t length,
+             "TID", tid, "ID", identifier, "RC", rc);
+     }
+ 
+-    co_return rc;
++    co_return readRc != PLDM_SUCCESS ? readRc : rc;
+ }
+ 
+ sdbusplus::message::unix_fd FileDescriptor::startFileTransfer(
+@@ -510,17 +536,71 @@ sdbusplus::message::unix_fd FileDescriptor::startFileTransfer(
+ 
+     auto& [scope, rcOpt] = taskHandle.emplace();
+     scope.spawn(
+-        readTask(offset, length, exclusivity) | stdexec::then([&](int rc) {
+-            lg2::info(
+-                "Read finishes for terminus ID {TID}, FileIdentifier {ID}, return code {RC}.",
+-                "TID", tid, "ID", identifier, "RC", rc);
+-            rcOpt.emplace(rc);
+-            if (sockets[SERVER_IDX] >= 0)
+-            {
+-                close(sockets[SERVER_IDX]);
+-                sockets[SERVER_IDX] = -1;
+-            }
+-        }),
++        readTask(offset, length, exclusivity) |
++            stdexec::upon_error([this](std::exception_ptr error) noexcept {
++                try
++                {
++                    if (!error)
++                    {
++                        lg2::error(
++                            "File transfer task failed for terminus ID {TID}, FileIdentifier {ID} without an error detail.",
++                            "TID", tid, "ID", identifier);
++                        return PLDM_ERROR;
++                    }
++                    try
++                    {
++                        std::rethrow_exception(error);
++                    }
++                    catch (const std::exception& e)
++                    {
++                        lg2::error(
++                            "File transfer task failed for terminus ID {TID}, FileIdentifier {ID}: {ERROR}",
++                            "TID", tid, "ID", identifier, "ERROR", e);
++                    }
++                    catch (...)
++                    {
++                        lg2::error(
++                            "File transfer task failed for terminus ID {TID}, FileIdentifier {ID} with an unknown error.",
++                            "TID", tid, "ID", identifier);
++                    }
++                }
++                catch (...)
++                {
++                    // A logging failure must not escape the task receiver.
++                }
++                return PLDM_ERROR;
++            }) |
++            stdexec::upon_stopped([this]() noexcept {
++                try
++                {
++                    lg2::error(
++                        "File transfer task stopped for terminus ID {TID}, FileIdentifier {ID}.",
++                        "TID", tid, "ID", identifier);
++                }
++                catch (...)
++                {
++                    // Complete the task even if logging fails.
++                }
++                return PLDM_ERROR;
++            }) |
++            stdexec::then([this, &rcOpt](int rc) noexcept {
++                try
++                {
++                    lg2::info(
++                        "Read finishes for terminus ID {TID}, FileIdentifier {ID}, return code {RC}.",
++                        "TID", tid, "ID", identifier, "RC", rc);
++                }
++                catch (...)
++                {
++                    // Complete the task and close its socket even if logging fails.
++                }
++                rcOpt.emplace(rc);
++                if (sockets[SERVER_IDX] >= 0)
++                {
++                    close(sockets[SERVER_IDX]);
++                    sockets[SERVER_IDX] = -1;
++                }
++            }),
+         exec::default_task_context<void>(stdexec::inline_scheduler{}));
+ 
+     return clientFd;
+@@ -529,7 +609,12 @@ sdbusplus::message::unix_fd FileDescriptor::startFileTransfer(
+ sdbusplus::message::unix_fd FileDescriptor::open(size_t offset, size_t length,
+                                                  bool exclusivity)
+ {
+-    return startFileTransfer(offset, length, exclusivity);
++    // sd-bus duplicates this FD while serializing the method reply. Keep the
++    // original alive until the next Open, after that reply has been sent.
++    auto clientFd = startFileTransfer(offset, length, exclusivity);
++    dbusClientFd.reset();
++    dbusClientFd.emplace(clientFd.fd);
++    return clientFd;
+ }
+ 
+ FileSize FileDescriptor::getFileSize() const
+diff --git a/platform-mc/file_descriptor.hpp b/platform-mc/file_descriptor.hpp
+index 6c3c062..1d3bad9 100644
+--- a/platform-mc/file_descriptor.hpp
++++ b/platform-mc/file_descriptor.hpp
+@@ -12,6 +12,7 @@
+ #include <sdbusplus/server/object.hpp>
+ #include <xyz/openbmc_project/PLDM/File/server.hpp>
+ 
++#include <optional>
+ #include <string>
+ 
+ PHOSPHOR_LOG2_USING;
+@@ -97,6 +98,9 @@ class FileDescriptor : virtual public FileInterface
+     /** @brief A socket pair to stream file data out upon an Open call.*/
+     int sockets[SOCKET_CNT] = {-1, -1};
+ 
++    /** @brief Original D-Bus Open FD, closed on the next Open or destruction. */
++    std::optional<pldm::utils::CustomFD> dbusClientFd;
++
+     /** @brief Coroutine handler for tasks.*/
+     std::optional<std::pair<exec::async_scope, std::optional<int>>> taskHandle;
+ 
+@@ -112,13 +116,10 @@ class FileDescriptor : virtual public FileInterface
+      *  @param[in] dataSize - Data length to be written
+      *  @param[in] data - Pointer to the array of data
+      *  @param[in] socket - The socket fd
+-     *  @param[in] maxfd - Highest-num fd of all the fd set. maxfd + 1 will be
+-     *                     passed as nfds argument to select()
+-     *
+      *  @return coroutine task returning int
+      */
+     exec::task<int> writeDataToSocket(
+-        size_t dataSize, const uint8_t* const data, int socket, int maxFd);
++        size_t dataSize, const uint8_t* const data, int socket);
+ 
+     /** @brief Call DfRead(s) to read a section of certain length to a buffer.
+      *  With reponse data from each part, write it to the socket pair
+-- 
+2.25.1
+

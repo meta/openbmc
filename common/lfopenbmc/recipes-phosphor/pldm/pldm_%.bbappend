@@ -58,8 +58,10 @@ SRC_URI:append:openbmc-fb-lf = " \
     file://0212-platform-mc-Fix-file-transfer-FD-lifetime.patch \
     file://0213-oem-arm-parse-PLDM-Device-File-state-events.patch \
     file://0214-oem-arm-collect-crashlog-files-as-a-system-dump.patch \
-    file://0215-platform-mc-update-object_path-namespace-for-sdbuspl.patch \
-    file://0216-platform-mc-NumericSensor-fix-rebase-of-useMetricInt.patch \
+    file://0215-oem-arm-run-internal-crashlog-transfer-on-event-thre.patch \
+    file://0216-platform-mc-harden-PLDM-file-transfer-socket-handlin.patch \
+    file://0217-platform-mc-update-object_path-namespace-for-sdbuspl.patch \
+    file://0218-platform-mc-NumericSensor-fix-rebase-of-useMetricInt.patch \
 "
 
 # Keep terminus names, and so every sensor and inventory object name, as they

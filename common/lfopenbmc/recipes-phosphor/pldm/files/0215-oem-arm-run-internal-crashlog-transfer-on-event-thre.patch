@@ -1,0 +1,517 @@
+From 9af07b972da022ed3920d7efa4df9134375499e2 Mon Sep 17 00:00:00 2001
+From: Manoj Kumar Prabakaran <manojkumar.prabakaran@arm.com>
+Date: Thu, 29 Oct 2026 15:23:19 +0530
+Subject: [PATCH] oem: arm: run internal crashlog transfer on event thread
+
+FileDescriptor and the PLDM requester belong to pldmd's event thread.
+Starting a transfer from the detached crashlog worker races with
+endpoint discovery, request timers, and transfer state.
+
+Dispatch descriptor discovery, file-size reads, and transfer startup
+through an eventfd watched by the event loop. Keep socket draining and
+archive creation on the worker. Hold each descriptor until the stream
+is drained and release it on its owning thread. Contain exceptions in
+the detached worker.
+
+Continue using the internal transfer API without a D-Bus File.Open call.
+
+Upstream-Status: Submitted [https://gerrit.openbmc.org/c/openbmc/pldm/+/96500]
+
+Change-Id: Id5d7a0b33407f60ad75479b50968cc2099352315
+Signed-off-by: Manoj Kumar Prabakaran <manojkumar.prabakaran@arm.com>
+---
+ oem/arm/event/crashlog.cpp | 267 ++++++++++++++++++++++++++++++++-----
+ 1 file changed, 230 insertions(+), 37 deletions(-)
+
+diff --git a/oem/arm/event/crashlog.cpp b/oem/arm/event/crashlog.cpp
+index 585e774..54226a2 100644
+--- a/oem/arm/event/crashlog.cpp
++++ b/oem/arm/event/crashlog.cpp
+@@ -8,8 +8,11 @@
+ 
+ #include <fcntl.h>
+ #include <poll.h>
++#include <sys/epoll.h>
++#include <sys/eventfd.h>
+ #include <sys/wait.h>
+ #include <unistd.h>
++#include <systemd/sd-event.h>
+ 
+ #include <phosphor-logging/lg2.hpp>
+ #include <sdbusplus/bus.hpp>
+@@ -18,17 +21,24 @@
+ #include <algorithm>
+ #include <array>
+ #include <atomic>
++#include <cerrno>
+ #include <chrono>
+ #include <ctime>
++#include <deque>
+ #include <exception>
++#include <functional>
+ #include <fstream>
+ #include <filesystem>
++#include <future>
+ #include <iomanip>
+ #include <mutex>
+ #include <optional>
++#include <stdexcept>
+ #include <sstream>
+ #include <string>
+ #include <thread>
++#include <type_traits>
++#include <utility>
+ #include <vector>
+ 
+ PHOSPHOR_LOG2_USING;
+@@ -64,6 +74,12 @@ constexpr auto fileSocketPollTimeoutMs = 5000;
+ std::atomic<uint32_t> nextCrashlogSourceId{1};
+ std::mutex crashlogWorkerMutex;
+ 
++struct CrashlogFile
++{
++    std::string name;
++    std::weak_ptr<platform_mc::FileDescriptor> descriptor;
++};
++
+ struct CollectedCrashlogFile
+ {
+     std::string name;
+@@ -71,6 +87,102 @@ struct CollectedCrashlogFile
+     uint64_t copiedSize;
+ };
+ 
++/** Run FileDescriptor operations on pldmd's event thread. The worker may
++ * block while draining a socket, but must never enter the PLDM requester's
++ * maps, timers or coroutine state from that thread.
++ */
++class EventThreadCalls
++{
++  public:
++    EventThreadCalls()
++    {
++        wakeFd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
++        if (wakeFd < 0)
++        {
++            throw std::runtime_error("Failed to create crashlog eventfd");
++        }
++
++        sd_event* event = nullptr;
++        auto rc = sd_event_default(&event);
++        if (rc >= 0)
++        {
++            rc = sd_event_add_io(event, &source, wakeFd, EPOLLIN,
++                                 &EventThreadCalls::onWake, this);
++            sd_event_unref(event);
++        }
++        if (rc < 0)
++        {
++            sd_event_source_unref(source);
++            close(wakeFd);
++            wakeFd = -1;
++            throw std::runtime_error("Failed to watch crashlog eventfd");
++        }
++    }
++
++    ~EventThreadCalls()
++    {
++        sd_event_source_unref(source);
++        close(wakeFd);
++    }
++
++    EventThreadCalls(const EventThreadCalls&) = delete;
++    EventThreadCalls& operator=(const EventThreadCalls&) = delete;
++
++    template <typename F>
++    auto call(F&& function) -> std::invoke_result_t<F>
++    {
++        using Result = std::invoke_result_t<F>;
++        auto task = std::make_shared<std::packaged_task<Result()>>(
++            std::forward<F>(function));
++        auto result = task->get_future();
++        {
++            std::lock_guard guard(queueMutex);
++            pending.emplace_back([task] { (*task)(); });
++        }
++
++        uint64_t wake = 1;
++        ssize_t written;
++        do
++        {
++            written = write(wakeFd, &wake, sizeof(wake));
++        } while (written < 0 && errno == EINTR);
++        if (written != static_cast<ssize_t>(sizeof(wake)) &&
++            !(written < 0 && errno == EAGAIN))
++        {
++            throw std::runtime_error("Failed to wake crashlog event thread");
++        }
++        return result.get();
++    }
++
++  private:
++    static int onWake(sd_event_source*, int fd, uint32_t, void* context)
++    {
++        auto* self = static_cast<EventThreadCalls*>(context);
++        uint64_t wake;
++        ssize_t rc;
++        do
++        {
++            rc = read(fd, &wake, sizeof(wake));
++        } while (rc < 0 && errno == EINTR);
++
++        std::deque<std::function<void()>> ready;
++        {
++            std::lock_guard guard(self->queueMutex);
++            ready.swap(self->pending);
++        }
++        for (auto& task : ready)
++        {
++            task();
++        }
++        return 0;
++    }
++
++    int wakeFd = -1;
++    sd_event_source* source = nullptr;
++    std::mutex queueMutex;
++    std::deque<std::function<void()>> pending;
++};
++
+ /** @brief Check whether a state sensor is a Device File update sensor.
+  *
+  * The SoC exposes crashlog file-ready sensors starting at sensor ID 2 with a
+@@ -176,11 +288,11 @@ std::optional<size_t> copyFdToFile(int inputFd, int outputFd)
+  * @param[in] tid Terminus ID that reported the Device File update event.
+  * @return Matching crashlog FileDescriptor objects.
+  */
+-std::vector<std::shared_ptr<platform_mc::FileDescriptor>>
+-    findCrashlogFiles(platform_mc::Manager& manager, pldm_tid_t tid)
++std::vector<CrashlogFile> findCrashlogFiles(platform_mc::Manager& manager,
++                                             pldm_tid_t tid)
+ {
+     auto files = manager.getFileDescriptors(tid);
+-    std::vector<std::shared_ptr<platform_mc::FileDescriptor>> crashlogFiles;
++    std::vector<CrashlogFile> crashlogFiles;
+ 
+     for (const auto& file : files)
+     {
+@@ -190,17 +302,21 @@ std::vector<std::shared_ptr<platform_mc::FileDescriptor>>
+         }
+ 
+         auto fileName = file->getFileName();
++        if (!fileName.empty() && fileName.back() == '\0')
++        {
++            fileName.pop_back();
++        }
+         if (fileName.find(crashlogFileName) == std::string::npos)
+         {
+             continue;
+         }
+ 
+-        crashlogFiles.emplace_back(file);
++        crashlogFiles.push_back({std::move(fileName), file});
+     }
+ 
+     std::sort(crashlogFiles.begin(), crashlogFiles.end(),
+               [](const auto& lhs, const auto& rhs) {
+-                  return lhs->getFileName() < rhs->getFileName();
++                  return lhs.name < rhs.name;
+               });
+     return crashlogFiles;
+ }
+@@ -214,12 +330,14 @@ std::vector<std::shared_ptr<platform_mc::FileDescriptor>>
+  * @param[in] tid Terminus ID that reported the Device File update event.
+  * @return Matching crashlog files, or an empty vector on timeout.
+  */
+-std::vector<std::shared_ptr<platform_mc::FileDescriptor>>
+-    waitForCrashlogFiles(platform_mc::Manager& manager, pldm_tid_t tid)
++std::vector<CrashlogFile> waitForCrashlogFiles(EventThreadCalls& eventCalls,
++                                                platform_mc::Manager& manager,
++                                                pldm_tid_t tid)
+ {
+     for (auto retry = 0; retry < crashlogFileObjectRetryCount; ++retry)
+     {
+-        auto files = findCrashlogFiles(manager, tid);
++        auto files = eventCalls.call(
++            [&manager, tid] { return findCrashlogFiles(manager, tid); });
+         if (!files.empty())
+         {
+             if (retry != 0)
+@@ -251,20 +369,31 @@ std::vector<std::shared_ptr<platform_mc::FileDescriptor>>
+  * @return Non-zero file size, zero on timeout, or std::nullopt on read failure.
+  */
+ std::optional<uint32_t> waitForNonZeroCurrentSize(
+-    const std::shared_ptr<platform_mc::FileDescriptor>& file)
++    EventThreadCalls& eventCalls, const CrashlogFile& file)
+ {
+     std::optional<uint32_t> currentSize;
+     for (auto retry = 0; retry < crashlogSizeRetryCount; ++retry)
+     {
++        if (file.descriptor.expired())
++        {
++            return std::nullopt;
++        }
+         try
+         {
+-            currentSize = file->getFileSize();
++            currentSize = eventCalls.call([descriptor = file.descriptor] {
++                auto live = descriptor.lock();
++                if (!live)
++                {
++                    throw std::runtime_error("Crashlog file descriptor removed");
++                }
++                return live->getFileSize();
++            });
+         }
+         catch (const std::exception& e)
+         {
+             lg2::debug("Failed to read size from PLDM crashlog file "
+                        "{FILE}: {ERROR}",
+-                       "FILE", file->getFileName(), "ERROR", e);
++                       "FILE", file.name, "ERROR", e);
+         }
+ 
+         if (currentSize && *currentSize != 0)
+@@ -273,7 +402,7 @@ std::optional<uint32_t> waitForNonZeroCurrentSize(
+             {
+                 lg2::info("PLDM crashlog file {FILE} size became {SIZE} "
+                           "after {RETRY} retries",
+-                          "FILE", file->getFileName(), "SIZE", *currentSize,
++                          "FILE", file.name, "SIZE", *currentSize,
+                           "RETRY", retry);
+             }
+             return currentSize;
+@@ -283,7 +412,7 @@ std::optional<uint32_t> waitForNonZeroCurrentSize(
+         {
+             lg2::info("PLDM crashlog file {FILE} size is not available; "
+                       "waiting for the file provider to publish size",
+-                      "FILE", file->getFileName());
++                      "FILE", file.name);
+         }
+         std::this_thread::sleep_for(crashlogSizeRetryDelay);
+     }
+@@ -309,10 +438,10 @@ std::string getUtcTimestamp()
+ 
+ /** @brief Transfer a PLDM crashlog file into a local file path.
+  *
+- * This calls FileDescriptor::startFileTransfer() directly, avoiding a D-Bus
+- * Open() method call while reusing the existing PLDM DfOpen/MultipartReceive/
+- * DfClose implementation in platform-mc.
++ * Start FileDescriptor's internal transfer on pldmd's event thread. Only the
++ * returned stream FD is handled by the worker thread.
+  *
++ * @param[in] eventCalls Handoff to pldmd's event thread.
+  * @param[in] file Crashlog FileDescriptor object to read.
+  * @param[in] outputPath Local file path to write.
+  * @param[in] expectedSize Number of bytes expected from the file.
+@@ -320,7 +449,7 @@ std::string getUtcTimestamp()
+  * @return true when the transfer completed and byte count matched.
+  */
+ bool downloadPldmFileToPath(
+-    const std::shared_ptr<platform_mc::FileDescriptor>& file,
++    EventThreadCalls& eventCalls, const CrashlogFile& file,
+     const fs::path& outputPath, uint64_t expectedSize, uint64_t& totalBytes)
+ {
+     fs::create_directories(outputPath.parent_path());
+@@ -338,13 +467,38 @@ bool downloadPldmFileToPath(
+     std::optional<size_t> bytesRead;
+     try
+     {
+-        auto socketFd = file->startFileTransfer(0, expectedSize, false);
+-        bytesRead = copyFdToFile(socketFd.fd, outputFd());
++        auto transfer = eventCalls.call([descriptor = file.descriptor,
++                                         expectedSize] {
++            auto live = descriptor.lock();
++            if (!live)
++            {
++                throw std::runtime_error("Crashlog file descriptor removed");
++            }
++            auto stream =
++                live->startFileTransfer(0, expectedSize, false);
++            return std::pair{stream.fd, std::move(live)};
++        });
++        try
++        {
++            pldm::utils::CustomFD inputFd(transfer.first);
++            bytesRead = copyFdToFile(inputFd(), outputFd());
++        }
++        catch (...)
++        {
++            eventCalls.call([live = std::move(transfer.second)]() mutable {
++                live.reset();
++            });
++            throw;
++        }
++        // Release the last FileDescriptor reference on its owning thread.
++        eventCalls.call([live = std::move(transfer.second)]() mutable {
++            live.reset();
++        });
+     }
+     catch (const std::exception& e)
+     {
+         lg2::error("Failed to download PLDM file {FILE}: {ERROR}", "FILE",
+-                   file->getFileName(), "ERROR", e);
++                   file.name, "ERROR", e);
+     }
+ 
+     totalBytes = bytesRead.value_or(0);
+@@ -357,14 +511,14 @@ bool downloadPldmFileToPath(
+     {
+         lg2::error("PLDM file {FILE} size mismatch: expected {EXPECTED}, "
+                    "downloaded {ACTUAL}",
+-                   "FILE", file->getFileName(), "EXPECTED", expectedSize,
++                   "FILE", file.name, "EXPECTED", expectedSize,
+                    "ACTUAL", totalBytes);
+         fs::remove(outputPath);
+         return false;
+     }
+ 
+     lg2::info("Downloaded {BYTES} bytes from PLDM file {FILE} to {PATH}",
+-              "BYTES", totalBytes, "FILE", file->getFileName(), "PATH",
++              "BYTES", totalBytes, "FILE", file.name, "PATH",
+               outputPath.string());
+     return true;
+ }
+@@ -492,15 +646,15 @@ int notifySystemDump(uint32_t sourceId, uint64_t size)
+  * @return PLDM completion code.
+  */
+ int collectCrashlogFile(
+-    const std::shared_ptr<platform_mc::FileDescriptor>& file,
++    EventThreadCalls& eventCalls, const CrashlogFile& file,
+     size_t fileInstance, const fs::path& workDir,
+     std::vector<CollectedCrashlogFile>& collectedFiles)
+ {
+-    auto currentSize = waitForNonZeroCurrentSize(file);
++    auto currentSize = waitForNonZeroCurrentSize(eventCalls, file);
+     if (!currentSize)
+     {
+         lg2::error("Failed to read size from PLDM crashlog file {FILE}",
+-                   "FILE", file->getFileName());
++                   "FILE", file.name);
+         return PLDM_ERROR_NOT_READY;
+     }
+ 
+@@ -508,23 +662,24 @@ int collectCrashlogFile(
+     {
+         lg2::info("Skipping crashlog collection; file {FILE} size is "
+                   "still 0 after waiting",
+-                  "FILE", file->getFileName());
++                  "FILE", file.name);
+         return PLDM_ERROR_NOT_READY;
+     }
+ 
+     lg2::info("Collecting crashlog file instance {INSTANCE} from {FILE}, "
+               "expected size {SIZE}",
+-              "INSTANCE", fileInstance, "FILE", file->getFileName(), "SIZE",
++              "INSTANCE", fileInstance, "FILE", file.name, "SIZE",
+               *currentSize);
+ 
+-    auto outputPath = workDir / file->getFileName();
++    auto outputPath = workDir / file.name;
+     uint64_t bytesRead = 0;
+-    if (!downloadPldmFileToPath(file, outputPath, *currentSize, bytesRead))
++    if (!downloadPldmFileToPath(eventCalls, file, outputPath, *currentSize,
++                                bytesRead))
+     {
+         return PLDM_ERROR;
+     }
+ 
+-    collectedFiles.push_back({file->getFileName(), *currentSize, bytesRead});
++    collectedFiles.push_back({file.name, *currentSize, bytesRead});
+     return PLDM_SUCCESS;
+ }
+ 
+@@ -534,11 +689,14 @@ int collectCrashlogFile(
+  * File events are coalesced by the mutex so sensor 2 and sensor 4 updates do
+  * not start duplicate transfers.
+  *
++ * @param[in] eventCalls Handoff to pldmd's event thread.
+  * @param[in] manager Platform manager containing discovered file descriptors.
+  * @param[in] tid Terminus ID that reported the Device File update event.
++ * @param[in] terminusName Name copied while handling the sensor event.
+  * @return PLDM_SUCCESS when all files collect successfully.
+  */
+-int collectCrashlog(platform_mc::Manager& manager, pldm_tid_t tid)
++int collectCrashlog(EventThreadCalls& eventCalls, platform_mc::Manager& manager,
++                    pldm_tid_t tid, const std::string& terminusName)
+ {
+     std::unique_lock workerGuard(crashlogWorkerMutex, std::try_to_lock);
+     if (!workerGuard.owns_lock())
+@@ -547,7 +705,7 @@ int collectCrashlog(platform_mc::Manager& manager, pldm_tid_t tid)
+         return PLDM_SUCCESS;
+     }
+ 
+-    auto files = waitForCrashlogFiles(manager, tid);
++    auto files = waitForCrashlogFiles(eventCalls, manager, tid);
+     if (files.empty())
+     {
+         lg2::error("No crashlog PLDM file objects found for terminus {TID}",
+@@ -557,7 +715,6 @@ int collectCrashlog(platform_mc::Manager& manager, pldm_tid_t tid)
+ 
+     auto sourceId = nextCrashlogSourceId.fetch_add(1);
+     auto timestamp = getUtcTimestamp();
+-    std::string terminusName{manager.getTerminusName(tid).value_or("unknown")};
+     auto workDir = fs::path(crashlogArchiveWorkDir) /
+                    ("pldm-crashlog-" + std::to_string(sourceId) + "-" +
+                     timestamp);
+@@ -570,7 +727,7 @@ int collectCrashlog(platform_mc::Manager& manager, pldm_tid_t tid)
+ 
+     for (size_t index = 0; index < files.size(); ++index)
+     {
+-        auto rc = collectCrashlogFile(files[index], index, workDir,
++        auto rc = collectCrashlogFile(eventCalls, files[index], index, workDir,
+                                        collectedFiles);
+         if (rc != PLDM_SUCCESS)
+         {
+@@ -658,9 +815,45 @@ int processFileStateEvent(platform_mc::Manager* manager, pldm_tid_t tid,
+               "sensor {SID}",
+               "NAME", *terminusName, "SID", sensorId);
+ 
+-    std::thread([manager, tid]() {
+-        collectCrashlog(*manager, tid);
+-    }).detach();
++    try
++    {
++        // The dispatcher is created on the event thread. The worker only
++        // queues calls into it; it never calls FileDescriptor directly.
++        static EventThreadCalls eventCalls;
++        std::thread([manager, tid, name = std::string(*terminusName)]() noexcept {
++            try
++            {
++                try
++                {
++                    auto rc = collectCrashlog(eventCalls, *manager, tid, name);
++                    if (rc != PLDM_SUCCESS)
++                    {
++                        lg2::error(
++                            "Crashlog collection for {NAME} failed, code {RC}",
++                            "NAME", name, "RC", rc);
++                    }
++                }
++                catch (const std::exception& e)
++                {
++                    lg2::error("Crashlog collection failed: {ERROR}", "ERROR",
++                               e);
++                }
++                catch (...)
++                {
++                    lg2::error("Crashlog collection failed with an unknown error");
++                }
++            }
++            catch (...)
++            {
++                // No exception may escape a detached worker thread.
++            }
++        }).detach();
++    }
++    catch (const std::exception& e)
++    {
++        lg2::error("Failed to start crashlog collection: {ERROR}", "ERROR", e);
++        return PLDM_ERROR;
++    }
+ 
+     return PLDM_SUCCESS;
+ }
+-- 
+2.25.1
+

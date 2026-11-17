@@ -1,4 +1,4 @@
-From 94e61dc47d442a81d41e108c05ba1b37f5036d46 Mon Sep 17 00:00:00 2001
+From c05438dc00941e86d5e3a338c50e3b36f906c2a2 Mon Sep 17 00:00:00 2001
 From: Manoj Kumar Prabakaran <manojkumar.prabakaran@arm.com>
 Date: Wed, 19 Aug 2026 16:52:33 +0530
 Subject: [PATCH] oem: arm: collect crashlog files as a system dump
@@ -19,29 +19,30 @@ Upstream-Status: Submitted [https://gerrit.openbmc.org/c/openbmc/pldm/+/93724]
 Signed-off-by: Manoj Kumar Prabakaran <manojkumar.prabakaran@arm.com>
 Change-Id: Iaefea5b752d494a771688455cab7885149c994ac
 ---
- oem/arm/event/crashlog.cpp          | 665 ++++++++++++++++++++++++++++
+ oem/arm/event/crashlog.cpp          | 670 ++++++++++++++++++++++++++++
  oem/arm/event/crashlog.hpp          |  42 ++
  oem/arm/event/meson.build           |   5 +-
  oem/arm/event/oem_event_manager.cpp |  40 +-
  oem/arm/event/oem_event_manager.hpp |   3 +-
- 5 files changed, 716 insertions(+), 39 deletions(-)
+ 5 files changed, 721 insertions(+), 39 deletions(-)
  create mode 100644 oem/arm/event/crashlog.cpp
  create mode 100644 oem/arm/event/crashlog.hpp
 
 diff --git a/oem/arm/event/crashlog.cpp b/oem/arm/event/crashlog.cpp
 new file mode 100644
-index 0000000..df7269a
+index 0000000..585e774
 --- /dev/null
 +++ b/oem/arm/event/crashlog.cpp
-@@ -0,0 +1,665 @@
+@@ -0,0 +1,670 @@
 +#include "crashlog.hpp"
 +
 +#include "common/utils.hpp"
 +#include "platform-mc/file_descriptor.hpp"
 +#include "platform-mc/manager.hpp"
 +
-+#include <fcntl.h>
 +#include <libpldm/base.h>
++
++#include <fcntl.h>
 +#include <poll.h>
 +#include <sys/wait.h>
 +#include <unistd.h>
@@ -56,8 +57,8 @@ index 0000000..df7269a
 +#include <chrono>
 +#include <ctime>
 +#include <exception>
-+#include <filesystem>
 +#include <fstream>
++#include <filesystem>
 +#include <iomanip>
 +#include <mutex>
 +#include <optional>
@@ -88,7 +89,8 @@ index 0000000..df7269a
 +constexpr const char* dumpManagerService = "xyz.openbmc_project.Dump.Manager";
 +constexpr const char* systemDumpPath = "/xyz/openbmc_project/dump/system";
 +constexpr const char* systemDumpInterface = "xyz.openbmc_project.Dump.NewDump";
-+constexpr const char* systemDumpStagingDir = "/tmp/system-dumps";
++constexpr const char* systemDumpStagingDir =
++    "/tmp/system-dumps";
 +constexpr const char* crashlogArchiveWorkDir = "/tmp";
 +constexpr const char* tarCommand = "/usr/bin/tar";
 +constexpr auto crashlogFileObjectRetryCount = 30;
@@ -210,8 +212,8 @@ index 0000000..df7269a
 + * @param[in] tid Terminus ID that reported the Device File update event.
 + * @return Matching crashlog FileDescriptor objects.
 + */
-+std::vector<std::shared_ptr<platform_mc::FileDescriptor>> findCrashlogFiles(
-+    platform_mc::Manager& manager, pldm_tid_t tid)
++std::vector<std::shared_ptr<platform_mc::FileDescriptor>>
++    findCrashlogFiles(platform_mc::Manager& manager, pldm_tid_t tid)
 +{
 +    auto files = manager.getFileDescriptors(tid);
 +    std::vector<std::shared_ptr<platform_mc::FileDescriptor>> crashlogFiles;
@@ -248,8 +250,8 @@ index 0000000..df7269a
 + * @param[in] tid Terminus ID that reported the Device File update event.
 + * @return Matching crashlog files, or an empty vector on timeout.
 + */
-+std::vector<std::shared_ptr<platform_mc::FileDescriptor>> waitForCrashlogFiles(
-+    platform_mc::Manager& manager, pldm_tid_t tid)
++std::vector<std::shared_ptr<platform_mc::FileDescriptor>>
++    waitForCrashlogFiles(platform_mc::Manager& manager, pldm_tid_t tid)
 +{
 +    for (auto retry = 0; retry < crashlogFileObjectRetryCount; ++retry)
 +    {
@@ -359,8 +361,8 @@ index 0000000..df7269a
 +{
 +    fs::create_directories(outputPath.parent_path());
 +
-+    auto fd =
-+        open(outputPath.c_str(), O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC, 0600);
++    auto fd = open(outputPath.c_str(), O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC,
++                   0600);
 +    if (fd < 0)
 +    {
 +        lg2::error("Failed to create crashlog file {PATH}, errno {ERRNO}",
@@ -414,9 +416,9 @@ index 0000000..df7269a
 + * @return true when the manifest was written successfully.
 + */
 +bool writeCrashlogManifest(const fs::path& manifestPath,
-+                           const std::string& timestamp, pldm_tid_t tid,
-+                           const std::string& terminusName, uint32_t sourceId,
-+                           const std::vector<CollectedCrashlogFile>& files)
++                            const std::string& timestamp, pldm_tid_t tid,
++                            const std::string& terminusName, uint32_t sourceId,
++                            const std::vector<CollectedCrashlogFile>& files)
 +{
 +    std::ofstream manifest(manifestPath);
 +    if (!manifest.good())
@@ -502,8 +504,9 @@ index 0000000..df7269a
 +    try
 +    {
 +        auto bus = sdbusplus::bus::new_default();
-+        auto method = bus.new_method_call(dumpManagerService, systemDumpPath,
-+                                          systemDumpInterface, "Notify");
++        auto method =
++            bus.new_method_call(dumpManagerService, systemDumpPath,
++                                systemDumpInterface, "Notify");
 +        method.append(sourceId, size);
 +        bus.call_noreply(method);
 +    }
@@ -532,8 +535,8 @@ index 0000000..df7269a
 +    auto currentSize = waitForNonZeroCurrentSize(file);
 +    if (!currentSize)
 +    {
-+        lg2::error("Failed to read size from PLDM crashlog file {FILE}", "FILE",
-+                   file->getFileName());
++        lg2::error("Failed to read size from PLDM crashlog file {FILE}",
++                   "FILE", file->getFileName());
 +        return PLDM_ERROR_NOT_READY;
 +    }
 +
@@ -591,11 +594,10 @@ index 0000000..df7269a
 +    auto sourceId = nextCrashlogSourceId.fetch_add(1);
 +    auto timestamp = getUtcTimestamp();
 +    std::string terminusName{manager.getTerminusName(tid).value_or("unknown")};
-+    auto workDir =
-+        fs::path(crashlogArchiveWorkDir) /
-+        ("pldm-crashlog-" + std::to_string(sourceId) + "-" + timestamp);
-+    auto archivePath =
-+        fs::path(systemDumpStagingDir) / std::to_string(sourceId);
++    auto workDir = fs::path(crashlogArchiveWorkDir) /
++                   ("pldm-crashlog-" + std::to_string(sourceId) + "-" +
++                    timestamp);
++    auto archivePath = fs::path(systemDumpStagingDir) / std::to_string(sourceId);
 +    std::vector<CollectedCrashlogFile> collectedFiles;
 +
 +    fs::remove_all(workDir);
@@ -604,8 +606,8 @@ index 0000000..df7269a
 +
 +    for (size_t index = 0; index < files.size(); ++index)
 +    {
-+        auto rc =
-+            collectCrashlogFile(files[index], index, workDir, collectedFiles);
++        auto rc = collectCrashlogFile(files[index], index, workDir,
++                                       collectedFiles);
 +        if (rc != PLDM_SUCCESS)
 +        {
 +            fs::remove_all(workDir);
@@ -615,7 +617,7 @@ index 0000000..df7269a
 +    }
 +
 +    if (!writeCrashlogManifest(workDir / "manifest.txt", timestamp, tid,
-+                               terminusName, sourceId, collectedFiles))
++                                terminusName, sourceId, collectedFiles))
 +    {
 +        fs::remove_all(workDir);
 +        fs::remove(archivePath);
@@ -683,7 +685,8 @@ index 0000000..df7269a
 +    {
 +        lg2::debug("Ignoring unsupported Device File state {STATE} from "
 +                   "terminus {NAME}, sensor {SID}",
-+                   "STATE", eventState, "NAME", *terminusName, "SID", sensorId);
++                   "STATE", eventState, "NAME", *terminusName, "SID",
++                   sensorId);
 +        return PLDM_SUCCESS;
 +    }
 +
@@ -691,7 +694,9 @@ index 0000000..df7269a
 +              "sensor {SID}",
 +              "NAME", *terminusName, "SID", sensorId);
 +
-+    std::thread([manager, tid]() { collectCrashlog(*manager, tid); }).detach();
++    std::thread([manager, tid]() {
++        collectCrashlog(*manager, tid);
++    }).detach();
 +
 +    return PLDM_SUCCESS;
 +}
@@ -846,5 +851,5 @@ index 4cf43e2..8c07900 100644
       * @param[in] tid Terminus ID that emitted the event.
       * @param[in] sensorId State sensor ID.
 -- 
-2.53.0-Meta
+2.25.1
 

@@ -67,7 +67,7 @@ SRC_URI:append:openbmc-fb-lf = " \
 # SENTINEL_DOME_SLOT_6_MB_* rather than SENTINEL_DOME_SLOT_6_1_MB_*.
 # Applied after the 02xx patches because it updates tests they restructure.
 SRC_URI:append:openbmc-fb-lf = " \
-    file://0035-platform-mc-Make-terminus-name-instance-suffix-optional.patch \
+    file://0035-platform-mc-Make-terminus-name-instance-suffix-optio.patch \
 "
 EXTRA_OEMESON:append:openbmc-fb-lf = " -Dterminus-name-instance-suffix=disabled"
 

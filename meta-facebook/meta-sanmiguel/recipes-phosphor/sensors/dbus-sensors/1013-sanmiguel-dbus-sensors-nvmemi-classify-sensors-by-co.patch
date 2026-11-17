@@ -1,8 +1,8 @@
-From cd34779bfda47d22ed88980fcd6ec15cc1dc8b59 Mon Sep 17 00:00:00 2001
+From 35e4d640af1469e48e28a6e38459ae44f8764d7b Mon Sep 17 00:00:00 2001
 From: Mik Lin <mik.lin@quantatw.com>
 Date: Tue, 20 Oct 2026 16:23:07 +0800
-Subject: [PATCH 4/5] sanmiguel: dbus-sensors: nvmemi: classify sensors by
- config type
+Subject: [PATCH] sanmiguel: dbus-sensors: nvmemi: classify sensors by config
+ type
 
 Determine whether an NVMe-MI sensor is a temperature or status sensor
 from its configuration type instead of whether its threshold list is
@@ -73,5 +73,5 @@ index 8ed694c..e7e8b82 100644
                                  sensorConfig.thresholds; // Make a copy
                              std::shared_ptr<NVMeSensor> sensorPtr =
 -- 
-2.53.0
+2.53.0-Meta
 

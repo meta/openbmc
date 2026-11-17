@@ -1,4 +1,4 @@
-From d83092011f84e1d9e2a1c49de72f4fd0157e7cfd Mon Sep 17 00:00:00 2001
+From 7c6bc3603ead44344cc9b9b8046f747af74e2044 Mon Sep 17 00:00:00 2001
 From: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
 Date: Mon, 29 Jun 2026 11:40:26 +0800
 Subject: [PATCH] iio: adc: aspeed: Support deglitch feature.
@@ -19,7 +19,7 @@ Signed-off-by: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
  1 file changed, 191 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/iio/adc/aspeed_adc.c b/drivers/iio/adc/aspeed_adc.c
-index b3570379e5e9..b2b9b96109a8 100644
+index 34a24d84e4b4..79043f379737 100644
 --- a/drivers/iio/adc/aspeed_adc.c
 +++ b/drivers/iio/adc/aspeed_adc.c
 @@ -121,6 +121,27 @@ struct aspeed_adc_data {
@@ -49,8 +49,8 @@ index b3570379e5e9..b2b9b96109a8 100644
 +	},
  };
  
- #define ASPEED_CHAN(_idx, _data_reg_addr) {			\
-@@ -132,6 +153,8 @@ struct aspeed_adc_data {
+ /*
+@@ -157,6 +178,8 @@ static inline unsigned int aspeed_adc_get_active_channels(const struct aspeed_ad
  	.info_mask_shared_by_type = BIT(IIO_CHAN_INFO_SCALE) |	\
  				BIT(IIO_CHAN_INFO_SAMP_FREQ) |	\
  				BIT(IIO_CHAN_INFO_OFFSET),	\
@@ -59,7 +59,7 @@ index b3570379e5e9..b2b9b96109a8 100644
  }
  
  static const struct iio_chan_spec aspeed_adc_iio_channels[] = {
-@@ -271,6 +294,42 @@ static int aspeed_adc_set_sampling_rate(struct iio_dev *indio_dev, u32 rate)
+@@ -296,6 +319,42 @@ static int aspeed_adc_set_sampling_rate(struct iio_dev *indio_dev, u32 rate)
  	return 0;
  }
  
@@ -102,10 +102,10 @@ index b3570379e5e9..b2b9b96109a8 100644
  static int aspeed_adc_read_raw(struct iio_dev *indio_dev,
  			       struct iio_chan_spec const *chan,
  			       int *val, int *val2, long mask)
-@@ -295,15 +354,16 @@ static int aspeed_adc_read_raw(struct iio_dev *indio_dev,
+@@ -319,15 +378,16 @@ static int aspeed_adc_read_raw(struct iio_dev *indio_dev,
  			 * Experiment result is 1ms.
  			 */
- 			usleep_range(1000, 1100);
+ 			fsleep(1000);
 -			*val = readw(data->base + chan->address);
 +			*val = aspeed_adc_get_voltage_raw(data, chan);
  			if (data->battery_sensing)
@@ -122,7 +122,7 @@ index b3570379e5e9..b2b9b96109a8 100644
  		return IIO_VAL_INT;
  
  	case IIO_CHAN_INFO_OFFSET:
-@@ -366,10 +426,107 @@ static int aspeed_adc_reg_access(struct iio_dev *indio_dev,
+@@ -390,10 +450,107 @@ static int aspeed_adc_reg_access(struct iio_dev *indio_dev,
  	return 0;
  }
  
@@ -230,7 +230,7 @@ index b3570379e5e9..b2b9b96109a8 100644
  };
  
  static void aspeed_adc_unregister_fixed_divider(void *data)
-@@ -487,6 +644,33 @@ static int aspeed_adc_probe(struct platform_device *pdev)
+@@ -511,6 +668,33 @@ static int aspeed_adc_probe(struct platform_device *pdev)
  	if (IS_ERR(data->base))
  		return PTR_ERR(data->base);
  
@@ -264,7 +264,7 @@ index b3570379e5e9..b2b9b96109a8 100644
  	/* Register ADC clock prescaler with source specified by device tree. */
  	spin_lock_init(&data->clk_lock);
  	snprintf(clk_parent_name, ARRAY_SIZE(clk_parent_name), "%s",
-@@ -623,6 +807,10 @@ static int aspeed_adc_probe(struct platform_device *pdev)
+@@ -644,6 +828,10 @@ static int aspeed_adc_probe(struct platform_device *pdev)
  	writel(adc_engine_control_reg_val,
  	       data->base + ASPEED_REG_ENGINE_CONTROL);
  
@@ -276,5 +276,5 @@ index b3570379e5e9..b2b9b96109a8 100644
  	indio_dev->info = &aspeed_adc_iio_info;
  	indio_dev->modes = INDIO_DIRECT_MODE;
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

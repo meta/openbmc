@@ -1,4 +1,4 @@
-From 10dae1cbaf8402c841e3db2517578ca7199c78cf Mon Sep 17 00:00:00 2001
+From 1272546a199803883af6a21974011416f77d0131 Mon Sep 17 00:00:00 2001
 From: Daniel Hsu <Daniel-Hsu@quantatw.com>
 Date: Tue, 11 Aug 2026 10:17:36 +0800
 Subject: [PATCH] common: fix missing power-gated sensors after BMC reset
@@ -306,10 +306,10 @@ index c082697..10d9a31 100644
 +    }
 +}
 diff --git a/src/hwmon-temp/HwmonTempMain.cpp b/src/hwmon-temp/HwmonTempMain.cpp
-index 23549c4..b8b46ce 100644
+index 2d9f40f..8aa8ca6 100644
 --- a/src/hwmon-temp/HwmonTempMain.cpp
 +++ b/src/hwmon-temp/HwmonTempMain.cpp
-@@ -616,29 +616,6 @@ void interfaceRemoved(
+@@ -607,29 +607,6 @@ void interfaceRemoved(
      }
  }
  
@@ -339,7 +339,7 @@ index 23549c4..b8b46ce 100644
  int main()
  {
      boost::asio::io_context io;
-@@ -654,7 +631,9 @@ int main()
+@@ -645,7 +622,9 @@ int main()
  
      auto powerCallBack = [&sensors, &io, &objectServer,
                            &systemBus](PowerState type, bool state) {

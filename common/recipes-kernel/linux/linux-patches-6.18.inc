@@ -113,13 +113,9 @@ SRC_URI:append = " \
     file://0609-dt-bindings-trivial-devices-Add-adi-max20912-and-max.patch \
     file://0610-hwmon-pmbus-Add-driver-for-Analog-Devices-MAX20912-a.patch \
     file://0611-nfc-nxp-nci-treat-ENXIO-in-IRQ-thread-as-no-data-ava.patch \
-    file://0612-hwmon-kb9002-Add-driver-for-Kandou-KB9002-retimer.patch \
-    file://0613-hwmon-pmbus-Add-MPQ82D00-support.patch \
-    file://0614-hwmon-pmbus-ltc4286-Add-writable-shunt_resistor-sysf.patch \
-    file://0615-dt-bindings-hwmon-pmbus-isl68137-Add-RAA229639-and-R.patch \
-    file://0616-hwmon-pmbus-isl68137-Add-support-for-Renesas-RAA2296.patch \
-    file://0617-dt-bindings-hwmon-pmbus-Add-Infineon-tda38740-and-td.patch \
-    file://0618-hwmon-pmbus-tda38740-Add-driver-for-Infineon-TDA3874.patch \
+    file://0612-hwmon-pmbus-ltc4286-Add-writable-shunt_resistor-sysf.patch \
+    file://0613-dt-bindings-hwmon-pmbus-Add-Infineon-tda38740-and-td.patch \
+    file://0614-hwmon-pmbus-tda38740-Add-driver-for-Infineon-TDA3874.patch \
 "
 
 #

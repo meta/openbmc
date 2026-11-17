@@ -1,0 +1,90 @@
+From e76d516b01c3f20d002ab85c029d2918105ad07d Mon Sep 17 00:00:00 2001
+From: Colin Huang <u8813345@gmail.com>
+Date: Tue, 16 Jun 2026 21:14:42 +0800
+Subject: [PATCH] hwmon: (pmbus/tda38740) Add driver for Infineon
+ TDA38740/TDA38725
+
+Add a PMBus driver for Infineon TDA38740 and TDA38725
+single-voltage synchronous buck regulators.
+
+Lore:
+ https://lore.kernel.org/all/20260918-add-tda38740-and-tda38725-v6-1-a8b11018d850@gmail.com/
+ https://lore.kernel.org/all/20260921-dev-6-18-tda38740-driver-v1-0-f9fd35faf911@gmail.com/#t
+
+Signed-off-by: Colin Huang <8813345@gmail.com>
+---
+ drivers/hwmon/pmbus/tda38740.c | 41 ++++++++++++++++++++++++++++++----
+ 1 file changed, 37 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/hwmon/pmbus/tda38740.c b/drivers/hwmon/pmbus/tda38740.c
+index 067de07ba9fb..98aaf4ea4058 100644
+--- a/drivers/hwmon/pmbus/tda38740.c
++++ b/drivers/hwmon/pmbus/tda38740.c
+@@ -13,10 +13,35 @@
+ #include <linux/module.h>
+ #include "pmbus.h"
+ 
++struct tda38740_data {
++	struct pmbus_driver_info info;
++};
++
++/*
++ * TDA38725/TDA38740 only support Linear format for VOUT related commands,
++ * with exponents in the range of -8 to -12 (see datasheet VOUT_MODE
++ * description). Direct format is not supported by this device.
++ */
++static int tda38740_identify(struct i2c_client *client,
++			     struct pmbus_driver_info *info)
++{
++	int vout_mode;
++
++	vout_mode = pmbus_read_byte_data(client, 0, PMBUS_VOUT_MODE);
++	if (vout_mode < 0 || vout_mode == 0xff)
++		return vout_mode < 0 ? vout_mode : -ENODEV;
++
++	if ((vout_mode >> 5) != 0)
++		return -ENODEV;
++
++	info->format[PSC_VOLTAGE_OUT] = linear;
++
++	return 0;
++}
++
+ static struct pmbus_driver_info tda38740_info = {
+ 	.pages = 1,
+ 	.format[PSC_VOLTAGE_IN] = linear,
+-	.format[PSC_VOLTAGE_OUT] = linear,
+ 	.format[PSC_CURRENT_OUT] = linear,
+ 	.format[PSC_CURRENT_IN] = linear,
+ 	.format[PSC_POWER] = linear,
+@@ -27,16 +52,24 @@ static struct pmbus_driver_info tda38740_info = {
+ 	    | PMBUS_HAVE_VOUT | PMBUS_HAVE_STATUS_VOUT
+ 	    | PMBUS_HAVE_IOUT | PMBUS_HAVE_STATUS_IOUT
+ 	    | PMBUS_HAVE_POUT | PMBUS_HAVE_PIN,
++	.identify = tda38740_identify,
+ };
+ 
+ static int tda38740_probe(struct i2c_client *client)
+ {
+-	return pmbus_do_probe(client, &tda38740_info);
++	struct tda38740_data *data;
++
++	data = devm_kzalloc(&client->dev, sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return -ENOMEM;
++	memcpy(&data->info, &tda38740_info, sizeof(tda38740_info));
++
++	return pmbus_do_probe(client, &data->info);
+ }
+ 
+ static const struct i2c_device_id tda38740_id[] = {
+-	{ .name = "tda38725"},
+-	{ .name = "tda38740"},
++	{"tda38725"},
++	{"tda38740"},
+ 	{}
+ };
+ MODULE_DEVICE_TABLE(i2c, tda38740_id);
+-- 
+2.53.1-Meta
+

@@ -1,4 +1,4 @@
-From 1fb3b53e94bd6613bafe1df30f4a9835057b8927 Mon Sep 17 00:00:00 2001
+From 5213dc5ace018b7f04a27e4fb2664896b3fd6495 Mon Sep 17 00:00:00 2001
 From: Bright Cheng <bright_cheng@wiwynn.com>
 Date: Mon, 26 Aug 2024 11:37:53 +0800
 Subject: [PATCH] Utils: support powerState for multi-node system
@@ -921,10 +921,10 @@ index 10d9a31..59d46a5 100644
  
      void getPath(const std::string& path, const std::string& interface,
 diff --git a/src/hwmon-temp/HwmonTempMain.cpp b/src/hwmon-temp/HwmonTempMain.cpp
-index 50d996e..3f07ed6 100644
+index cb1331c..addb04d 100644
 --- a/src/hwmon-temp/HwmonTempMain.cpp
 +++ b/src/hwmon-temp/HwmonTempMain.cpp
-@@ -618,6 +618,33 @@ void interfaceRemoved(
+@@ -609,6 +609,33 @@ void interfaceRemoved(
      }
  }
  
@@ -958,7 +958,7 @@ index 50d996e..3f07ed6 100644
  int main()
  {
      boost::asio::io_context io;
-@@ -633,9 +660,7 @@ int main()
+@@ -624,9 +651,7 @@ int main()
  
      auto powerCallBack = [&sensors, &io, &objectServer,
                            &systemBus](PowerState type, bool state) {

@@ -1,4 +1,4 @@
-From 73c070cbfc22610a28e161ba05f8eb0e9bfd7b07 Mon Sep 17 00:00:00 2001
+From 17e0563503e1162e64e3fe82d77f656e05780fa4 Mon Sep 17 00:00:00 2001
 From: Fred Chen <fredchen.openbmc@gmail.com>
 Date: Tue, 7 Jul 2026 12:22:11 +0800
 Subject: [PATCH] hwmon: (pmbus) Add driver for Analog Devices MAX20912 and
@@ -22,10 +22,10 @@ Signed-off-by: Fred Chen <fredchen.openbmc@gmail.com>
  create mode 100644 drivers/hwmon/pmbus/max20912.c
 
 diff --git a/Documentation/hwmon/index.rst b/Documentation/hwmon/index.rst
-index c5ab1aa5d416..cff141061a0d 100644
+index 1578c58859ed..68811790f4b9 100644
 --- a/Documentation/hwmon/index.rst
 +++ b/Documentation/hwmon/index.rst
-@@ -155,6 +155,7 @@ Hardware Monitoring Kernel Drivers
+@@ -156,6 +156,7 @@ Hardware Monitoring Kernel Drivers
     max197
     max20730
     max20751
@@ -196,10 +196,10 @@ index 000000000000..da1430751e93
 +
 +**power4_label**
 diff --git a/MAINTAINERS b/MAINTAINERS
-index a59b89038f50..e9986b02caa3 100644
+index 7a20b14ca37c..212a57795f07 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -15246,6 +15246,13 @@ S:	Maintained
+@@ -15254,6 +15254,13 @@ S:	Maintained
  F:	Documentation/hwmon/max15301.rst
  F:	drivers/hwmon/pmbus/max15301.c
  
@@ -214,7 +214,7 @@ index a59b89038f50..e9986b02caa3 100644
  M:	Ramesh Shanmugasundaram <rashanmu@gmail.com>
  L:	linux-media@vger.kernel.org
 diff --git a/drivers/hwmon/pmbus/Kconfig b/drivers/hwmon/pmbus/Kconfig
-index 6734431b3e91..2e5432dee5f1 100644
+index 7251de38cea1..28e8b83263ba 100644
 --- a/drivers/hwmon/pmbus/Kconfig
 +++ b/drivers/hwmon/pmbus/Kconfig
 @@ -347,6 +347,15 @@ config SENSORS_MAX20751
@@ -234,7 +234,7 @@ index 6734431b3e91..2e5432dee5f1 100644
  	tristate "Maxim MAX31785 and compatibles"
  	help
 diff --git a/drivers/hwmon/pmbus/Makefile b/drivers/hwmon/pmbus/Makefile
-index 5fe7eafe01c5..f9974ad649b3 100644
+index d37545d7c552..de9227bf52ba 100644
 --- a/drivers/hwmon/pmbus/Makefile
 +++ b/drivers/hwmon/pmbus/Makefile
 @@ -34,6 +34,7 @@ obj-$(CONFIG_SENSORS_MAX16064)	+= max16064.o
@@ -322,5 +322,5 @@ index 000000000000..3d028a619678
 +MODULE_LICENSE("GPL");
 +MODULE_IMPORT_NS("PMBUS");
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

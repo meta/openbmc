@@ -1,4 +1,4 @@
-From 31c8ee76fc5423cf837c0b7f65b0306d22eece7d Mon Sep 17 00:00:00 2001
+From 735303ef1a259dd92035908809aa1bbfc662b124 Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Mon, 3 Nov 2025 18:52:17 +0800
 Subject: [PATCH] iio: adc: aspeed: Add AST2700 ADC support
@@ -63,10 +63,10 @@ index b35b2390c98a..2b582f74b24c 100644
  			};
  
 diff --git a/drivers/iio/adc/aspeed_adc.c b/drivers/iio/adc/aspeed_adc.c
-index 8039370e1cd2..9e0b993dd0ae 100644
+index bbddd9ac80bf..c7a45af6a770 100644
 --- a/drivers/iio/adc/aspeed_adc.c
 +++ b/drivers/iio/adc/aspeed_adc.c
-@@ -174,18 +174,11 @@ static const struct iio_chan_spec aspeed_adc_iio_bat_channels[] = {
+@@ -201,18 +201,11 @@ static const struct iio_chan_spec aspeed_adc_iio_bat_channels[] = {
  
  static int aspeed_adc_set_trim_data(struct iio_dev *indio_dev)
  {
@@ -86,7 +86,7 @@ index 8039370e1cd2..9e0b993dd0ae 100644
  	if (IS_ERR(scu)) {
  		dev_warn(data->dev, "Failed to get syscon regmap\n");
  		return -EOPNOTSUPP;
-@@ -647,6 +640,16 @@ static const struct aspeed_adc_trim_locate ast2600_adc1_trim = {
+@@ -693,6 +686,16 @@ static const struct aspeed_adc_trim_locate ast2600_adc1_trim = {
  	.field = GENMASK(7, 4),
  };
  
@@ -103,7 +103,7 @@ index 8039370e1cd2..9e0b993dd0ae 100644
  static const struct aspeed_adc_model_data ast2400_model_data = {
  	.model_name = "ast2400-adc",
  	.vref_fixed_mv = 2500,
-@@ -691,11 +694,35 @@ static const struct aspeed_adc_model_data ast2600_adc1_model_data = {
+@@ -737,11 +740,35 @@ static const struct aspeed_adc_model_data ast2600_adc1_model_data = {
  	.trim_locate = &ast2600_adc1_trim,
  };
  
@@ -140,5 +140,5 @@ index 8039370e1cd2..9e0b993dd0ae 100644
  };
  MODULE_DEVICE_TABLE(of, aspeed_adc_matches);
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

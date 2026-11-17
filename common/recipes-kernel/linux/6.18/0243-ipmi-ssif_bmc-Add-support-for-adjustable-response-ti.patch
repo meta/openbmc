@@ -1,4 +1,4 @@
-From 44e8de120cd8c93823e2ee59bec51954bb3dbdad Mon Sep 17 00:00:00 2001
+From 22079a27df663029b10ef50a8275fd9d9c5debee Mon Sep 17 00:00:00 2001
 From: Potin Lai <potin.lai.pt@gmail.com>
 Date: Mon, 3 Feb 2025 20:46:01 +0800
 Subject: [PATCH] ipmi: ssif_bmc: Add support for adjustable response timeout
@@ -18,7 +18,7 @@ LORE: https://lore.kernel.org/all/20250203-ssif-response-timeout-ms-v1-2-6fe2797
  1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/char/ipmi/ssif_bmc.c b/drivers/char/ipmi/ssif_bmc.c
-index 015c006a764a..0694078612ba 100644
+index d05d3c34d371..b07bf5ce5b0e 100644
 --- a/drivers/char/ipmi/ssif_bmc.c
 +++ b/drivers/char/ipmi/ssif_bmc.c
 @@ -88,6 +88,7 @@ struct ssif_bmc_ctx {
@@ -29,7 +29,7 @@ index 015c006a764a..0694078612ba 100644
  	/* Flag to identify a Multi-part Read Transaction */
  	bool                    is_singlepart_read;
  	u8                      nbytes_processed;
-@@ -339,7 +340,8 @@ static void handle_request(struct ssif_bmc_ctx *ssif_bmc)
+@@ -341,7 +342,8 @@ static void handle_request(struct ssif_bmc_ctx *ssif_bmc)
  		timer_setup(&ssif_bmc->response_timer, response_timeout, 0);
  		ssif_bmc->response_timer_inited = true;
  	}
@@ -39,7 +39,7 @@ index 015c006a764a..0694078612ba 100644
  }
  
  static void calculate_response_part_pec(struct ssif_part_buffer *part)
-@@ -836,6 +838,10 @@ static int ssif_bmc_probe(struct i2c_client *client)
+@@ -843,6 +845,10 @@ static int ssif_bmc_probe(struct i2c_client *client)
  	if (!ssif_bmc)
  		return -ENOMEM;
  
@@ -51,5 +51,5 @@ index 015c006a764a..0694078612ba 100644
  	ssif_bmc->alert = devm_gpiod_get(&client->dev, "alert", GPIOD_ASIS);
  	if (!IS_ERR(ssif_bmc->alert))
 -- 
-2.52.0
+2.53.1-Meta
 

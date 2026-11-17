@@ -13,8 +13,7 @@ ENV_CONFIG_FILE:df-phosphor-mmc = "${@bb.utils.contains('MACHINE_FEATURES', 'mf-
 
 # AST2700 gets the generated default environment from u-boot-aspeed-env.
 LIBUBOOTENV_INSTALL_INITIAL_ENV = "1"
-# UNCOMMENT IN NEXT DIFF
-#LIBUBOOTENV_INSTALL_INITIAL_ENV:aspeed-g7 = "0"
+LIBUBOOTENV_INSTALL_INITIAL_ENV:aspeed-g7 = "0"
 
 do_install:append () {
     install -d ${D}${sysconfdir}
@@ -22,19 +21,9 @@ do_install:append () {
     if [ "${LIBUBOOTENV_INSTALL_INITIAL_ENV}" = "1" ]; then
         install -m 644 ${UNPACKDIR}/u-boot-initial-env ${D}${sysconfdir}/u-boot-initial-env
     fi
-
-    # Compatibility links: meta-phosphor hardcodes /sbin/fw_printenv and
-    # /sbin/fw_setenv (clear-once.service, phosphor-static-norootfs-init),
-    # matching the historical u-boot-fw-utils install path. .
-    install -d ${D}${base_sbindir}
-    ln -sr ${D}${bindir}/fw_printenv ${D}${base_sbindir}/fw_printenv
-    ln -sr ${D}${bindir}/fw_setenv ${D}${base_sbindir}/fw_setenv
 }
 
-FILES:${PN}-bin:append = " \
-    ${base_sbindir}/fw_printenv \
-    ${base_sbindir}/fw_setenv \
-"
+# meta-aspeed installs and packages the fw_printenv/fw_setenv compatibility links.
 
 # Pull in the tools and environment config together
 RDEPENDS:${PN}:append = " ${PN}-bin"

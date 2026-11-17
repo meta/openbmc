@@ -1,4 +1,4 @@
-From c7e8af6b8f270f37b9db07b8c69359403f97194d Mon Sep 17 00:00:00 2001
+From fbd2f78921a376fecd7b3565278a688719ead62b Mon Sep 17 00:00:00 2001
 From: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
 Date: Tue, 12 May 2026 17:19:05 +0800
 Subject: [PATCH] dbus-sensors: implement in-place threshold updates to
@@ -149,14 +149,14 @@ May 12 00:43:05 bmc-9082C30B4A46 adcsensor[1754]: OPENBMC_MESSAGE_ID={"severity"
 Change-Id: I6ab9524ebf7808a690e4c40b057693aa75e12c0b
 Signed-off-by: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
 ---
- src/adc/ADCSensorMain.cpp        | 35 +++++++++++-----
- src/fan/FanMain.cpp              | 31 ++++++++++----
- src/hwmon-temp/HwmonTempMain.cpp | 71 +++++++++++++++++++++++---------
- src/psu/PSUSensorMain.cpp        | 21 ++++++++++
- 4 files changed, 118 insertions(+), 40 deletions(-)
+ src/adc/ADCSensorMain.cpp        | 35 ++++++++++++------
+ src/fan/FanMain.cpp              | 31 +++++++++++-----
+ src/hwmon-temp/HwmonTempMain.cpp | 62 +++++++++++++++++++++-----------
+ src/psu/PSUSensorMain.cpp        | 21 +++++++++++
+ 4 files changed, 109 insertions(+), 40 deletions(-)
 
 diff --git a/src/adc/ADCSensorMain.cpp b/src/adc/ADCSensorMain.cpp
-index cfacd9a..8145cb6 100644
+index 45f7e3c..aafde3b 100644
 --- a/src/adc/ADCSensorMain.cpp
 +++ b/src/adc/ADCSensorMain.cpp
 @@ -196,23 +196,36 @@ void createSensors(
@@ -208,7 +208,7 @@ index cfacd9a..8145cb6 100644
  
                  auto findCPU = baseConfiguration->second.find("CPURequired");
 diff --git a/src/fan/FanMain.cpp b/src/fan/FanMain.cpp
-index ac14147..0baca76 100644
+index a978661..31ac9b4 100644
 --- a/src/fan/FanMain.cpp
 +++ b/src/fan/FanMain.cpp
 @@ -417,22 +417,35 @@ void createSensors(
@@ -257,7 +257,7 @@ index ac14147..0baca76 100644
              std::vector<thresholds::Threshold> sensorThresholds;
              if (!parseThresholdsFromConfig(*sensorData, sensorThresholds))
 diff --git a/src/hwmon-temp/HwmonTempMain.cpp b/src/hwmon-temp/HwmonTempMain.cpp
-index 616c253..23549c4 100644
+index 616c253..2d9f40f 100644
 --- a/src/hwmon-temp/HwmonTempMain.cpp
 +++ b/src/hwmon-temp/HwmonTempMain.cpp
 @@ -401,37 +401,42 @@ void createSensors(

@@ -1,8 +1,8 @@
-From 059ea385a5a14f0aea123076fa74c41473e9ad38 Mon Sep 17 00:00:00 2001
+From 20e27b9ffcae5a6d99e8c435dea57ff196121b85 Mon Sep 17 00:00:00 2001
 From: Potin Lai <potin.lai@quantatw.com>
 Date: Sat, 17 Oct 2026 18:04:43 +0800
-Subject: [PATCH 1/1] smbpbi: add sensor reading retry on next polling when
- over threshold
+Subject: [PATCH] smbpbi: add sensor reading retry on next polling when over
+ threshold
 
 HMC virtual EEPROM lacks proper protection to prevent the BMC from
 reading while an HMC update is in progress. This race condition can
@@ -29,7 +29,7 @@ Signed-off-by: Potin Lai <potin.lai@quantatw.com>
  2 files changed, 91 insertions(+), 3 deletions(-)
 
 diff --git a/src/smbpbi/SmbpbiSensor.cpp b/src/smbpbi/SmbpbiSensor.cpp
-index 3d97b741..c869be59 100644
+index 9f8a2eb..3b6b852 100644
 --- a/src/smbpbi/SmbpbiSensor.cpp
 +++ b/src/smbpbi/SmbpbiSensor.cpp
 @@ -25,6 +25,7 @@
@@ -93,7 +93,7 @@ index 3d97b741..c869be59 100644
  double SmbpbiSensor::convert2Temp(const uint8_t* raw)
  {
      // Temp data is encoded in SMBPBI format. The 3 MSBs denote
-@@ -366,6 +413,7 @@ void SmbpbiSensor::waitReadCallback(const boost::system::error_code& ec)
+@@ -370,6 +417,7 @@ void SmbpbiSensor::waitReadCallback(const boost::system::error_code& ec)
          lg2::error("Invalid read at offset: {OFFSET} with value: {VALUE}",
                     "OFFSET", offset, "VALUE", temp);
          incrementError();
@@ -101,7 +101,7 @@ index 3d97b741..c869be59 100644
      }
      else if (outOfRange(temp))
      {
-@@ -373,11 +421,46 @@ void SmbpbiSensor::waitReadCallback(const boost::system::error_code& ec)
+@@ -377,11 +425,46 @@ void SmbpbiSensor::waitReadCallback(const boost::system::error_code& ec)
              "Reading out of range at offset: {OFFSET} with value: {VALUE}",
              "OFFSET", offset, "VALUE", temp);
          incrementError();
@@ -151,7 +151,7 @@ index 3d97b741..c869be59 100644
      read();
  }
 diff --git a/src/smbpbi/SmbpbiSensor.hpp b/src/smbpbi/SmbpbiSensor.hpp
-index 074fa8da..ecc083b2 100644
+index 074fa8d..ecc083b 100644
 --- a/src/smbpbi/SmbpbiSensor.hpp
 +++ b/src/smbpbi/SmbpbiSensor.hpp
 @@ -22,6 +22,7 @@
@@ -182,5 +182,5 @@ index 074fa8da..ecc083b2 100644
      // there is no value updated from HMC if reading data is all 0xff
      uint8_t* ptr = reading;
 -- 
-2.52.0
+2.53.0-Meta
 

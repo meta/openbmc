@@ -1,4 +1,4 @@
-From 2e9302fe8f69c08eba51ce56366f378ade615844 Mon Sep 17 00:00:00 2001
+From 1c8d2bbf6034cd68984013b1b6dfd47069bf83c7 Mon Sep 17 00:00:00 2001
 From: Billy Tsai <billy_tsai@aspeedtech.com>
 Date: Tue, 7 Jan 2025 13:35:34 +0800
 Subject: [PATCH] iio: adc: aspeed: Disable the last channel by default
@@ -14,23 +14,14 @@ enabled when the user specifically needs to retrieve its value.
 Signed-off-by: Billy Tsai <billy_tsai@aspeedtech.com>
 Change-Id: Ic7bf980bdbabf4cc749c1f2a1231aaf61ad54933
 ---
- drivers/iio/adc/aspeed_adc.c | 42 ++++++++++++++++++++++--------------
- 1 file changed, 26 insertions(+), 16 deletions(-)
+ drivers/iio/adc/aspeed_adc.c | 45 ++++++++++++------------------------
+ 1 file changed, 15 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/iio/adc/aspeed_adc.c b/drivers/iio/adc/aspeed_adc.c
-index 9e0b993dd0ae..b3570379e5e9 100644
+index c7a45af6a770..34a24d84e4b4 100644
 --- a/drivers/iio/adc/aspeed_adc.c
 +++ b/drivers/iio/adc/aspeed_adc.c
-@@ -72,6 +72,8 @@
- #define ASPEED_ADC_BAT_SENSING_ENABLE		BIT(13)
- #define ASPEED_ADC_CTRL_CHANNEL			GENMASK(31, 16)
- #define ASPEED_ADC_CTRL_CHANNEL_ENABLE(ch)	FIELD_PREP(ASPEED_ADC_CTRL_CHANNEL, BIT(ch))
-+#define ADC_MASK(n)				((n) < 16 ? ((1U << (n)) - 1) : 0xFFFF)
-+#define ASPEED_ADC_CTRL_CHANNELS_ENABLE(chs)	FIELD_PREP(ASPEED_ADC_CTRL_CHANNEL, ADC_MASK(chs))
- 
- #define ASPEED_ADC_INIT_POLLING_TIME	500
- #define ASPEED_ADC_INIT_TIMEOUT		500000
-@@ -274,28 +276,31 @@ static int aspeed_adc_read_raw(struct iio_dev *indio_dev,
+@@ -301,48 +301,33 @@ static int aspeed_adc_read_raw(struct iio_dev *indio_dev,
  			       int *val, int *val2, long mask)
  {
  	struct aspeed_adc_data *data = iio_priv(indio_dev);
@@ -39,60 +30,61 @@ index 9e0b993dd0ae..b3570379e5e9 100644
  
  	switch (mask) {
  	case IIO_CHAN_INFO_RAW:
--		if (data->battery_sensing && chan->channel == 7) {
--			adc_engine_control_reg_val =
--				readl(data->base + ASPEED_REG_ENGINE_CONTROL);
+-		adc_engine_control_reg_val = readl(data->base + ASPEED_REG_ENGINE_CONTROL);
+-		/*
+-		 * For battery sensing capable controllers, we need to enable
+-		 * the specific channel before reading. This is required because
+-		 * the battery channel may not be enabled by default.
+-		 */
+ 		if (data->model_data->bat_sense_sup &&
+-		    chan->channel == ASPEED_ADC_BATTERY_CHANNEL) {
+-			u32 ctrl_reg = adc_engine_control_reg_val & ~ASPEED_ADC_CTRL_CHANNEL;
+-
+-			ctrl_reg |= ASPEED_ADC_CTRL_CHANNEL_ENABLE(chan->channel);
+-			writel(ctrl_reg, data->base + ASPEED_REG_ENGINE_CONTROL);
+-			/*
+-			 * After enable a new channel need to wait some time for ADC stable
+-			 * Experiment result is 1ms.
+-			 */
+-			fsleep(1000);
+-		}
+-
+-		if (data->battery_sensing && chan->channel == ASPEED_ADC_BATTERY_CHANNEL) {
 -			writel(adc_engine_control_reg_val |
 -				       FIELD_PREP(ASPEED_ADC_CH7_MODE,
 -						  ASPEED_ADC_CH7_BAT) |
 -				       ASPEED_ADC_BAT_SENSING_ENABLE,
 -			       data->base + ASPEED_REG_ENGINE_CONTROL);
-+		if (data->model_data->bat_sense_sup &&
 +		    chan->channel == data->model_data->num_channels - 1) {
 +			engine_ctrl_tmp_val = readl(data->base + ASPEED_REG_ENGINE_CONTROL);
-+			reg_val = engine_ctrl_tmp_val &
-+				  ~ASPEED_ADC_CTRL_CHANNELS_ENABLE(data->model_data->num_channels);
++			reg_val = engine_ctrl_tmp_val & ~ASPEED_ADC_CTRL_CHANNEL;
 +			reg_val |= ASPEED_ADC_CTRL_CHANNEL_ENABLE(chan->channel);
 +			if (data->battery_sensing)
 +				reg_val |= FIELD_PREP(ASPEED_ADC_CH7_MODE, ASPEED_ADC_CH7_BAT) |
 +					   ASPEED_ADC_BAT_SENSING_ENABLE;
 +			writel(reg_val, data->base + ASPEED_REG_ENGINE_CONTROL);
  			/*
- 			 * After enable battery sensing mode need to wait some time for adc stable
+ 			 * After enable battery sensing mode need to wait some time for ADC stable
  			 * Experiment result is 1ms.
  			 */
--			mdelay(1);
-+			usleep_range(1000, 1100);
+ 			fsleep(1000);
  			*val = readw(data->base + chan->address);
 -			*val = (*val * data->battery_mode_gain.mult) /
 -			       data->battery_mode_gain.div;
 +			if (data->battery_sensing)
 +				*val = (*val * data->battery_mode_gain.mult) /
 +				       data->battery_mode_gain.div;
- 			/* Restore control register value */
--			writel(adc_engine_control_reg_val,
++			/* Restore control register value */
 +			writel(engine_ctrl_tmp_val,
- 			       data->base + ASPEED_REG_ENGINE_CONTROL);
++			       data->base + ASPEED_REG_ENGINE_CONTROL);
  		} else
  			*val = readw(data->base + chan->address);
-@@ -607,9 +612,14 @@ static int aspeed_adc_probe(struct platform_device *pdev)
+-		/* Restore control register value */
+-		writel(adc_engine_control_reg_val,
+-				data->base + ASPEED_REG_ENGINE_CONTROL);
+ 		return IIO_VAL_INT;
  
- 	aspeed_adc_compensation(indio_dev);
- 	/* Start all channels in normal mode. */
--	adc_engine_control_reg_val =
--		readl(data->base + ASPEED_REG_ENGINE_CONTROL);
--	adc_engine_control_reg_val |= ASPEED_ADC_CTRL_CHANNEL;
-+	adc_engine_control_reg_val = readl(data->base + ASPEED_REG_ENGINE_CONTROL);
-+	/* Disable the last channel when the controller supports battery sensing */
-+	if (data->model_data->bat_sense_sup)
-+		adc_engine_control_reg_val |=
-+			ASPEED_ADC_CTRL_CHANNELS_ENABLE(data->model_data->num_channels - 1);
-+	else
-+		adc_engine_control_reg_val |=
-+			ASPEED_ADC_CTRL_CHANNELS_ENABLE(data->model_data->num_channels);
- 	writel(adc_engine_control_reg_val,
- 	       data->base + ASPEED_REG_ENGINE_CONTROL);
- 
+ 	case IIO_CHAN_INFO_OFFSET:
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

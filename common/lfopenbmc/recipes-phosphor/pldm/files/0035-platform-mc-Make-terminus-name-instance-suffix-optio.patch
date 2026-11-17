@@ -1,4 +1,4 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From 4098fc6a96c9e784b410a318cf7863a7ca8e1920 Mon Sep 17 00:00:00 2001
 From: Pete O_o <pmb@meta.com>
 Date: Fri, 13 Nov 2026 09:05:26 -0800
 Subject: [PATCH] platform-mc: Make terminus name instance suffix optional
@@ -194,5 +194,5 @@ index 2027bad..e4052bd 100644
  
  TEST_F(TerminusTest, createPldmEntityTest)
 -- 
-2.53.1-Meta
+2.53.0-Meta
 

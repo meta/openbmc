@@ -1,4 +1,4 @@
-From f67355d173bb2c37aca53dfe35dffa9918319f7a Mon Sep 17 00:00:00 2001
+From cc063e01194c171e3542246c846e4f34204a741d Mon Sep 17 00:00:00 2001
 From: Cosmo Chou <chou.cosmo@gmail.com>
 Date: Wed, 2 Oct 2024 12:10:32 +0800
 Subject: [PATCH] ipmi: ssif_bmc: add GPIO-based alert mechanism
@@ -17,7 +17,7 @@ LORE: https://lore.kernel.org/all/20241022-ssif-alert-gpios-v2-2-c7dd6dd17a7e@gm
  1 file changed, 15 insertions(+)
 
 diff --git a/drivers/char/ipmi/ssif_bmc.c b/drivers/char/ipmi/ssif_bmc.c
-index a45e80d13e10..015c006a764a 100644
+index f7e1df585bba..d05d3c34d371 100644
 --- a/drivers/char/ipmi/ssif_bmc.c
 +++ b/drivers/char/ipmi/ssif_bmc.c
 @@ -17,6 +17,7 @@
@@ -28,7 +28,7 @@ index a45e80d13e10..015c006a764a 100644
  #include <linux/ipmi_ssif_bmc.h>
  
  #define DEVICE_NAME                             "ipmi-ssif-host"
-@@ -102,6 +103,7 @@ struct ssif_bmc_ctx {
+@@ -104,6 +105,7 @@ struct ssif_bmc_ctx {
  	struct ssif_part_buffer part_buf;
  	struct ipmi_ssif_msg    response;
  	struct ipmi_ssif_msg    request;
@@ -36,7 +36,7 @@ index a45e80d13e10..015c006a764a 100644
  };
  
  static inline struct ssif_bmc_ctx *to_ssif_bmc(struct file *file)
-@@ -224,6 +226,9 @@ static ssize_t ssif_bmc_write(struct file *file, const char __user *buf, size_t
+@@ -226,6 +228,9 @@ static ssize_t ssif_bmc_write(struct file *file, const char __user *buf, size_t
  
  	/* Clean old request buffer */
  	memset(&ssif_bmc->request, 0, sizeof(struct ipmi_ssif_msg));
@@ -46,7 +46,7 @@ index a45e80d13e10..015c006a764a 100644
  exit:
  	spin_unlock_irqrestore(&ssif_bmc->lock, flags);
  
-@@ -595,6 +600,9 @@ static void process_smbus_cmd(struct ssif_bmc_ctx *ssif_bmc, u8 *val)
+@@ -597,6 +602,9 @@ static void process_smbus_cmd(struct ssif_bmc_ctx *ssif_bmc, u8 *val)
  	memset(&ssif_bmc->part_buf.payload[0], 0, MAX_PAYLOAD_PER_TRANSACTION);
  
  	if (*val == SSIF_IPMI_SINGLEPART_WRITE || *val == SSIF_IPMI_MULTIPART_WRITE_START) {
@@ -56,16 +56,16 @@ index a45e80d13e10..015c006a764a 100644
  		/*
  		 * The response maybe not come in-time, causing host SSIF driver
  		 * to timeout and resend a new request. In such case check for
-@@ -651,6 +659,8 @@ static void on_read_requested_event(struct ssif_bmc_ctx *ssif_bmc, u8 *val)
- 	calculate_response_part_pec(&ssif_bmc->part_buf);
+@@ -655,6 +663,8 @@ static void on_read_requested_event(struct ssif_bmc_ctx *ssif_bmc, u8 *val)
  	ssif_bmc->part_buf.index = 0;
+ 	ssif_bmc->part_buf_loaded = true;
  	*val = ssif_bmc->part_buf.length;
 +	if (!IS_ERR(ssif_bmc->alert))
 +		gpiod_set_value(ssif_bmc->alert, 0);
  }
  
  static void on_read_processed_event(struct ssif_bmc_ctx *ssif_bmc, u8 *val)
-@@ -826,6 +836,11 @@ static int ssif_bmc_probe(struct i2c_client *client)
+@@ -833,6 +843,11 @@ static int ssif_bmc_probe(struct i2c_client *client)
  	if (!ssif_bmc)
  		return -ENOMEM;
  
@@ -78,5 +78,5 @@ index a45e80d13e10..015c006a764a 100644
  
  	init_waitqueue_head(&ssif_bmc->wait_queue);
 -- 
-2.52.0
+2.53.1-Meta
 

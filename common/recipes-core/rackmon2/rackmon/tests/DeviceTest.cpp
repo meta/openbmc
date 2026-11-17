@@ -1,5 +1,8 @@
 // Copyright 2021-present Facebook. All Rights Reserved.
 #include "Device.h"
+#include <fcntl.h>
+#include <unistd.h>
+#include <cstdlib>
 #include <fstream>
 #include <thread>
 #include "TempDir.h"
@@ -7,6 +10,34 @@
 
 using namespace std::literals;
 using namespace rackmon;
+
+// Closing a pty's master hangs up its slave the same way a USB serial
+// adapter that disconnects hangs up its ttyUSB.
+class Pty {
+  int master_ = -1;
+  std::string slavePath_{};
+
+ public:
+  Pty() {
+    master_ = posix_openpt(O_RDWR | O_NOCTTY);
+    if (master_ < 0 || grantpt(master_) != 0 || unlockpt(master_) != 0) {
+      throw std::runtime_error("pty setup failed");
+    }
+    slavePath_ = ptsname(master_);
+  }
+  ~Pty() {
+    hangUp();
+  }
+  const std::string& slavePath() const {
+    return slavePath_;
+  }
+  void hangUp() {
+    if (master_ >= 0) {
+      ::close(master_);
+      master_ = -1;
+    }
+  }
+};
 
 class DeviceTest : public ::testing::Test {
   TempDirectory test_dir_{};
@@ -31,6 +62,45 @@ TEST_F(DeviceTest, OpenClose) {
   Device dev(test_device_path);
   dev.open();
   ASSERT_TRUE(dev.exists());
+  dev.close();
+}
+
+TEST_F(DeviceTest, IsOpened) {
+  Device dev(test_device_path);
+  ASSERT_FALSE(dev.isOpened());
+  dev.open();
+  ASSERT_TRUE(dev.isOpened());
+  dev.close();
+  ASSERT_FALSE(dev.isOpened());
+}
+
+TEST_F(DeviceTest, WriteClosesHungUpTty) {
+  Pty pty;
+  Device dev(pty.slavePath());
+  dev.open();
+  pty.hangUp();
+  std::vector<uint8_t> buf = {1, 2, 3, 4};
+  EXPECT_THROW(dev.write(buf.data(), buf.size()), std::system_error);
+  ASSERT_FALSE(dev.isOpened());
+}
+
+TEST_F(DeviceTest, ReadClosesHungUpTty) {
+  Pty pty;
+  Device dev(pty.slavePath());
+  dev.open();
+  pty.hangUp();
+  std::vector<uint8_t> buf(4);
+  EXPECT_THROW(dev.read(buf.data(), buf.size(), 100), std::system_error);
+  ASSERT_FALSE(dev.isOpened());
+}
+
+TEST_F(DeviceTest, ReadTimeoutKeepsTtyOpen) {
+  Pty pty;
+  Device dev(pty.slavePath());
+  dev.open();
+  std::vector<uint8_t> buf(4);
+  EXPECT_THROW(dev.read(buf.data(), buf.size(), 10), TimeoutException);
+  ASSERT_TRUE(dev.isOpened());
   dev.close();
 }
 

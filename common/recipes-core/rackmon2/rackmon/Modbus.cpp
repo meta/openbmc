@@ -15,7 +15,7 @@ void Modbus::command(
     ModbusTime timeout,
     Parity parity) {
   std::unique_lock lck(deviceMutex_);
-  if (!deviceValid_) {
+  if (!isPresent()) {
     throw std::runtime_error("Uninitialized");
   }
   RACKMON_PROFILE_SCOPE(
@@ -66,16 +66,17 @@ std::unique_ptr<UARTDevice> Modbus::makeDevice(
 bool Modbus::openDevice() {
   try {
     device_->open();
-    deviceValid_ = true;
     return true;
   } catch (std::exception&) {
+    // UARTDevice::open() can fail after it opened the fd. Close it so the
+    // device does not look present without its attributes set.
+    device_->close();
     return false;
   }
 }
 
 void Modbus::closeDevice() {
   device_->close();
-  deviceValid_ = false;
 }
 
 void Modbus::healthCheck() {
@@ -101,6 +102,8 @@ void Modbus::initialize(const json& j) {
 
   defaultTimeout_ = ModbusTime(j.value("default_timeout", 300));
   minDelay_ = ModbusTime(j.value("min_delay", 0));
+  healthCheckInterval_ = std::chrono::seconds(
+      j.value("health_check_interval", healthCheckInterval_.count()));
   ignoredAddrs_ = j.value("ignored_addrs", std::set<uint8_t>{});
   device_ = makeDevice(deviceType, devicePath_, defaultBaudrate_);
   if (j.contains("port")) {

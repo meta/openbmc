@@ -9,7 +9,12 @@ using namespace rackmon;
 
 class MockUARTDevice : public UARTDevice {
  public:
-  MockUARTDevice(const std::string& dev, int baud) : UARTDevice(dev, baud) {}
+  MockUARTDevice(const std::string& dev, int baud) : UARTDevice(dev, baud) {
+    // Keep deviceFd_ in step with the mocked open() and close() so that
+    // isOpened() reports the right state. The fd is never used.
+    ON_CALL(*this, open()).WillByDefault([this]() { deviceFd_ = 1000; });
+    ON_CALL(*this, close()).WillByDefault([this]() { deviceFd_ = -1; });
+  }
   MOCK_METHOD0(open, void());
   MOCK_METHOD0(close, void());
   MOCK_METHOD0(exists, bool());
@@ -78,10 +83,10 @@ class ModbusTest : public ::testing::Test {
         .WillOnce(Throw(std::runtime_error("nodev"))) // 1. T0 fail initialize()
         .WillOnce(
             Throw(std::runtime_error("nodev"))) // 2. T0 fail healthThread()
-        .WillOnce(Return()) // 3. T1 healthThread() success
-        .WillOnce(Return()); // 6. T3 healthThread() success/recover
-    EXPECT_CALL(*ptr, close())
-        .Times(2); // 5. T2 healthThread(), 8. TX destructor
+        .WillOnce(DoDefault()) // 3. T1 healthThread() success
+        .WillOnce(DoDefault()); // 6. T3 healthThread() success/recover
+    // 1. and 2. failed opens, 5. T2 healthThread(), 8. TX destructor
+    EXPECT_CALL(*ptr, close()).Times(4);
     EXPECT_CALL(*ptr, exists())
         .Times(2)
         .WillOnce(Return(false)) // 4. T2 vanishes.
@@ -218,5 +223,33 @@ TEST_F(ModbusTest, TestFlakyIntfRecover) {
   bus.tick(); // T3
   ASSERT_TRUE(bus.isPresent());
   bus.tick(); // T4
+  ASSERT_TRUE(bus.isPresent());
+}
+
+TEST_F(ModbusTest, HealthCheckReopensClosedDevice) {
+  nlohmann::json conf;
+  conf["device_path"] = "/dev/ttyUSB0";
+  conf["baudrate"] = 19200;
+  auto ptr = std::make_unique<MockUARTDevice>("/dev/ttyUSB0", 19200);
+  MockUARTDevice* dev = ptr.get();
+  EXPECT_CALL(*ptr, open()).Times(2); // initialize(), then recovery.
+  // Device::write() closes a device whose USB serial adapter disconnected.
+  EXPECT_CALL(*ptr, write(_, _)).WillOnce([dev](const uint8_t*, size_t) {
+    dev->close();
+    throw std::system_error(EIO, std::generic_category());
+  });
+  EXPECT_CALL(*ptr, close()).Times(2); // In write(), and in the destructor.
+  EXPECT_CALL(*ptr, exists()).WillRepeatedly(Return(true));
+  MockModbus bus;
+  EXPECT_CALL(bus, makeDevice("default", "/dev/ttyUSB0", 19200))
+      .WillOnce(Return(ByMove(std::move(ptr))));
+  bus.initialize(conf);
+  bus.tick(); // Let the health check's start-up run finish first.
+  Msg req = 0x0001020304050607_M;
+  Msg resp;
+  resp.len = 9;
+  EXPECT_THROW(bus.command(req, resp), std::system_error);
+  ASSERT_FALSE(bus.isPresent());
+  bus.tick();
   ASSERT_TRUE(bus.isPresent());
 }

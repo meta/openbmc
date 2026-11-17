@@ -22,7 +22,6 @@ class Modbus {
   uint32_t defaultBaudrate_ = 0;
   ModbusTime defaultTimeout_ = ModbusTime::zero();
   ModbusTime minDelay_ = ModbusTime::zero();
-  std::atomic<bool> deviceValid_{false};
   bool debug_{false};
   std::chrono::seconds healthCheckInterval_ = std::chrono::seconds(600);
   std::unique_ptr<PollThread<Modbus>> healthCheckThread_{};
@@ -73,7 +72,7 @@ class Modbus {
       Parity parity = Parity::EVEN);
 
   virtual bool isPresent() {
-    return deviceValid_.load();
+    return device_ && device_->isOpened();
   }
 };
 

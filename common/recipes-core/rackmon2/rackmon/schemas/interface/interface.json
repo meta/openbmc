@@ -30,6 +30,11 @@
         "type": "integer",
         "minimum": 0
       },
+      "health_check_interval": {
+        "description": "Seconds between checks that close the device once its path is gone and reopen it once it is back. Defaults to 600",
+        "type": "integer",
+        "minimum": 1
+      },
       "debug": {
         "description": "Enables device tracing and potentially other debug prints",
         "type": "boolean"

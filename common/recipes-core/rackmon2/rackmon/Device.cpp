@@ -41,12 +41,24 @@ bool Device::exists() {
   return access(device_.c_str(), F_OK) == 0;
 }
 
+void Device::closeIfGone(const std::error_code& err) {
+  if (err == std::errc::io_error || err == std::errc::no_such_device ||
+      err == std::errc::no_such_device_or_address) {
+    logError << device_ << " is gone (" << err.message() << "), closing it"
+             << std::endl;
+    close();
+  }
+}
+
 void Device::write(const uint8_t* buf, size_t len) {
   int ret = ::write(deviceFd_, buf, len);
   if (ret != (int)len) {
+    std::error_code err = sys_error();
+    if (ret < 0) {
+      closeIfGone(err);
+    }
     throw std::system_error(
-        sys_error(),
-        "Writing " + std::to_string(len) + " to " + device_ + "failed!");
+        err, "Writing " + std::to_string(len) + " to " + device_ + "failed!");
   }
 }
 
@@ -105,7 +117,14 @@ size_t Device::read(uint8_t* buf, size_t exactLen, int timeoutMs) {
       if (errno == EAGAIN) {
         continue;
       }
-      throw std::system_error(sys_error(), "read response failure");
+      std::error_code err = sys_error();
+      closeIfGone(err);
+      throw std::system_error(err, "read response failure");
+    }
+    if (iterReadBytes == 0) {
+      // The fd was readable but has no data: a hung-up tty reads as EOF.
+      closeIfGone(sys_error(EIO));
+      throw std::system_error(sys_error(EIO), "read hit EOF on " + device_);
     }
     if (iterReadBytes > (int)remBytes) {
       throw std::system_error(

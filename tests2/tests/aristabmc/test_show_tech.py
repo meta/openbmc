@@ -20,6 +20,7 @@
 
 import unittest
 
+from common.base_showtech_test import BaseShowtechTest
 from utils.cit_logger import Logger
 from utils.shell_util import run_shell_cmd
 from utils.test_utils import qemu_check
@@ -31,7 +32,7 @@ def collect_show_tech():
 
 
 @unittest.skipIf(qemu_check(), "test env is QEMU, skipped")
-class ShowTechTest(unittest.TestCase):
+class ShowTechTest(BaseShowtechTest, unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.show_tech_output = collect_show_tech()

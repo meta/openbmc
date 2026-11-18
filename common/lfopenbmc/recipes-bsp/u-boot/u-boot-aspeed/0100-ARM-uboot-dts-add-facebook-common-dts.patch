@@ -1,33 +1,35 @@
-From fff7eb7d898ecc6a8828ee97e78a053dcf04f49e Mon Sep 17 00:00:00 2001
+From 387e78c72c42420e144fb9b0713ea8398fea2b53 Mon Sep 17 00:00:00 2001
 From: Peter Yin <peter.yin@quantatw.com>
 Date: Thu, 2 Oct 2025 16:08:10 +0800
 Subject: [PATCH] ARM: uboot: dts: add facebook common dts
 
 Add facebook common dts.
 ---
- arch/arm/dts/Makefile             |  1 +
- arch/arm/dts/ast2700-facebook.dts | 75 +++++++++++++++++++++++++++++++
- 2 files changed, 76 insertions(+)
+ arch/arm/dts/Makefile             |  3 +-
+ arch/arm/dts/ast2700-facebook.dts | 46 +++++++++++++++++++++++++++++++
+ 2 files changed, 48 insertions(+), 1 deletion(-)
  create mode 100644 arch/arm/dts/ast2700-facebook.dts
 
 diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
-index 4195608f54a5..e882af33fb58 100644
+index 37d3b6fd3cce..b148fc19c98f 100644
 --- a/arch/arm/dts/Makefile
 +++ b/arch/arm/dts/Makefile
-@@ -1285,6 +1285,7 @@ dtb-$(CONFIG_ASPEED_AST2600) += \
- 
+@@ -1025,7 +1025,8 @@ dtb-$(CONFIG_ASPEED_AST2600) += \
+ 	ast2600-sbp1.dtb \
+ 	ast2600-x4tf.dtb
  dtb-$(CONFIG_ASPEED_AST2700) += \
- 	ast2700-evb.dtb \
-+	ast2700-facebook.dtb \
- 	ast2700-raw.dtb \
- 	ast2700-slt.dtb \
- 	ast2700-ncsi.dtb \
+-	ast2700-evb.dtb
++	ast2700-evb.dtb \
++	ast2700-facebook.dtb
+ 
+ dtb-$(CONFIG_STM32MP15X) += \
+ 	stm32mp157c-odyssey.dtb
 diff --git a/arch/arm/dts/ast2700-facebook.dts b/arch/arm/dts/ast2700-facebook.dts
 new file mode 100644
-index 000000000000..1533a383a855
+index 000000000000..0dee592da195
 --- /dev/null
 +++ b/arch/arm/dts/ast2700-facebook.dts
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,46 @@
 +// SPDX-License-Identifier: GPL-2.0+
 +
 +/dts-v1/;
@@ -39,20 +41,13 @@ index 000000000000..1533a383a855
 +	model = "Facebook BMC";
 +	compatible = "facebook,yosemite5a7-bmc", "aspeed,ast2700";
 +
-+	memory {
++	memory@400000000 {
 +		device_type = "memory";
 +		reg = <0x4 0x00000000 0x0 0x80000000>;
 +	};
 +
 +	chosen {
 +		stdout-path = &uart12;
-+	};
-+
-+	reserved-memory {
-+		#address-cells = <2>;
-+		#size-cells = <2>;
-+
-+		#include "ast2700-evb-reserved-mem.dtsi"
 +	};
 +};
 +
@@ -75,28 +70,6 @@ index 000000000000..1533a383a855
 +		spi-max-frequency = <50000000>;
 +		spi-tx-bus-width = <2>;
 +		spi-rx-bus-width = <2>;
-+	};
-+};
-+
-+&mac0 {
-+	status = "okay";
-+	phy-mode = "NC-SI";
-+	use-ncsi;
-+};
-+
-+&gpio1 {
-+	status = "okay";
-+
-+	gpiog4-hog {
-+		gpio-hog;
-+		gpios = <ASPEED_GPIO(G, 4) GPIO_ACTIVE_HIGH>;
-+		input;
-+	};
-+
-+	gpiog5-hog {
-+		gpio-hog;
-+		gpios = <ASPEED_GPIO(G, 5) GPIO_ACTIVE_HIGH>;
-+		input;
 +	};
 +};
 +

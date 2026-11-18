@@ -1,0 +1,83 @@
+From ced9ad0aef3b72a262ecb21bda10f6ab23f9e117 Mon Sep 17 00:00:00 2001
+From: Peter Yin <peter.yin@quantatw.com>
+Date: Wed, 26 Nov 2025 15:54:08 +0800
+Subject: [PATCH] ARM64: Aspeed2700: add a config for WDTA timer reload value
+
+Add a config for WDTA timer reload, and set timer reload value if
+WDTA is enabled.
+
+Signed-off-by: Peter Yin <peter.yin@quantatw.com>
+---
+ arch/arm/mach-aspeed/ast2700/Kconfig        |  9 +++++++++
+ arch/arm/mach-aspeed/ast2700/board_common.c | 21 +++++++++++++++++++++
+ 2 files changed, 30 insertions(+)
+
+diff --git a/arch/arm/mach-aspeed/ast2700/Kconfig b/arch/arm/mach-aspeed/ast2700/Kconfig
+index 3dd68db76db5..c8fa8041b249 100644
+--- a/arch/arm/mach-aspeed/ast2700/Kconfig
++++ b/arch/arm/mach-aspeed/ast2700/Kconfig
+@@ -31,6 +31,15 @@ config TARGET_EVB_AST2700
+ 
+ endchoice
+ 
++config ASPEED_WDTA_TIMER_RELOAD
++	hex "Aspeed WDTA timer reload value"
++	depends on ASPEED_AST2700
++	default 0x0
++	help
++	  Set the reload value for the Aspeed WDTA timer.
++	  The unit is 1us (e.g., 1 second = 0xF4240).
++	  Set to 0x0 to leave the register unchanged (Default 40s).
++
+ source "board/aspeed/evb_ast2700/Kconfig"
+ 
+ endif
+diff --git a/arch/arm/mach-aspeed/ast2700/board_common.c b/arch/arm/mach-aspeed/ast2700/board_common.c
+index 6d2160bbca44..e53d0212d064 100644
+--- a/arch/arm/mach-aspeed/ast2700/board_common.c
++++ b/arch/arm/mach-aspeed/ast2700/board_common.c
+@@ -9,6 +9,7 @@
+ #include <timer.h>
+ #include <asm/io.h>
+ #include <asm/arch/timer.h>
++#include <asm/arch/wdt_ast2600.h>
+ #include <linux/bitfield.h>
+ #include <linux/bitops.h>
+ #include <linux/err.h>
+@@ -65,6 +66,25 @@ static void ahbc_init(void)
+ 		       (void *)ASPEED_IO_AHBC_BASE + AHBC_GROUP(i) + AHBC_HREADY_WAIT_CNT_REG);
+ }
+ 
++static void wdta_init(void)
++{
++	struct ast2600_wdt *wdt = (struct ast2600_wdt *)ASPEED_WDTA_BASE;
++
++	if (!CONFIG_ASPEED_WDTA_TIMER_RELOAD)
++		return;
++
++	if (!(readl(&wdt->ctrl) & WDT_CTRL_EN)) {
++		printf("WDTA disabled, keep reload value as init\n");
++		return;
++	}
++
++	/* Load the new counter value, then restart to latch it */
++	writel(CONFIG_ASPEED_WDTA_TIMER_RELOAD, &wdt->counter_reload_val);
++	writel(WDT_COUNTER_RESTART_VAL, &wdt->counter_restart);
++	printf("Set WDTA timer reload value to 0x%08X\n",
++	       CONFIG_ASPEED_WDTA_TIMER_RELOAD);
++}
++
+ int board_init(void)
+ {
+ 	struct udevice *dev;
+@@ -72,6 +92,7 @@ int board_init(void)
+ 	int ret;
+ 
+ 	ahbc_init();
++	wdta_init();
+ 
+ 	/*
+ 	 * Loop over all MISC uclass drivers to call the comphy code
+-- 
+2.53.0
+

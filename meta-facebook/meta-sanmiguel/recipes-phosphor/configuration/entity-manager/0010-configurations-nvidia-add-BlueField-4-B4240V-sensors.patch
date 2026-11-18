@@ -1,7 +1,10 @@
-From 74cc6c88221ac941146548c8c61fdb3174219a32 Mon Sep 17 00:00:00 2001
+From 2bfcb99e0f8cac1afeb4c571c8e7f2bdf34f52d0 Mon Sep 17 00:00:00 2001
 From: Mike Hsieh <mike_hsieh@quantatw.com>
 Date: Thu, 5 Nov 2026 13:46:14 +0800
 Subject: [PATCH] configurations: nvidia: add BlueField-4 B4240V sensors
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 Expose the NIC temperature and power, CPU temperature and power, SSD
 temperature, total power and QSFP0/QSFP1 temperature of the
@@ -133,5 +136,5 @@ index 2e9abb3..53edfa4 100644
      ],
      "Name": "NVIDIA VR NVL72 BlueField4",
 -- 
-2.53.0
+2.53.1-Meta
 

@@ -1,4 +1,4 @@
-From 2f2a940435ebe66c4191ed4311eb962f46577fd5 Mon Sep 17 00:00:00 2001
+From ebdae62ec40fc6d6abdb180bf8bec5c82ebab85b Mon Sep 17 00:00:00 2001
 From: Jagpal Singh Gill <jagpalgill@meta.com>
 Date: Mon, 16 Nov 2026 13:48:59 -0800
 Subject: [PATCH] registries: expose Power and Platform for downstream PDI
@@ -28,7 +28,7 @@ index 7d0f0f84..760112d0 100644
  #include "registries/sensor_event_message_registry.hpp"
  #include "registries/task_event_message_registry.hpp"
 diff --git a/scripts/parse_registries.py b/scripts/parse_registries.py
-index 46942348..7ec39939 100755
+index 49a1a139..6456bcf4 100755
 --- a/scripts/parse_registries.py
 +++ b/scripts/parse_registries.py
 @@ -967,6 +967,8 @@ def main() -> None:

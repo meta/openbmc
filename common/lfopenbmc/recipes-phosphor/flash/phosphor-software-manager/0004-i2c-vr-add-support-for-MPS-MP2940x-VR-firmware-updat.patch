@@ -1,4 +1,4 @@
-From 0e16b2d4e7b96253e3750b60f3d84a9e1e1434b8 Mon Sep 17 00:00:00 2001
+From 6d674824ccaca25a04ade6a97789171eec42c096 Mon Sep 17 00:00:00 2001
 From: Alan Tsai <alan-tsai@quantatw.com>
 Date: Wed, 12 Aug 2026 10:48:23 +0800
 Subject: [PATCH] i2c-vr: add support for MPS MP2940x VR firmware update
@@ -1123,5 +1123,5 @@ index 77a3fbd..5124551 100644
      MP5998,
      MP994X,
 -- 
-2.53.0-Meta
+2.52.1
 

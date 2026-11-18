@@ -1,4 +1,4 @@
-From 098cae95fd3eba8341ad034791cf8ca4fd21f9ca Mon Sep 17 00:00:00 2001
+From 7031acfa598d6719ff22a920d3c5303bc1f66cfb Mon Sep 17 00:00:00 2001
 From: Alan Tsai <alan-tsai@quantatw.com>
 Date: Wed, 12 Aug 2026 10:49:25 +0800
 Subject: [PATCH] i2c-vr: add support for TI TPS544X27 VR firmware update
@@ -250,7 +250,7 @@ https://$bmc/redfish/v1/UpdateService/FirmwareInventory/MB_VR_CPU_V1P2_Firmware_
 Change-Id: Ia1bcdf4c1af68222255fff8373a1b9bfaac28368
 Signed-off-by: Alan Tsai <alan-tsai@quantatw.com>
 ---
- common/include/utils.hpp             |  21 +
+ common/include/utils.hpp             |  17 +
  common/src/utils.cpp                 | 152 +++++
  i2c-vr/i2cvr_software_manager.cpp    |   3 +-
  i2c-vr/meson.build                   |   2 +
@@ -266,7 +266,7 @@ Signed-off-by: Alan Tsai <alan-tsai@quantatw.com>
  test/i2c-vr/tps544x27/csv_parser.cpp | 299 +++++++++
  test/i2c-vr/tps544x27/meson.build    |  14 +
  test/meson.build                     |   1 +
- 16 files changed, 2137 insertions(+), 1 deletion(-)
+ 16 files changed, 2133 insertions(+), 1 deletion(-)
  create mode 100644 i2c-vr/tps544x27/csv_parser.cpp
  create mode 100644 i2c-vr/tps544x27/csv_parser.hpp
  create mode 100644 i2c-vr/tps544x27/tps544x27.cpp
@@ -277,10 +277,10 @@ Signed-off-by: Alan Tsai <alan-tsai@quantatw.com>
  create mode 100644 test/i2c-vr/tps544x27/meson.build
 
 diff --git a/common/include/utils.hpp b/common/include/utils.hpp
-index 3d3c68f..bccfb01 100644
+index 192d113..e66420a 100644
 --- a/common/include/utils.hpp
 +++ b/common/include/utils.hpp
-@@ -2,8 +2,17 @@
+@@ -2,7 +2,12 @@
  
  #include <sdbusplus/async.hpp>
  
@@ -291,14 +291,9 @@ index 3d3c68f..bccfb01 100644
  #include <functional>
 +#include <initializer_list>
  #include <optional>
-+#include <string>
-+#include <type_traits>
-+#include <utility>
-+#include <vector>
- 
- /**
-  * @brief Asynchronously executes a shell command.
-@@ -135,3 +144,15 @@ std::vector<uint8_t> buildByteVector(Args&&... args)
+ #include <string>
+ #include <string_view>
+@@ -146,3 +151,15 @@ std::vector<uint8_t> buildByteVector(Args&&... args)
  
      return buf;
  }
@@ -315,7 +310,7 @@ index 3d3c68f..bccfb01 100644
 +
 +std::vector<std::string> splitCsvLine(const std::string& line);
 diff --git a/common/src/utils.cpp b/common/src/utils.cpp
-index 24dc1af..7d892fb 100644
+index a5d1bd2..897f998 100644
 --- a/common/src/utils.cpp
 +++ b/common/src/utils.cpp
 @@ -6,7 +6,11 @@
@@ -330,9 +325,9 @@ index 24dc1af..7d892fb 100644
  
  PHOSPHOR_LOG2_USING;
  
-@@ -129,3 +133,151 @@ sdbusplus::async::task<bool> asyncSystem(
-     co_return co_await runParent(ctx, pid, exitPipefd[0],
-                                  result ? resultPipefd[0] : -1, result, cmd);
+@@ -168,3 +172,151 @@ sdbusplus::async::task<bool> asyncSystem(
+                                  captureOutput ? resultPipefd[0] : -1, result,
+                                  cmd, std::move(outputCallback));
  }
 +
 +std::string trim(const std::string& s)
@@ -2561,7 +2556,7 @@ index 0000000..2feafb1
 +    ),
 +)
 diff --git a/test/meson.build b/test/meson.build
-index 5e5c634..30d8b9a 100644
+index 809b8ed..fbdc1d2 100644
 --- a/test/meson.build
 +++ b/test/meson.build
 @@ -3,6 +3,7 @@ subdir('create_package')
@@ -2573,5 +2568,5 @@ index 5e5c634..30d8b9a 100644
  if get_option('cpld-software-update').allowed()
      subdir('cpld')
 -- 
-2.53.0-Meta
+2.52.1
 

@@ -1,4 +1,4 @@
-From 0f2a8fa712f732e4cbed680498dc92095a6c631d Mon Sep 17 00:00:00 2001
+From 4b74804f0f00e9d066892bc0e5497a8a2520386f Mon Sep 17 00:00:00 2001
 From: Peter Delevoryas <pdel@fb.com>
 Date: Wed, 17 Aug 2022 10:14:07 +0200
 Subject: [PATCH] hw/misc/aspeed: Add intel-me
@@ -26,10 +26,10 @@ Signed-off-by: Peter Delevoryas <peter@pjd.dev>
  create mode 100644 hw/misc/intel_me.c
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 8fd0452919..0f5840d595 100644
+index 115316c725..24fcaf2094 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -1303,6 +1303,7 @@ F: tests/*/*ast2700*
+@@ -1304,6 +1304,7 @@ F: tests/*/*ast2700*
  F: pc-bios/ast27x0_bootrom.bin
  F: roms/vbootrom
  F: hw/misc/fby35_sb_cpld.c
@@ -206,7 +206,7 @@ index 0000000000..ac99c6f05b
 +
 +DEFINE_TYPES(types);
 diff --git a/hw/misc/meson.build b/hw/misc/meson.build
-index 934716ea58..c0baa60053 100644
+index 7c685bac60..f3457ad04a 100644
 --- a/hw/misc/meson.build
 +++ b/hw/misc/meson.build
 @@ -152,7 +152,8 @@ system_ss.add(when: 'CONFIG_ASPEED_SOC', if_true: files(
@@ -236,5 +236,5 @@ index 378b01f7b9..3e18038e66 100644
 +intel_me_tx_data(uint8_t addr, uint8_t data) "addr 0x%02x data 0x%02x"
 +intel_me_tx_end(uint8_t addr) "addr 0x%02x"
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

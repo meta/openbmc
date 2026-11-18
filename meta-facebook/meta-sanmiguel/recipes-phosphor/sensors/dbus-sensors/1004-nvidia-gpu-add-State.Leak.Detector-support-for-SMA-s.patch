@@ -1,4 +1,4 @@
-From 11a2b89d5d57329421071e96a35ebed0c0fb26da Mon Sep 17 00:00:00 2001
+From f4467f46d9dfea0d144e1256c1cd7b8b34d0c093 Mon Sep 17 00:00:00 2001
 From: Mike Hsieh <mike_hsieh@quantatw.com>
 Date: Fri, 21 Aug 2026 17:56:52 +0800
 Subject: [PATCH] nvidia-gpu: add State.Leak.Detector support for SMA sensors
@@ -249,19 +249,19 @@ index 8b27f26..28fb868 100644
 +    }
 +}
 diff --git a/src/nvidia-gpu/NvidiaSmaLeakSensor.hpp b/src/nvidia-gpu/NvidiaSmaLeakSensor.hpp
-index 83a1bce..5bda457 100644
+index 3cd49fa..72d6246 100644
 --- a/src/nvidia-gpu/NvidiaSmaLeakSensor.hpp
 +++ b/src/nvidia-gpu/NvidiaSmaLeakSensor.hpp
-@@ -38,6 +38,8 @@ struct NvidiaSmaLeakSensor :
- 
-     void update();
+@@ -45,6 +45,8 @@ struct NvidiaSmaLeakSensor :
+         eid = newEid;
+     }
  
 +    void updateState(uint8_t value);
 +
    private:
      void processResponse(const std::error_code& ec,
                           std::span<const uint8_t> buffer);
-@@ -58,4 +60,18 @@ struct NvidiaSmaLeakSensor :
+@@ -65,4 +67,18 @@ struct NvidiaSmaLeakSensor :
          commonPhysicalContextInterface;
  
      std::vector<gpu::LeakSensorData> parsedSensors;
@@ -281,5 +281,5 @@ index 83a1bce..5bda457 100644
 +    LeakState lastLeakFault = LeakState::Normal;
  };
 -- 
-2.53.0-Meta
+2.52.1
 

@@ -1,7 +1,7 @@
-From fc4b1d0aaac252cbc731562bb004bd8a0c7c2f92 Mon Sep 17 00:00:00 2001
+From 9669e355dc867c0f003b55180aecf5d64332ccd7 Mon Sep 17 00:00:00 2001
 From: Oliver Brewka <oliver.brewka@9elements.com>
 Date: Tue, 17 Mar 2026 18:16:09 +0100
-Subject: [PATCH 8/9] cmos-reset: Add ActivationBlocksTransition
+Subject: [PATCH] cmos-reset: Add ActivationBlocksTransition
 
 Analogous to a software update, add
 `xyz.openbmc_project.Software.ActionvationBlocksTransition` to the
@@ -62,5 +62,5 @@ index 23afc3b..b21c7e7 100644
  namespace cmos
  {
 -- 
-2.34.1
+2.53.1-Meta
 

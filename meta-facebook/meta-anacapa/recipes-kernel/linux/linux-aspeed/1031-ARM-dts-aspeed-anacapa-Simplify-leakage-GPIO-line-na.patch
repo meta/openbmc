@@ -1,4 +1,4 @@
-From 24556845c35156dc272fcdb5b4c61938af123b27 Mon Sep 17 00:00:00 2001
+From 733b0f3a720117943eff77a6fd23069db43500b6 Mon Sep 17 00:00:00 2001
 From: Colin Huang <colin.huang2@amd.com>
 Date: Tue, 20 Oct 2026 16:35:24 +0800
 Subject: [PATCH] ARM: dts: aspeed: anacapa: Simplify leakage GPIO line names
@@ -16,10 +16,10 @@ Signed-off-by: Colin Huang <colin.huang2@amd.com>
  1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
-index d773f0b06899..3bcebfd208f4 100644
+index ca730f68eb1d..9561228b3b35 100644
 --- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
 +++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
-@@ -1174,14 +1174,14 @@ &sgpiom0 {
+@@ -1137,14 +1137,14 @@ &sgpiom0 {
  	"", "",
  
  	/* B0-B7 line 16-31 */
@@ -42,5 +42,5 @@ index d773f0b06899..3bcebfd208f4 100644
  	/* C0-C7 line 32-47 */
  	"RSVD_RMC_GPIO3", "RTM_MUX_L",
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

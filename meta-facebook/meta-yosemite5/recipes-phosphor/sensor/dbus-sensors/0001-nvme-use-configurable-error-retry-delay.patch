@@ -1,4 +1,4 @@
-From e517358c24144c514b0516ad16398d83b54276d7 Mon Sep 17 00:00:00 2001
+From cc81d3a1ac68964ab6a10c34853ff27c409e4026 Mon Sep 17 00:00:00 2001
 From: Elton Wang <elton.wang.wiwynn@gmail.com>
 Date: Thu, 3 Sep 2026 01:01:46 +0000
 Subject: [PATCH] nvme: use configurable error retry delay
@@ -204,10 +204,10 @@ Signed-off-by: Elton Wang <elton.wang.wiwynn@gmail.com>
  5 files changed, 60 insertions(+), 13 deletions(-)
 
 diff --git a/src/nvme/NVMeBasicContext.cpp b/src/nvme/NVMeBasicContext.cpp
-index 9028996..3f03921 100644
+index 0d8c275..b71a60c 100644
 --- a/src/nvme/NVMeBasicContext.cpp
 +++ b/src/nvme/NVMeBasicContext.cpp
-@@ -367,7 +367,7 @@ void NVMeBasicContext::pollNVMeDevices()
+@@ -375,7 +375,7 @@ void NVMeBasicContext::pollNVMeDevices()
  {
      pollCursor = sensors.begin();
  
@@ -383,5 +383,5 @@ index 7d2204d..3928c1f 100644
              context->addSensor(sensorPtr);
          }
 -- 
-2.43.0
+2.53.1-Meta
 

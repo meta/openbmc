@@ -1,4 +1,4 @@
-From 093829b2b7feecaa1fbccfd75e5cc3e2f5cd20a0 Mon Sep 17 00:00:00 2001
+From 19279beea8316ee12d0cb12416f0093cbab7e08d Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 5 Aug 2026 18:06:08 +0200
 Subject: [PATCH] tests/qtest: tmp421: cover device IDs and reset defaults
@@ -15,10 +15,10 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  create mode 100644 tests/qtest/tmp421-test.c
 
 diff --git a/tests/qtest/meson.build b/tests/qtest/meson.build
-index bd0ad1d81d..8319a0ca1d 100644
+index d135f65f55..7207b14b58 100644
 --- a/tests/qtest/meson.build
 +++ b/tests/qtest/meson.build
-@@ -362,6 +362,7 @@ qos_test_ss.add(
+@@ -364,6 +364,7 @@ qos_test_ss.add(
    'sdhci-test.c',
    'spapr-phb-test.c',
    'tmp105-test.c',
@@ -117,5 +117,5 @@ index 0000000000..2307e5f603
 +
 +libqos_init(tmp421_register_nodes);
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

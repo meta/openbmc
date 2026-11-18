@@ -1,4 +1,4 @@
-From 2091d593777f67d0bd4f285cbb609d2b59920bfa Mon Sep 17 00:00:00 2001
+From 3c10c0c5eee0ba2afc082e697b9da4b161973405 Mon Sep 17 00:00:00 2001
 From: Abhijeet Singh <abhijeet.singh@amd.com>
 Date: Sun, 18 Oct 2026 14:38:36 +0000
 Subject: [PATCH] State: SMC: add critical event
@@ -38,5 +38,5 @@ index 64155aa3..28f3fcb4 100644
      - name: SMCRestored
        metadata:
 -- 
-2.43.0
+2.53.1-Meta
 

@@ -1,4 +1,4 @@
-From fc6da5726c0e93364c7533e2d5f55c54c0603799 Mon Sep 17 00:00:00 2001
+From 4ef0364941cf11a6c3e9da610b2a8fcad862cb8f Mon Sep 17 00:00:00 2001
 From: Abhijeet Singh <abhijeet.singh@amd.com>
 Date: Tue, 20 Oct 2026 21:19:33 +0000
 Subject: [PATCH] State: add power supply fault and recovery events
@@ -1060,5 +1060,5 @@ index 00000000..5acb1fe2
 +      redfish-mapping: Power.PowerSupplyGroupNormal
 \ No newline at end of file
 -- 
-2.43.0
+2.53.1-Meta
 

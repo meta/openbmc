@@ -1,4 +1,4 @@
-From da80c65fd96ba642d54d066286360dd796f3496a Mon Sep 17 00:00:00 2001
+From aadb12c3f14770b2234ea9b0caae8ca46895210c Mon Sep 17 00:00:00 2001
 From: Peter Delevoryas <peter@pjd.dev>
 Date: Thu, 5 Jan 2023 01:13:45 -0800
 Subject: [PATCH] net/slirp: Add mfr-id and oob-eth-addr parameters
@@ -14,10 +14,10 @@ Signed-off-by: Peter Delevoryas <peter@pjd.dev>
  2 files changed, 24 insertions(+), 6 deletions(-)
 
 diff --git a/net/slirp.c b/net/slirp.c
-index 451c0fd1ba..75bc2d25e7 100644
+index eea12e7981..a8c3d5d722 100644
 --- a/net/slirp.c
 +++ b/net/slirp.c
-@@ -441,7 +441,8 @@ static int net_slirp_init(NetClientState *peer, const char *model,
+@@ -432,7 +432,8 @@ static int net_slirp_init(NetClientState *peer, const char *model,
                            const char *vnameserver, const char *vnameserver6,
                            const char *smb_export, const char *vsmbserver,
                            const char **dnssearch, const char *vdomainname,
@@ -27,7 +27,7 @@ index 451c0fd1ba..75bc2d25e7 100644
                            Error **errp)
  {
      /* default settings according to historic slirp */
-@@ -464,6 +465,7 @@ static int net_slirp_init(NetClientState *peer, const char *model,
+@@ -455,6 +456,7 @@ static int net_slirp_init(NetClientState *peer, const char *model,
      int shift;
      char *end;
      struct slirp_config_str *config;
@@ -35,7 +35,7 @@ index 451c0fd1ba..75bc2d25e7 100644
  
      if (!ipv4 && (vnetwork || vhost || vnameserver)) {
          error_setg(errp, "IPv4 disabled but netmask/host/dns provided");
-@@ -637,6 +639,12 @@ static int net_slirp_init(NetClientState *peer, const char *model,
+@@ -628,6 +630,12 @@ static int net_slirp_init(NetClientState *peer, const char *model,
          return -1;
      }
  
@@ -48,7 +48,7 @@ index 451c0fd1ba..75bc2d25e7 100644
      nc = qemu_new_net_client(&net_slirp_info, peer, model, name);
  
      qemu_set_info_str(nc, "net=%s,restrict=%s", inet_ntoa(net),
-@@ -644,9 +652,7 @@ static int net_slirp_init(NetClientState *peer, const char *model,
+@@ -635,9 +643,7 @@ static int net_slirp_init(NetClientState *peer, const char *model,
  
      s = DO_UPCAST(SlirpState, nc, nc);
  
@@ -59,7 +59,7 @@ index 451c0fd1ba..75bc2d25e7 100644
      cfg.restricted = restricted;
      cfg.in_enabled = ipv4;
      cfg.vnetwork = net;
-@@ -665,6 +671,10 @@ static int net_slirp_init(NetClientState *peer, const char *model,
+@@ -656,6 +662,10 @@ static int net_slirp_init(NetClientState *peer, const char *model,
      cfg.vnameserver6 = ip6_dns;
      cfg.vdnssearch = dnssearch;
      cfg.vdomainname = vdomainname;
@@ -70,7 +70,7 @@ index 451c0fd1ba..75bc2d25e7 100644
      s->slirp = slirp_new(&cfg, &slirp_cb, s);
      QTAILQ_INSERT_TAIL(&slirp_stacks, s, entry);
  
-@@ -1339,7 +1349,8 @@ int net_init_slirp(const Netdev *netdev, const char *name,
+@@ -1330,7 +1340,8 @@ int net_init_slirp(const Netdev *netdev, const char *name,
                           user->bootfile, user->dhcpstart,
                           user->dns, user->ipv6_dns, user->smb,
                           user->smbserver, dnssearch, user->domainname,
@@ -108,5 +108,5 @@ index f0312dfb71..4277a98af6 100644
  ##
  # @NetdevTapOptions:
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

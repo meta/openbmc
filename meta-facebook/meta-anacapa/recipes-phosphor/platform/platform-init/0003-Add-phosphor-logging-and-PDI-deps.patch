@@ -1,7 +1,7 @@
-From 179d74f27a03025c14e78500a164c7af7b6a42bc Mon Sep 17 00:00:00 2001
+From f15d184cf1ff2cfb4bf50f4db85d57099227a3d3 Mon Sep 17 00:00:00 2001
 From: Oliver Brewka <oliver.brewka@9elements.com>
 Date: Wed, 22 Jul 2026 15:57:48 +0200
-Subject: [PATCH 3/9] Add phosphor-logging and PDI deps
+Subject: [PATCH] Add phosphor-logging and PDI deps
 
 Follow-up patches depend on phosphor-logging and
 phosphor-dbus-interfaces. This patch adds the wrap files and declares
@@ -58,5 +58,5 @@ index 0000000..71eee8b
 +[provide]
 +phosphor-logging = phosphor_logging_dep
 -- 
-2.34.1
+2.53.1-Meta
 

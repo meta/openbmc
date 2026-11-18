@@ -1,4 +1,4 @@
-From d1161245352035a994bb04fd78b8fc13df67a10a Mon Sep 17 00:00:00 2001
+From e9e146dd68ce74a953a528713849ba3ff50d9d2a Mon Sep 17 00:00:00 2001
 From: Potin Lai <potin.lai@quantatw.com>
 Date: Thu, 20 Aug 2026 14:06:06 +0800
 Subject: [PATCH] sanmiguel: dbus-sensors: nvmemi: poll unavailable sensors as
@@ -136,5 +136,5 @@ index 1646f15..148c454 100644
  
      struct nvme_mi_nvm_ss_health_status* healthLog =
 -- 
-2.53.0-Meta
+2.52.1
 

@@ -1,4 +1,4 @@
-From a2d53f7a7165a2855f9571630a5a577aae3a0f56 Mon Sep 17 00:00:00 2001
+From 60473f67cad1383fb150684b17d0c324b90e065a Mon Sep 17 00:00:00 2001
 From: Carl Lee <carl.lee@amd.com>
 Date: Wed, 9 Sep 2026 16:21:31 +0800
 Subject: [PATCH] ARM: dts: aspeed: anacapa: add NCT7363 fan controllers
@@ -17,7 +17,7 @@ Signed-off-by: Carl Lee <carl.lee@amd.com>
  1 file changed, 86 insertions(+)
 
 diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
-index 573acc272..75778659e 100644
+index 6c5acf9cf85e..e5c2371de8a7 100644
 --- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
 +++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
 @@ -516,6 +516,45 @@ adc@1f {
@@ -66,7 +66,7 @@ index 573acc272..75778659e 100644
  			gpio@22 {
  				compatible = "nxp,pca9555";
  				reg = <0x22>;
-@@ -611,6 +650,53 @@ gpio@22 {
+@@ -590,6 +629,53 @@ gpio@22 {
  					"LPDB_PWRGD_P50V_HSC5_SYS_R","";
  			};
  
@@ -121,5 +121,5 @@ index 573acc272..75778659e 100644
  				compatible = "nxp,pca9555";
  				reg = <0x24>;
 -- 
-2.34.1
+2.53.1-Meta
 

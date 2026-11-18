@@ -1,4 +1,4 @@
-From ef7424b76149470390b8c2ee5753d66e7d450f80 Mon Sep 17 00:00:00 2001
+From aa4ffbb89a567bf4494defc8c364479096675b4b Mon Sep 17 00:00:00 2001
 From: Manoj Kumar Prabakaran <manojkumar.prabakaran@arm.com>
 Date: Fri, 7 Aug 2026 18:33:11 +0530
 Subject: [PATCH] dsp: platform: Add tagged numeric sensor decode API
@@ -24,10 +24,10 @@ Signed-off-by: Manoj Kumar Prabakaran <manojkumar.prabakaran@arm.com>
  7 files changed, 335 insertions(+), 85 deletions(-)
 
 diff --git a/CHANGELOG.md b/CHANGELOG.md
-index c74f2fa..9e4a32d 100644
+index ff4c441..b5fc086 100644
 --- a/CHANGELOG.md
 +++ b/CHANGELOG.md
-@@ -50,6 +50,7 @@ Change categories:
+@@ -53,6 +53,7 @@ Change categories:
  ### Added
  
  - fru: New constants for additional bound on GetFRURecordTable payload size
@@ -699,5 +699,5 @@ index 96a010e..3b7339d 100644
      uint8_t sensor_dataSize = PLDM_EFFECTER_DATA_SIZE_UINT8;
  
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

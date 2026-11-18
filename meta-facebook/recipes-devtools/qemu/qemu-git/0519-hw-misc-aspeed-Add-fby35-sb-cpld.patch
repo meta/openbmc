@@ -1,4 +1,4 @@
-From d31686dab880373c3a6a979b25b1c9cb1031e38d Mon Sep 17 00:00:00 2001
+From 523e6addf7d259f878df496edd423772041a8247 Mon Sep 17 00:00:00 2001
 From: Peter Delevoryas <pdel@fb.com>
 Date: Wed, 17 Aug 2022 10:14:07 +0200
 Subject: [PATCH] hw/misc/aspeed: Add fby35-sb-cpld
@@ -33,10 +33,10 @@ Signed-off-by: Peter Delevoryas <peter@pjd.dev>
  create mode 100644 hw/misc/fby35_sb_cpld.c
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 8884e4177e..8fd0452919 100644
+index 15942aaba3..115316c725 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -1302,6 +1302,7 @@ F: tests/*/*aspeed*
+@@ -1303,6 +1303,7 @@ F: tests/*/*aspeed*
  F: tests/*/*ast2700*
  F: pc-bios/ast27x0_bootrom.bin
  F: roms/vbootrom
@@ -188,7 +188,7 @@ index 0000000000..aa1a1e5c47
 +
 +DEFINE_TYPES(types);
 diff --git a/hw/misc/meson.build b/hw/misc/meson.build
-index f0f9f212af..934716ea58 100644
+index 064e15e320..7c685bac60 100644
 --- a/hw/misc/meson.build
 +++ b/hw/misc/meson.build
 @@ -151,7 +151,8 @@ system_ss.add(when: 'CONFIG_ASPEED_SOC', if_true: files(
@@ -214,5 +214,5 @@ index 6c425ce8da..378b01f7b9 100644
 +fby35_sb_cpld_read(uint8_t reg, uint8_t value) "reg 0x%02x value 0x%02x"
 +fby35_sb_cpld_write(uint8_t reg, uint8_t value) "reg 0x%02x value 0x%02x"
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

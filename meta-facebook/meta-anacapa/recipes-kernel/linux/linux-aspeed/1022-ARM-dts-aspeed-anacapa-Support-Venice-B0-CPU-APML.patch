@@ -1,4 +1,4 @@
-From b35a99a39b20de00ed4f336323b62f24b269cc6e Mon Sep 17 00:00:00 2001
+From 0f0392f60c97461d2948c51933bf0e936803c285 Mon Sep 17 00:00:00 2001
 From: Andy Chung <Andy.Chung@amd.com>
 Date: Tue, 7 Jul 2026 10:51:46 +0800
 Subject: [PATCH] ARM: dts: aspeed: anacapa: Support Venice B0 CPU APML
@@ -14,10 +14,10 @@ Signed-off-by: Andy Chung <Andy.Chung@amd.com>
  1 file changed, 1 insertion(+), 12 deletions(-)
 
 diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
-index fe1401a4d219..59bd51e2599c 100644
+index 7704b8b79a78..71d4278063c3 100644
 --- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
 +++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
-@@ -996,18 +996,7 @@ &i2c15 {
+@@ -959,18 +959,7 @@ &i2c15 {
  &i3c0 {
  	status = "okay";
  	i3c-scl-hz = <12500000>;
@@ -38,5 +38,5 @@ index fe1401a4d219..59bd51e2599c 100644
  
  &kcs2 {
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

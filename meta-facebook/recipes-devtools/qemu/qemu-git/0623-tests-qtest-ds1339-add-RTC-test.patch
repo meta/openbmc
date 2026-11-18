@@ -1,4 +1,4 @@
-From 29cd9043e13d74241a3b22a9c8b84740e1504ad3 Mon Sep 17 00:00:00 2001
+From 55c1a2dc2c31a33a90782a83c7146266fa964577 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 3 Sep 2026 17:15:29 +0200
 Subject: [PATCH] tests/qtest: ds1339: add RTC test
@@ -187,10 +187,10 @@ index 0000000000..08fc16acda
 +
 +libqos_init(ds1339_register_nodes);
 diff --git a/tests/qtest/meson.build b/tests/qtest/meson.build
-index b91deb25dd..979043d4d1 100644
+index 0bc05c0a8d..1aac2226fc 100644
 --- a/tests/qtest/meson.build
 +++ b/tests/qtest/meson.build
-@@ -339,6 +339,7 @@ qos_test_ss.add(
+@@ -341,6 +341,7 @@ qos_test_ss.add(
    'adm1272-test.c',
    'adm1266-test.c',
    'ds1338-test.c',
@@ -199,5 +199,5 @@ index b91deb25dd..979043d4d1 100644
    'eepro100-test.c',
    'es1370-test.c',
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

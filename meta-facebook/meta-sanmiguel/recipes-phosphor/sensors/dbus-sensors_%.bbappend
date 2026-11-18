@@ -9,12 +9,11 @@ SRC_URI:append = " \
     file://1006-nvidia-gpu-add-SMA-leak-detector-associations.patch \
     file://1007-nvidia-gpu-support-PATCH-for-leak-thresholds.patch \
     file://1008-nvidia-gpu-fix-first-set-threshold-drift-in-SMA-leak.patch \
-    file://1009-nvidia-gpu-recover-from-MCTP-endpoint-removal.patch \
-    file://1010-sanmiguel-dbus-sensors-nvmemi-poll-unavailable-senso.patch \
-    file://1011-sanmiguel-dbus-sensors-nvmemi-fix-sensor-creation-ev.patch \
-    file://1012-sanmiguel-dbus-sensors-nvmemi-fix-context-handling-d.patch \
-    file://1013-sanmiguel-dbus-sensors-nvmemi-classify-sensors-by-co.patch \
-    file://1014-sanmiguel-dbus-sensors-nvmemi-handle-NSS-Drive-Funct.patch \
+    file://1009-sanmiguel-dbus-sensors-nvmemi-poll-unavailable-senso.patch \
+    file://1010-sanmiguel-dbus-sensors-nvmemi-fix-sensor-creation-ev.patch \
+    file://1011-sanmiguel-dbus-sensors-nvmemi-fix-context-handling-d.patch \
+    file://1012-sanmiguel-dbus-sensors-nvmemi-classify-sensors-by-co.patch \
+    file://1013-sanmiguel-dbus-sensors-nvmemi-handle-NSS-Drive-Funct.patch \
 "
 
 DEPENDS += " libnvme"

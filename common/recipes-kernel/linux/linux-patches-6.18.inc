@@ -71,9 +71,9 @@ SRC_URI:append = " \
     file://0236-dt-bindings-iio-adc-ti-ads112c04-Add-binding-for-ADS.patch \
     file://0237-iio-adc-ti-ads112c04-Add-support-for-TI-ADS112C04.patch \
     file://0238-ipmi-ssif_bmc-Prevent-pending-response-from-being-lo.patch \
-    file://0241-ipmi-ssif_bmc-add-GPIO-based-alert-mechanism.patch \
-    file://0242-bindings-ipmi-ssif-bmc-Add-property-to-adjust-respon.patch \
-    file://0243-ipmi-ssif_bmc-Add-support-for-adjustable-response-ti.patch \
+    file://0239-ipmi-ssif_bmc-add-GPIO-based-alert-mechanism.patch \
+    file://0240-bindings-ipmi-ssif-bmc-Add-property-to-adjust-respon.patch \
+    file://0241-ipmi-ssif_bmc-Add-support-for-adjustable-response-ti.patch \
 "
 
 #

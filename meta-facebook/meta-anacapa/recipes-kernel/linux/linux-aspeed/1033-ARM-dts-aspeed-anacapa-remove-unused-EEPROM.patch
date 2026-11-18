@@ -1,4 +1,4 @@
-From 305acadf3b4b91ee6fd1a97c9f4befda8ee9cc04 Mon Sep 17 00:00:00 2001
+From 54f4ceef2d4c82783e85fabc2a433ac49a13d7f4 Mon Sep 17 00:00:00 2001
 From: Carl Lee <carl.lee@amd.com>
 Date: Wed, 11 Nov 2026 10:46:21 +0800
 Subject: [PATCH] ARM: dts: aspeed: anacapa: remove unused EEPROM
@@ -15,10 +15,10 @@ Signed-off-by: Carl Lee <carl.lee@amd.com>
  1 file changed, 6 deletions(-)
 
 diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
-index 6dbf0624b..0a8758bf8 100644
+index 724aa1d2d1d3..a3ffeeb49129 100644
 --- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
 +++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
-@@ -1069,12 +1069,6 @@ i2c13mux0ch4: i2c@4 {
+@@ -1032,12 +1032,6 @@ i2c13mux0ch4: i2c@4 {
  			reg = <4>;
  			#address-cells = <1>;
  			#size-cells = <0>;
@@ -32,5 +32,5 @@ index 6dbf0624b..0a8758bf8 100644
  		i2c13mux0ch5: i2c@5 {
  			reg = <5>;
 -- 
-2.34.1
+2.53.1-Meta
 

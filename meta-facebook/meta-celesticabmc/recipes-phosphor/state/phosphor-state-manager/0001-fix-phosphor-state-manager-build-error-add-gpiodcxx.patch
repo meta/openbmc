@@ -1,15 +1,15 @@
-From 885d761e81bcee0ddb6fffa10c0716b7df6107d9 Mon Sep 17 00:00:00 2001
+From 18b392b6a26ffb87ada42d33097c388bd0da883f Mon Sep 17 00:00:00 2001
 From: Henry Wu <frankwu@celestica.com>
 Date: Sun, 20 Sep 2026 13:25:19 +0800
-Subject: [PATCH] fix phosphor-state-manager build error-add gpiodcxx
+Subject: [PATCH 1/1] fix phosphor-state-manager build error-add gpiodcxx
 
 ---
  meson.build |  3 ++-
- utils.cpp   | 40 +++++++++++++++++++++++++++++-----------
- 2 files changed, 31 insertions(+), 12 deletions(-)
+ utils.cpp   | 41 +++++++++++++++++++++++++++--------------
+ 2 files changed, 29 insertions(+), 15 deletions(-)
 
 diff --git a/meson.build b/meson.build
-index bbc0131..0c806c1 100644
+index a0378f4..3bc8745 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -103,6 +103,7 @@ sdbusplus = dependency('sdbusplus')
@@ -30,7 +30,7 @@ index bbc0131..0c806c1 100644
  
  sub_device_lib = static_library(
 diff --git a/utils.cpp b/utils.cpp
-index f91c8a0..ab748af 100644
+index 571d99c..7b8ca58 100644
 --- a/utils.cpp
 +++ b/utils.cpp
 @@ -2,7 +2,7 @@
@@ -42,7 +42,7 @@ index f91c8a0..ab748af 100644
  
  #include <phosphor-logging/lg2.hpp>
  #include <xyz/openbmc_project/Dump/Create/client.hpp>
-@@ -152,24 +152,42 @@ void setProperty(sdbusplus::bus_t& bus, const std::string& path,
+@@ -150,29 +150,42 @@ void setProperty(sdbusplus::bus_t& bus, const std::string& path,
  int getGpioValue(const std::string& gpioName)
  {
      int gpioval = -1;
@@ -66,17 +66,18 @@ index f91c8a0..ab748af 100644
 -            gpioval = gpiod_line_get_value(line);
 +            ::gpiod::chip chip(entry.path());
 +            int offset = chip.get_line_offset_from_name(gpioName);
-+
+ 
+-            if (gpioval < 0)
 +            if (offset >= 0)
-+            {
+             {
+-                error("Failed to read {GPIO_NAME} GPIO: {ERRNO}", "GPIO_NAME",
+-                      gpioName, "ERRNO", errno);
 +                auto settings = ::gpiod::line_settings()
 +                                    .set_direction(::gpiod::line::direction::INPUT);
 +
 +                auto line_cfg = ::gpiod::line_config();
 +                line_cfg.add_line_settings(offset, settings);
- 
--            // release ownership of gpio
--            gpiod_line_close_chip(line);
++
 +                auto request = chip.prepare_request()
 +                                   .set_consumer("state-manager")
 +                                   .set_line_config(line_cfg)
@@ -84,17 +85,19 @@ index f91c8a0..ab748af 100644
 +
 +                auto val = request.get_value(offset);
 +                return (val == ::gpiod::line::value::ACTIVE) ? 1 : 0;
-+            }
-+        }
+             }
+         }
+-        // release ownership of gpio and close the chip
+-        gpiod_line_close_chip(line);
 +        catch (...)
 +        {
 +            continue;
-         }
++        }
      }
 +    error("Failed request for {GPIO_NAME} GPIO", "GPIO_NAME", gpioName);
      return gpioval;
  }
  
 -- 
-2.43.0
+2.53.1-Meta
 

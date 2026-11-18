@@ -1,4 +1,4 @@
-From 1d88648b92de74ecd2a8327d2631cca8b445d966 Mon Sep 17 00:00:00 2001
+From 23eb5eb83c310bb8343705d8ecb664034d6c9d4f Mon Sep 17 00:00:00 2001
 From: Igor Kanyuka <ifelmail@gmail.com>
 Date: Mon, 24 Feb 2025 12:50:55 +0000
 Subject: [PATCH] Add generation for Vendor registries and a DBus to RF map
@@ -30,7 +30,7 @@ Signed-off-by: Igor Kanyuka <ifelmail@gmail.com>
  1 file changed, 349 insertions(+), 72 deletions(-)
 
 diff --git a/scripts/parse_registries.py b/scripts/parse_registries.py
-index 320c4297..8273a184 100755
+index d6cc261c..49a1a139 100755
 --- a/scripts/parse_registries.py
 +++ b/scripts/parse_registries.py
 @@ -4,6 +4,7 @@ import json
@@ -417,7 +417,7 @@ index 320c4297..8273a184 100755
          ]
      )
  
-@@ -718,63 +979,79 @@ def main() -> None:
+@@ -721,63 +982,79 @@ def main() -> None:
          default=",".join(default_registries),
          help="Comma delimited list of registries to update",
      )
@@ -549,5 +549,5 @@ index 320c4297..8273a184 100755
  
  if __name__ == "__main__":
 -- 
-2.52.0
+2.53.1-Meta
 

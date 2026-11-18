@@ -1,4 +1,4 @@
-From 483308b82612f9a0be66735df9803664767baff6 Mon Sep 17 00:00:00 2001
+From 6a9f9163079ebd7fb6523fdf9ed80fc1b810e4fe Mon Sep 17 00:00:00 2001
 From: Rex Fu <Rex.Fu@amd.com>
 Date: Wed, 23 Sep 2026 16:39:45 +0800
 Subject: [PATCH] arm: dts: anacapa: Align Cable and SSD SGPIO pin names
@@ -21,10 +21,10 @@ Signed-off-by: Rex Fu <Rex.Fu@amd.com>
  1 file changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
-index 9ebd0bddd..601600cad 100644
+index e5c2371de8a7..f76360a16e70 100644
 --- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
 +++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
-@@ -1196,9 +1196,9 @@ &sgpiom0 {
+@@ -1159,9 +1159,9 @@ &sgpiom0 {
  	"L_PRSNT_EDSFF1_N", "",
  	"R_PRSNT_EDSFF2_N", "",
  	"R_PRSNT_EDSFF3_N", "",
@@ -36,7 +36,7 @@ index 9ebd0bddd..601600cad 100644
  	"PRSNT_NFC_BOARD_R", "",
  
  	/* H0-H7 line 112-127 */
-@@ -1208,8 +1208,8 @@ &sgpiom0 {
+@@ -1171,8 +1171,8 @@ &sgpiom0 {
  	"R_BNIC2_FLT", "",
  	"R_BNIC3_FLT", "",
  	"R_RTM_SW_FLT", "",
@@ -47,7 +47,7 @@ index 9ebd0bddd..601600cad 100644
  
  	/* I0-I7 line 128-143 */
  	"EAM0_BRD_PRSNT_R_L", "",
-@@ -1242,10 +1242,10 @@ &sgpiom0 {
+@@ -1205,10 +1205,10 @@ &sgpiom0 {
  	"PDB_ALERT_R_N", "",
  
  	/* L0-L7 line 176-191 */
@@ -63,5 +63,5 @@ index 9ebd0bddd..601600cad 100644
  	"CPU0_CORETYPE1", "",
  	"CPU0_CORETYPE2", "",
 -- 
-2.34.1
+2.53.1-Meta
 

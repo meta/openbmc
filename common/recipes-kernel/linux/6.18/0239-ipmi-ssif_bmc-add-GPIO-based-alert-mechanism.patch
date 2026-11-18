@@ -1,4 +1,4 @@
-From cc063e01194c171e3542246c846e4f34204a741d Mon Sep 17 00:00:00 2001
+From 1188b72462e5cdbd910ac7eb7875bf3b379baa40 Mon Sep 17 00:00:00 2001
 From: Cosmo Chou <chou.cosmo@gmail.com>
 Date: Wed, 2 Oct 2024 12:10:32 +0800
 Subject: [PATCH] ipmi: ssif_bmc: add GPIO-based alert mechanism

@@ -1,4 +1,4 @@
-From 535076817896a9afb56bb33daf6425714fa4ba65 Mon Sep 17 00:00:00 2001
+From 16f5daa100b181af58cae4b423cba8bcc4bc3d6b Mon Sep 17 00:00:00 2001
 From: Potin Lai <potin.lai@quantatw.com>
 Date: Wed, 1 Jul 2026 13:47:12 +0800
 Subject: [PATCH] nvidia-gpu: add option to disable PCIe device support
@@ -14,6 +14,9 @@ duplicate monitoring.
 Add a Meson build option to allow platforms to disable PCIe device
 support in the nvidia-gpu service.
 
+Guard the PCIe configuration helper as well, since it has no callers when
+PCIe support is disabled and otherwise fails to build with -Werror.
+
 [1] https://gerrit.openbmc.org/c/openbmc/dbus-sensors/+/91900/3
 
 Change-Id: I247f347776a4f41d8d4b8a5230e3d1191b2dfa82
@@ -21,8 +24,8 @@ Signed-off-by: Potin Lai <potin.lai@quantatw.com>
 ---
  meson.build                      | 4 ++++
  meson.options                    | 6 ++++++
- src/nvidia-gpu/DeviceManager.cpp | 7 ++++++-
- 3 files changed, 16 insertions(+), 1 deletion(-)
+ src/nvidia-gpu/DeviceManager.cpp | 9 ++++++++-
+ 3 files changed, 18 insertions(+), 1 deletion(-)
 
 diff --git a/meson.build b/meson.build
 index b40be7d..6494292 100644
@@ -56,10 +59,22 @@ index 0718209..6dfb444 100644
      'external',
      type: 'feature',
 diff --git a/src/nvidia-gpu/DeviceManager.cpp b/src/nvidia-gpu/DeviceManager.cpp
-index e1bc1eb..873493c 100644
+index 734beaf..dc94872 100644
 --- a/src/nvidia-gpu/DeviceManager.cpp
 +++ b/src/nvidia-gpu/DeviceManager.cpp
-@@ -168,6 +168,7 @@ void DeviceManager::processQueryDeviceIdResponse(
+@@ -92,3 +92,4 @@ static NvidiaMctpVdmConfig readNvidiaMctpVdmConfig(const MctpVdmRecord& record)
++#ifndef NVIDIA_GPU_DISABLE_PCIE
+ // Only a ConnectX device has network ports, so the record is only asked for
+ // a count of them once the device has turned out to be one.
+ static PcieDeviceConfigs readPcieDeviceConfigs(const MctpVdmRecord& record)
+@@ -109,5 +110,6 @@ static PcieDeviceConfigs readPcieDeviceConfigs(const MctpVdmRecord& record)
+     return pcieConfig;
+ }
++#endif
+
+ void DeviceManager::processQueryDeviceIdResponse(
+     const MctpVdmRecord& record, const sdbusplus::object_path& mctpObjectPath,
+@@ -215,6 +217,7 @@ void DeviceManager::processQueryDeviceIdResponse(
  
          case gpu::DeviceIdentification::DEVICE_PCIE:
          {
@@ -67,7 +82,7 @@ index e1bc1eb..873493c 100644
              lg2::info(
                  "Found the PCIe Device with EID {EID}, DeviceType {DEVTYPE}, InstanceId {IID}.",
                  "EID", eid, "DEVTYPE", responseDeviceType, "IID",
-@@ -191,7 +192,11 @@ void DeviceManager::processQueryDeviceIdResponse(
+@@ -238,7 +241,11 @@ void DeviceManager::processQueryDeviceIdResponse(
                      "PCIe Device with name {NAME} already exists. Skipping creating a new device.",
                      "NAME", pcieName);
              }
@@ -81,5 +96,5 @@ index e1bc1eb..873493c 100644
          }
  
 -- 
-2.52.0
+2.52.1
 

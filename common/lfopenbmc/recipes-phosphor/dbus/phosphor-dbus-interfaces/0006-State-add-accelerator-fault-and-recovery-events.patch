@@ -1,4 +1,4 @@
-From 7d0e1b5e1b9f0698b9e1c9c30f19e4ef66ee666e Mon Sep 17 00:00:00 2001
+From 9042854c23b838e1721d98b3b7f8d669ce070398 Mon Sep 17 00:00:00 2001
 From: Jayanth Othayoth <ojayanth@gmail.com>
 Date: Tue, 11 Aug 2026 23:29:05 -0500
 Subject: [PATCH] State: add accelerator fault and recovery events
@@ -194,5 +194,5 @@ index 00000000..82f1581b
 +          description: The accelerator status has been restored.
 +          message: The accelerator '{Source}' has been restored.
 -- 
-2.43.0
+2.53.1-Meta
 

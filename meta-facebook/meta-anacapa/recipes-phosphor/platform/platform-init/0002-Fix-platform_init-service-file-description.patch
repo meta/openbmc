@@ -1,7 +1,7 @@
-From 278741d9ec711224b905293104e49fa14614db54 Mon Sep 17 00:00:00 2001
+From 792b33ed2dbdc03201e42ddf264c75b09854cd17 Mon Sep 17 00:00:00 2001
 From: Oliver Brewka <oliver.brewka@9elements.com>
 Date: Sun, 14 Jun 2026 16:23:42 +0200
-Subject: [PATCH 2/9] Fix platform_init service file description
+Subject: [PATCH] Fix platform_init service file description
 
 The description is wrong and logs do not form properly. Fix the unit
 description as per systemd docs [1].
@@ -39,5 +39,5 @@ index 5c6d77f..d5bae53 100644
  
  [Service]
 -- 
-2.34.1
+2.53.1-Meta
 

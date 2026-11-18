@@ -1,4 +1,4 @@
-From 7a0ac5be95c2e07d94316700c09450ca993e0c6c Mon Sep 17 00:00:00 2001
+From dfb9da075c802707ae3f2a20b82f0cb5c7dc9be7 Mon Sep 17 00:00:00 2001
 From: Eric Liu <liuer@nvidia.com>
 Date: Mon, 14 Sep 2026 16:29:32 +0900
 Subject: [PATCH] nvidia-gpu: support PATCH for leak thresholds
@@ -604,7 +604,7 @@ index 0ef5fb9..317b7f2 100644
              break;
          }
 diff --git a/src/nvidia-gpu/NvidiaSmaLeakSensor.hpp b/src/nvidia-gpu/NvidiaSmaLeakSensor.hpp
-index 4bc9cd9..f8bd232 100644
+index 73b7606..b96e485 100644
 --- a/src/nvidia-gpu/NvidiaSmaLeakSensor.hpp
 +++ b/src/nvidia-gpu/NvidiaSmaLeakSensor.hpp
 @@ -10,6 +10,7 @@
@@ -623,7 +623,7 @@ index 4bc9cd9..f8bd232 100644
  #include <string>
  #include <vector>
  
-@@ -51,6 +53,16 @@ struct NvidiaSmaLeakSensor :
+@@ -58,6 +60,16 @@ struct NvidiaSmaLeakSensor :
          const sdbusplus::object_path& monitoredPath,
          const std::string& detectorName);
  
@@ -640,7 +640,7 @@ index 4bc9cd9..f8bd232 100644
      uint8_t eid{};
  
      uint8_t sensorId{};
-@@ -63,6 +75,36 @@ struct NvidiaSmaLeakSensor :
+@@ -70,6 +82,36 @@ struct NvidiaSmaLeakSensor :
  
      std::array<uint8_t, gpu::getLeakDetectionInfoRequestSize> request{};
  
@@ -1285,5 +1285,5 @@ index 11a0959..66e1ee2 100644
      // by tests that wait on a timer inside the object under test.
      static bool pumpIoUntil(const std::function<bool()>& done,
 -- 
-2.53.0-Meta
+2.52.1
 

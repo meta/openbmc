@@ -1,7 +1,7 @@
-From 68f71e50524f3e7e2fbddb75f1849c8f9418c6e8 Mon Sep 17 00:00:00 2001
+From 4924605160f6a735b0cefaed48ebe3afe341ae4d Mon Sep 17 00:00:00 2001
 From: Carl Lee <carl.lee@amd.com>
 Date: Wed, 23 Sep 2026 14:41:53 +0800
-Subject: [PATCH 9/9] meta: add Anacapa init support
+Subject: [PATCH] meta: add Anacapa init support
 
 Description:
 Add Meta Anacapa platform source to the Meson build and register
@@ -122,5 +122,5 @@ index 1aadd3c..33591df 100644
  
  } // namespace meta
 -- 
-2.34.1
+2.53.1-Meta
 

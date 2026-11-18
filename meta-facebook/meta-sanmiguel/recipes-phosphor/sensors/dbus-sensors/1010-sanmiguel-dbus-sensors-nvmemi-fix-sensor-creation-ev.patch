@@ -1,4 +1,4 @@
-From 094ff1fbbb49897b352c7633215bca6b7d5eef8e Mon Sep 17 00:00:00 2001
+From deaa10b864cbadb8cc09609f431cb667350fca09 Mon Sep 17 00:00:00 2001
 From: Mik Lin <mik.lin@quantatw.com>
 Date: Thu, 15 Oct 2026 15:23:59 +0800
 Subject: [PATCH] sanmiguel: dbus-sensors: nvmemi: fix sensor creation event
@@ -169,5 +169,5 @@ index 8fb62dd..6908157 100644
                      }
  
 -- 
-2.53.0-Meta
+2.52.1
 

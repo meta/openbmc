@@ -1,7 +1,7 @@
-From 004dc4212368dd6123bb6b1e1b5351ea72926078 Mon Sep 17 00:00:00 2001
+From d1ff54f6328d7df9aa2b53c5254457c36e0bedbe Mon Sep 17 00:00:00 2001
 From: Oliver Brewka <oliver.brewka@9elements.com>
 Date: Mon, 16 Mar 2026 06:22:02 +0100
-Subject: [PATCH 5/9] cmos-reset: Add cmos reset service
+Subject: [PATCH] cmos-reset: Add cmos reset service
 
 In order to support a cmos reset / clear, add a dbus service that
 exposes the Reset method from xyz.openbmc_project.Common.FactoryReset.
@@ -389,5 +389,5 @@ index 35d2840..1aadd3c 100644
  
  } // namespace meta
 -- 
-2.34.1
+2.53.1-Meta
 

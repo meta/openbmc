@@ -1,4 +1,4 @@
-From 9ec3637c1ec9ac4ed91aed5eeccf0b45fa868b5d Mon Sep 17 00:00:00 2001
+From 87b956d7efe15896e93e9252fe9726814c12ba87 Mon Sep 17 00:00:00 2001
 From: Potin Lai <potin.lai@quantatw.com>
 Date: Wed, 30 Sep 2026 20:03:35 +0800
 Subject: [PATCH] fru-device: fix redundant rescans on dbus property changes
@@ -61,5 +61,5 @@ index d8e4b4c..dfbf6b3 100644
  
      sdbusplus::match powerMatch = sdbusplus::match(
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

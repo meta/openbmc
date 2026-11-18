@@ -1,4 +1,4 @@
-From 4994520ad0d64c974e97a1dada04b80b465606a1 Mon Sep 17 00:00:00 2001
+From f8cce87b74a7303826d353b7460df9b4b6225a0c Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Tue, 1 Sep 2026 12:00:00 +0200
 Subject: [PATCH] slirp: pin the guest address with a static DHCP lease
@@ -53,7 +53,7 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  2 files changed, 51 insertions(+), 2 deletions(-)
 
 diff --git a/net/slirp.c b/net/slirp.c
-index 75bc2d25e7..422487c898 100644
+index a8c3d5d722..f3787ab920 100644
 --- a/net/slirp.c
 +++ b/net/slirp.c
 @@ -107,6 +107,7 @@ static QTAILQ_HEAD(, SlirpState) slirp_stacks =
@@ -64,7 +64,7 @@ index 75bc2d25e7..422487c898 100644
  
  #if defined(CONFIG_SMBD_COMMAND)
  static int slirp_smb(SlirpState *s, const char *exported_dir,
-@@ -443,6 +444,7 @@ static int net_slirp_init(NetClientState *peer, const char *model,
+@@ -434,6 +435,7 @@ static int net_slirp_init(NetClientState *peer, const char *model,
                            const char **dnssearch, const char *vdomainname,
                            const char *tftp_server_name, uint32_t mfr_id,
                            const char *oob_eth_addr_str,
@@ -72,7 +72,7 @@ index 75bc2d25e7..422487c898 100644
                            Error **errp)
  {
      /* default settings according to historic slirp */
-@@ -465,6 +467,7 @@ static int net_slirp_init(NetClientState *peer, const char *model,
+@@ -456,6 +458,7 @@ static int net_slirp_init(NetClientState *peer, const char *model,
      int shift;
      char *end;
      struct slirp_config_str *config;
@@ -80,7 +80,7 @@ index 75bc2d25e7..422487c898 100644
      MACAddr oob_eth_addr = {};
  
      if (!ipv4 && (vnetwork || vhost || vnameserver)) {
-@@ -693,6 +696,12 @@ static int net_slirp_init(NetClientState *peer, const char *model,
+@@ -684,6 +687,12 @@ static int net_slirp_init(NetClientState *peer, const char *model,
      s->poll_notifier.notify = net_slirp_poll_notify;
      main_loop_poll_add_notifier(&s->poll_notifier);
  
@@ -93,7 +93,7 @@ index 75bc2d25e7..422487c898 100644
      for (config = slirp_configs; config; config = config->next) {
          if (config->flags & SLIRP_CFG_HOSTFWD) {
              if (slirp_hostfwd(s, config->str, errp) < 0) {
-@@ -814,6 +823,43 @@ void hmp_hostfwd_remove(MonitorHMP *hmp, const QDict *qdict)
+@@ -805,6 +814,43 @@ void hmp_hostfwd_remove(MonitorHMP *hmp, const QDict *qdict)
  }
  #endif
  
@@ -137,7 +137,7 @@ index 75bc2d25e7..422487c898 100644
  static int slirp_hostfwd(SlirpState *s, const char *redir_str, Error **errp)
  {
      union {
-@@ -1350,7 +1396,7 @@ int net_init_slirp(const Netdev *netdev, const char *name,
+@@ -1341,7 +1387,7 @@ int net_init_slirp(const Netdev *netdev, const char *name,
                           user->dns, user->ipv6_dns, user->smb,
                           user->smbserver, dnssearch, user->domainname,
                           user->tftp_server_name, user->mfr_id,
@@ -170,5 +170,5 @@ index 4277a98af6..e27bef3633 100644
  ##
  # @NetdevTapOptions:
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

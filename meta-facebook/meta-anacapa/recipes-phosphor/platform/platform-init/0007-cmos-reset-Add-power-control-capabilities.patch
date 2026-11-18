@@ -1,7 +1,7 @@
-From c913950f444a87fd2852f2c2a7eda974b350f6f5 Mon Sep 17 00:00:00 2001
+From e1b5a959d65b56c4748b80c98251ad43d7a1a17a Mon Sep 17 00:00:00 2001
 From: Oliver Brewka <oliver.brewka@9elements.com>
 Date: Tue, 17 Mar 2026 16:43:46 +0100
-Subject: [PATCH 7/9] cmos-reset: Add power control capabilities
+Subject: [PATCH] cmos-reset: Add power control capabilities
 
 Ideally the host is powered off before any reset.
 Add functionality, to check if the host is running and to do state
@@ -277,5 +277,5 @@ index 9004923..fc45248 100644
 +    description: 'Timeout for host state transition.',
 +)
 -- 
-2.34.1
+2.53.1-Meta
 

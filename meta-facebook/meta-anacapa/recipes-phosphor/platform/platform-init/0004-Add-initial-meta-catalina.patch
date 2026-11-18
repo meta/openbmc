@@ -1,7 +1,7 @@
-From c06f0ed640924a5a4f84c333f1200c93a9fab547 Mon Sep 17 00:00:00 2001
+From cf33e2f30f062b39f5448208239187bb190fcef5 Mon Sep 17 00:00:00 2001
 From: Oliver Brewka <oliver.brewka@9elements.com>
 Date: Sat, 7 Feb 2026 01:13:56 +0100
-Subject: [PATCH 4/9] Add initial meta catalina
+Subject: [PATCH] Add initial meta catalina
 
 Add the minimum requirement for meta catalina platform init
 
@@ -126,5 +126,5 @@ index 0000000..35d2840
 +
 +} // namespace meta
 -- 
-2.34.1
+2.53.1-Meta
 

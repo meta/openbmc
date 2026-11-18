@@ -1,4 +1,4 @@
-From 0c0b0026ef8a6ae2c19c2b19f6abae90cdac91cf Mon Sep 17 00:00:00 2001
+From 2db13eb6613a11b5d302a50d63e26088e8ea3f52 Mon Sep 17 00:00:00 2001
 From: Colin Huang <u8813345@gmail.com>
 Date: Mon, 11 May 2026 17:35:58 +0800
 Subject: [PATCH] ARM: dts: aspeed: anacapa: add JTAG CPLD TRST pin to SGPIO
@@ -18,10 +18,10 @@ Signed-off-by: Colin Huang <u8813345@gmail.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
-index 8b6a51e690dd..fe1401a4d219 100644
+index 12d74fd429a2..7704b8b79a78 100644
 --- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
 +++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-anacapa-evt2.dts
-@@ -1073,7 +1073,7 @@ &sgpiom0 {
+@@ -1036,7 +1036,7 @@ &sgpiom0 {
  	"LEAK_DETECT_RMC_N", "RTM_MUX_R",
  	"HDR_P0_NMI_BTN_BUF_R_N", "FPGA_JTAG_SCM_DBREQ_N",
  	"Channel6_leakage_present", "whdt_sel",
@@ -31,5 +31,5 @@ index 8b6a51e690dd..fe1401a4d219 100644
  	"", "",
  	"", "",
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

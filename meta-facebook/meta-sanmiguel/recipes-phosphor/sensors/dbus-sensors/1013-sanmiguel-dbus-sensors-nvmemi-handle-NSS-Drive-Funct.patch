@@ -1,4 +1,4 @@
-From dc2a814c18d454dc7c199b5125a2205b64a49c3f Mon Sep 17 00:00:00 2001
+From da2d382673a3334aab8574d7efb118d7ed3e827d Mon Sep 17 00:00:00 2001
 From: Mik Lin <mik.lin@quantatw.com>
 Date: Wed, 28 Oct 2026 19:05:36 +0800
 Subject: [PATCH] sanmiguel: dbus-sensors: nvmemi: handle NSS Drive Functional
@@ -115,5 +115,5 @@ index ab6a979..827fd28 100644
      uint8_t pollRate{1}; // Default poll rate of 1 second
  
 -- 
-2.53.0-Meta
+2.52.1
 

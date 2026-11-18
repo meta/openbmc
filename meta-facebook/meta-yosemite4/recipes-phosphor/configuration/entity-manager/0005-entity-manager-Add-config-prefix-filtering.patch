@@ -1,4 +1,4 @@
-From aa82d3b27282e09ebd77787746b4f2953b9891e2 Mon Sep 17 00:00:00 2001
+From 26db650d103901556cf56e5022f2ad1785166720 Mon Sep 17 00:00:00 2001
 From: Eric Yang <eric.yang.wiwynn@gmail.com>
 Date: Tue, 11 Mar 2025 13:47:42 +0800
 Subject: [PATCH] entity-manager: Add config-prefix filtering
@@ -49,10 +49,10 @@ index 8cdd903..efbf48c 100644
 +    description: 'Comma-separated list of JSON filename prefixes to filter. Default loads all JSON files.',
 +)
 diff --git a/src/entity_manager/configuration.cpp b/src/entity_manager/configuration.cpp
-index 8db933f..3461079 100644
+index 8180c97..2aa4bda 100644
 --- a/src/entity_manager/configuration.cpp
 +++ b/src/entity_manager/configuration.cpp
-@@ -73,10 +73,15 @@ void Configuration::loadSingleConfigFile(const std::filesystem::path& jsonPath,
+@@ -88,10 +88,15 @@ void Configuration::loadSingleConfigFile(const std::filesystem::path& jsonPath,
  void Configuration::loadConfigurations()
  {
      const auto start = std::chrono::steady_clock::now();
@@ -203,5 +203,5 @@ index a744773..58835d2 100644
  bool getI2cDevicePaths(const std::filesystem::path& dirPath,
                         std::flat_map<size_t, std::filesystem::path>& busPaths);
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

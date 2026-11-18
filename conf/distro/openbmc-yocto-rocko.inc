@@ -1,5 +1,8 @@
 require conf/distro/openbmc-pin-rocko.inc
 
+# Keep the modern flashrom append out of legacy builds.
+BBMASK_append = " common/recipes-utils/flashrom/flashrom_%\.bbappend$"
+
 # Prior to Honister, the licenses like GPL-2.0-only didn't exist and only
 # the non-timed versions did, but these non-timed versions are now deprecated
 # in Kirkstone.  We need our recipes to have the timed versions so that they

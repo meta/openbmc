@@ -17,7 +17,8 @@
 # Boston, MA 02110-1301 USA
 #
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/1.5.1:"
+# Track the upstream recipe version; legacy releases mask this append.
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI += "file://0001-disable-wp-func-in-linux_mtd-to-avoid-warn-msg.patch"
 

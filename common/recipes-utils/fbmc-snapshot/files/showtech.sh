@@ -26,7 +26,7 @@ COLLECTOR_TIMEOUT=180
 failed_collectors=0
 
 run_collector() {
-    if timeout -k 5 "$COLLECTOR_TIMEOUT" "$@"; then
+    if timeout.coreutils -k 5 "$COLLECTOR_TIMEOUT" "$@"; then
         return 0
     fi
     echo "ERROR: $* failed or timed out. Continuing..." >&2

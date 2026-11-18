@@ -83,5 +83,6 @@ do_install() {
     done
 }
 
-RDEPENDS:${PN} += "bash"
+# showtech uses GNU timeout's kill-after option to bound collector execution.
+RDEPENDS:${PN} += "bash coreutils-timeout"
 FILES:${PN} = "/usr/local/bin /etc/showtech/rules/"

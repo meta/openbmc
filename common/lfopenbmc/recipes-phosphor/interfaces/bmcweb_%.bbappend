@@ -1,7 +1,7 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 
 SRC_URI:append = " \
-    file://0100-Set-request-timeout-to-40s-on-bmcweb-http-http_conne.patch \
+    file://0100-Set-request-timeout-to-120s-on-bmcweb-http-http_conne.patch \
     file://0101-Up-the-max-connections-from-200-to-1000.patch \
     file://0102-parsing-add-parseTrustedStringAsJson-for-internal-pa.patch \
     file://0103-Add-option-to-disable-password-authentication.patch \
@@ -84,3 +84,13 @@ SRC_URI:append = " \
 SRC_URI:append = " \
     file://0450-Fix-dynamic-storageId-for-controller-routes.patch \
 "
+
+# bmcweb's D-Bus method calls default to sd-bus's 25 s timeout. On a busy BMC
+# the object mapper and sensor daemons can take longer than that to answer the
+# hundreds of calls behind a deep Redfish $expand, and bmcweb returns 500.
+SRC_URI:append = " file://bmcweb-dbus-timeout.conf"
+FILES:${PN} += "${systemd_system_unitdir}/bmcweb.service.d"
+do_install:append() {
+    install -d ${D}${systemd_system_unitdir}/bmcweb.service.d
+    install -m 0644 ${UNPACKDIR}/bmcweb-dbus-timeout.conf ${D}${systemd_system_unitdir}/bmcweb.service.d/
+}

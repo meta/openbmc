@@ -233,9 +233,9 @@ class BaseDimmUtilTest(object):
         out = run_cmd(cmd)
         pattern = (
             r"^DIMM "
-            + self.dimm_info["dimm_label"]
-            + r" Serial|Part Number \(cached\): "
-            + r"[A-Z0-9]+|[A-Z0-9]+-[A-Z]{2}"
+            + re.escape(self.dimm_info["dimm_label"])
+            + r" (Serial|Part) Number\s+\(cached\): "
+            + r"(NO DIMM|[0-9A-Z]+(-[0-9A-Z]+)*)$"
         )
         if out:
             for output in [line for line in out.split("\n") if len(line) > 0]:

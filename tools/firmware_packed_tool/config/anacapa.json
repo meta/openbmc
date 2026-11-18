@@ -1,0 +1,7 @@
+{
+    "anacapa-bios" : "com.meta.Hardware.Anacapa.SPI.Host",
+    "anacapa-scm-cpld" : "com.meta.Hardware.Anacapa.CPLD.LCMXO3D_9400_scm",
+    "anacapa-mb-cpld" : "com.meta.Hardware.Anacapa.CPLD.LFMXO5_15D_mb",
+    "anacapa-t16-bb-cpld" : "com.meta.Hardware.Anacapa.CPLD.LFMXO5_15D_t16_bb",
+    "anacapa-t20-bb-cpld" : "com.meta.Hardware.Anacapa.CPLD.LFMXO5_15D_t20_bb"
+}

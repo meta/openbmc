@@ -1,0 +1,13 @@
+{
+    "harma-mb-cpld" : "com.meta.Hardware.Harma.CPLD.LCMXO3LF_4300C_mb",
+    "harma-scm-cpld" : "com.meta.Hardware.Harma.CPLD.LCMXO3LF_2100C_scm",
+    "harma-aegis-cpld" : "com.meta.Hardware.Harma.CPLD.LCMXO3D_9400HC_aegis",
+    "harma-bios" : "com.meta.Hardware.Harma.SPI.Host",
+    "harma-isl-vcore0" : "com.meta.Hardware.Harma.VR.ISL69269_vcore0",
+    "harma-isl-vcore1" : "com.meta.Hardware.Harma.VR.ISL69269_vcore1",
+    "harma-isl-pvdd11" : "com.meta.Hardware.Harma.VR.ISL69269_pvdd11",
+    "harma-xdpe-vcore0" : "com.meta.Hardware.Harma.VR.XDPE192C3B_vcore0",
+    "harma-xdpe-vcore1" : "com.meta.Hardware.Harma.VR.XDPE192C3B_vcore1",
+    "harma-xdpe-pvdd11" : "com.meta.Hardware.Harma.VR.XDPE19283B_pvdd11",
+    "harma-retimer" : "com.meta.Hardware.Harma.Retimer.PT5161L"
+}

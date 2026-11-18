@@ -1,0 +1,42 @@
+{
+    "PackageHeaderInformation": {
+        "PackageHeaderIdentifier": "F018878CCB7D49439800A02F059ACA02",
+        "PackageHeaderFormatVersion": 1,
+        "PackageReleaseDateTime": "2026-11-17 16:59:38",
+        "PackageVersionString": "123"
+    },
+    "FirmwareDeviceIdentificationArea": [
+        {
+            "DeviceUpdateOptionFlags": [
+                0
+            ],
+            "ComponentImageSetVersionString": "123",
+            "ApplicableComponents": [
+                0
+            ],
+            "Descriptors": [
+                {
+                    "DescriptorType": 1,
+                    "DescriptorData": "15A00000"
+                },
+                {
+                    "DescriptorType": 65535,
+                    "VendorDefinedDescriptorTitleString": "com.meta.Hardware.Harma.Retimer.PT5161L",
+                    "VendorDefinedDescriptorData": "1234"
+                }
+            ]
+        }
+    ],
+    "ComponentImageInformationArea": [
+        {
+            "ComponentClassification": 10,
+            "ComponentIdentifier": 100,
+            "ComponentOptions": [
+                1
+            ],
+            "ComponentComparisonStamp": "0xFFFFFFFE",
+            "RequestedComponentActivationMethod": [],
+            "ComponentVersionString": "123"
+        }
+    ]
+}

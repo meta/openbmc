@@ -1,6 +1,8 @@
 # 🛠️ LF-OpenBMC Firmware Pack Tool
 
-A Python command-line utility for generating PLDM-compliant firmware update packages.
+A Python command-line utility for genTo add a new device, create a new `.json` file in `config/`.
+
+## 🔧 Exampleting PLDM-compliant firmware update packages.
 
 This tool:
 - Updates metadata in a JSON template
@@ -27,10 +29,17 @@ python3 -m pip install bitarray
 
 ---
 
+## 📁 Prerequisites
+
+- `src/metadata-example.json` must exist. The tool does not download it.
+- If `src/pldm_fwup_pkg_creator.py` is missing, the tool downloads it from the `master` branch of `openbmc/pldm`.
+
+---
+
 ## 🧾 Usage
 
 ```bash
-python3 packed_tool.py -c <compatible> -i <input_file> [-v <version>] [-o <output_file>]
+python3 packed_tool.py -c <compatible> -i <input_file> -v <version> [-o <output_file>]
 ```
 ---
 
@@ -49,13 +58,25 @@ python3 packed_tool.py -c <compatible> -i <input_file> [-v <version>] [-o <outpu
 - harma-retimer
 
 -i, --input: Path to the input binary firmware file.
+-v, --version: Firmware version string.
 
 Optional arguments
--v, --version: Firmware version string (default: 1.0.0)
 
 -o, --output: Custom output filename (default: <compatible>_<version>.pldm)
 
-## 🔧 Example
+## � Config
+
+Compatible strings are loaded from every `.json` file in the `config/` directory. Each file is a flat JSON object that maps a compatible name to its compatible string, for example:
+
+```json
+{
+    "<compatible-name>" : "<compatible-string>"
+}
+```
+
+To add a new device, create a new `.json` file in `config/`. If a key is defined in more than one file, the value from the file loaded last wins.
+
+## �🔧 Example
 
 ``` bash
 python3 packed_tool.py \
@@ -67,4 +88,5 @@ python3 packed_tool.py \
 This will:
 Set the version to 2.1.0 in the metadata
 Embed the correct compatible string for harma-mb-cpld
+Set PackageReleaseDateTime to the current time (format: YYYY-MM-DD HH:MM:SS)
 Produce the package: harma-mb-cpld_2.1.0.pldm

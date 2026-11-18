@@ -382,7 +382,8 @@ static int check_chip()
     run_devmem(SCU1_BASE_ADDR + SILICON_REVISION_ID_OFFSET_AST_G7,
                &cpu_silicon_rev_id_1, READ_OP);
     if(cpu_silicon_rev_id_0 == cpu_silicon_rev_id_1 &&
-      (cpu_silicon_rev_id_0 & AST_G7_REV_ID) == AST_G7_REV_ID) {
+      (cpu_silicon_rev_id_0 & AST_G7_REV_ID) == AST_G7_REV_ID &&
+      (cpu_silicon_rev_id_0 != 0xFFFFFFFF)) {
         chip = AST_G7; //AST_G7
         goto exit;
     }

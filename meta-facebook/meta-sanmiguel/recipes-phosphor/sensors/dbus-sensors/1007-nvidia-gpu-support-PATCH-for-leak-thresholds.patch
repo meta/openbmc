@@ -1,4 +1,4 @@
-From dfb9da075c802707ae3f2a20b82f0cb5c7dc9be7 Mon Sep 17 00:00:00 2001
+From 8839360f70fa0e5d28bf4a2b51c74a8b4d591857 Mon Sep 17 00:00:00 2001
 From: Eric Liu <liuer@nvidia.com>
 Date: Mon, 14 Sep 2026 16:29:32 +0900
 Subject: [PATCH] nvidia-gpu: support PATCH for leak thresholds
@@ -140,10 +140,10 @@ Signed-off-by: Eric Liu <liuer@nvidia.com>
  7 files changed, 933 insertions(+), 15 deletions(-)
 
 diff --git a/src/nvidia-gpu/NvidiaGpuMctpVdm.cpp b/src/nvidia-gpu/NvidiaGpuMctpVdm.cpp
-index 7a89784..f330a95 100644
+index b477164..28f05ad 100644
 --- a/src/nvidia-gpu/NvidiaGpuMctpVdm.cpp
 +++ b/src/nvidia-gpu/NvidiaGpuMctpVdm.cpp
-@@ -2005,6 +2005,55 @@ int encodeGetLeakDetectionInfoRequest(uint8_t instanceId,
+@@ -2006,6 +2006,55 @@ int encodeGetLeakDetectionInfoRequest(uint8_t instanceId,
      return buffer.getError();
  }
  
@@ -1285,5 +1285,5 @@ index 11a0959..66e1ee2 100644
      // by tests that wait on a timer inside the object under test.
      static bool pumpIoUntil(const std::function<bool()>& done,
 -- 
-2.52.1
+2.53.1-Meta
 

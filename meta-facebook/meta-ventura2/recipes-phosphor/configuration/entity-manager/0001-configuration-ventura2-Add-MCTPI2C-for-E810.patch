@@ -1,4 +1,4 @@
-From 80ed53e77f4d75b2f12bd49e69fbced8961d2e32 Mon Sep 17 00:00:00 2001
+From 15268b5721ec9f6141a399ae32d433ab035ec0d4 Mon Sep 17 00:00:00 2001
 From: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
 Date: Thu, 16 Apr 2026 12:38:46 +0800
 Subject: [PATCH] configuration: ventura2: Add MCTPI2C for E810
@@ -11,12 +11,12 @@ Signed-off-by: Kyle Hsieh <Kyle.Hsieh@quantatw.com>
  2 files changed, 12 insertions(+)
 
 diff --git a/configurations/meta/ventura2/ventura2_rmcv2_mb.json b/configurations/meta/ventura2/ventura2_rmcv2_mb.json
-index 7a37e91..be59bd2 100644
+index bb82c1b..8169e7f 100644
 --- a/configurations/meta/ventura2/ventura2_rmcv2_mb.json
 +++ b/configurations/meta/ventura2/ventura2_rmcv2_mb.json
-@@ -544,6 +544,12 @@
+@@ -543,6 +543,12 @@
+                 "Address": "0x32",
                  "Bus": "38",
-                 "Inventory": "Ventura2",
                  "Name": "E810",
 +                "PLDMSensors": [
 +                    {
@@ -28,12 +28,12 @@ index 7a37e91..be59bd2 100644
              },
              {
 diff --git a/configurations/meta/ventura2/ventura2_rmcv2_mb_2nd.json b/configurations/meta/ventura2/ventura2_rmcv2_mb_2nd.json
-index 09786a0..39c62ce 100644
+index ea589d6..39cf6c8 100644
 --- a/configurations/meta/ventura2/ventura2_rmcv2_mb_2nd.json
 +++ b/configurations/meta/ventura2/ventura2_rmcv2_mb_2nd.json
-@@ -508,6 +508,12 @@
+@@ -507,6 +507,12 @@
+                 "Address": "0x32",
                  "Bus": "38",
-                 "Inventory": "Ventura2",
                  "Name": "E810",
 +                "PLDMSensors": [
 +                    {
@@ -45,5 +45,5 @@ index 09786a0..39c62ce 100644
              },
              {
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

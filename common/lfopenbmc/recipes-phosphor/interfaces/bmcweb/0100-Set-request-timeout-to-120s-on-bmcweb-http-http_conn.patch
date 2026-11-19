@@ -1,7 +1,8 @@
-From e775ddacdd7a943fd81cab67a452dbc844e740f1 Mon Sep 17 00:00:00 2001
+From b7697432705e3a649857ff3936f2d20b92486d3d Mon Sep 17 00:00:00 2001
 From: Marco Kawajiri <kawajiri@meta.com>
 Date: Wed, 5 Feb 2025 09:42:22 -0800
-Subject: [PATCH] Set request timeout to 120s on bmcweb/http/http_connection.hpp
+Subject: [PATCH] Set request timeout to 120s on
+ bmcweb/http/http_connection.hpp
 
 Large platforms (yosemite4 with 8 slots, ~1,300 sensors) need well over
 the upstream 15 s to build deep Redfish $expand responses: 40 s was
@@ -14,7 +15,7 @@ Change-Id: Ieb9c9569a141cbb194fa362ac0426a9e8127becf
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/http/http_connection.hpp b/http/http_connection.hpp
-index d5c51214..82967ddb 100644
+index d5c51214..34db9bc2 100644
 --- a/http/http_connection.hpp
 +++ b/http/http_connection.hpp
 @@ -931,7 +931,7 @@ class Connection :
@@ -27,5 +28,5 @@ index d5c51214..82967ddb 100644
          {
              // if we're waiting for future requests while idle in keepalive,
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

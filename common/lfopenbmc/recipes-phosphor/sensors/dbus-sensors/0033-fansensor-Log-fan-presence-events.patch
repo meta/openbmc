@@ -1,4 +1,4 @@
-From 9e6256211cc12eff97a9ea901283c9ed7552bbd2 Mon Sep 17 00:00:00 2001
+From 938f48dbeca243c95abc277d5e94704d37508999 Mon Sep 17 00:00:00 2001
 From: Rex Fu <rex.fu@amd.com>
 Date: Fri, 17 Jul 2026 17:53:52 +0800
 Subject: [PATCH] fansensor: Log fan presence events
@@ -9,6 +9,8 @@ FanRemoved events.
 Change-Id: If0cfc056dc6a10f52db5d9a8de191a1ded962b76
 Signed-off-by: Rex Fu <rex.fu@amd.com>
 ---
+ src/fan/PresenceGpio.hpp | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
 diff --git a/src/fan/PresenceGpio.hpp b/src/fan/PresenceGpio.hpp
 index 1975785..27719bf 100644
@@ -24,7 +26,7 @@ index 1975785..27719bf 100644
  
  #include <memory>
  #include <string>
-@@ -34,17 +36,25 @@
+@@ -34,17 +36,25 @@ class PresenceGpio
      void logPresent(const std::string& device)
      {
          std::string summary = deviceType + " " + deviceName + " Inserted";
@@ -56,3 +58,6 @@ index 1975785..27719bf 100644
      }
  
      void updateAndTracePresence(int newValue);
+-- 
+2.53.1-Meta
+

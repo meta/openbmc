@@ -1,13 +1,15 @@
 From d90a028988ee1fa746fc9edca5f797ac9e92977e Mon Sep 17 00:00:00 2001
 From: James Athappilly <jamesatha@meta.com>
 Date: Thu, 2 Apr 2026 09:25:08 -0700
-Subject: [PATCH 504/504] Fix const compiler error and format error
+Subject: [PATCH 504/504] Fix const compiler error
 
-This fixes the build time error we are seeing on meta platforms
+Keep the tomlc99 const correction for the newer compiler. The endpoint
+polling format fix is already provided by upstream using PRIu64.
+
+Upstream-Status: Pending
 ---
  lib/tomlc99/toml.c | 2 +-
- src/mctpd.c        | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/lib/tomlc99/toml.c b/lib/tomlc99/toml.c
 index e7b878e..2bd806f 100644
@@ -22,19 +24,6 @@ index e7b878e..2bd806f 100644
      if (dot) {
        if (dot == s || !isdigit(dot[-1]) || !isdigit(dot[1]))
          return -1;
-diff --git a/src/mctpd.c b/src/mctpd.c
-index 046849b..ca45176 100644
---- a/src/mctpd.c
-+++ b/src/mctpd.c
-@@ -6455,7 +6455,7 @@ static int parse_config_bus_owner(struct ctx *ctx, toml_table_t *bus_owner)
- 	if (val.ok && val.u.i) {
- 		uint64_t i = val.u.i;
- 		if ((i > max_poll_interval_ms) || (i < min_poll_interval_ms)) {
--			warnx("endpoint polling interval invalid (%lu - %lu ms)",
-+			warnx("endpoint polling interval invalid (%llu - %llu ms)",
- 			      min_poll_interval_ms, max_poll_interval_ms);
- 			return -1;
- 		}
 -- 
 2.55.0
 

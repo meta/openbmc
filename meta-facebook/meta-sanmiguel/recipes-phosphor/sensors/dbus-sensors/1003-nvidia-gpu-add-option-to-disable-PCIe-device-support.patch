@@ -1,4 +1,4 @@
-From 16f5daa100b181af58cae4b423cba8bcc4bc3d6b Mon Sep 17 00:00:00 2001
+From 4099597e39104db95ecbecf6173239d489d64a60 Mon Sep 17 00:00:00 2001
 From: Potin Lai <potin.lai@quantatw.com>
 Date: Wed, 1 Jul 2026 13:47:12 +0800
 Subject: [PATCH] nvidia-gpu: add option to disable PCIe device support
@@ -59,19 +59,23 @@ index 0718209..6dfb444 100644
      'external',
      type: 'feature',
 diff --git a/src/nvidia-gpu/DeviceManager.cpp b/src/nvidia-gpu/DeviceManager.cpp
-index 734beaf..dc94872 100644
+index 734beaf..863b80b 100644
 --- a/src/nvidia-gpu/DeviceManager.cpp
 +++ b/src/nvidia-gpu/DeviceManager.cpp
-@@ -92,3 +92,4 @@ static NvidiaMctpVdmConfig readNvidiaMctpVdmConfig(const MctpVdmRecord& record)
+@@ -89,6 +89,7 @@ static NvidiaMctpVdmConfig readNvidiaMctpVdmConfig(const MctpVdmRecord& record)
+     return config;
+ }
+ 
 +#ifndef NVIDIA_GPU_DISABLE_PCIE
  // Only a ConnectX device has network ports, so the record is only asked for
  // a count of them once the device has turned out to be one.
  static PcieDeviceConfigs readPcieDeviceConfigs(const MctpVdmRecord& record)
-@@ -109,5 +110,6 @@ static PcieDeviceConfigs readPcieDeviceConfigs(const MctpVdmRecord& record)
+@@ -108,6 +109,7 @@ static PcieDeviceConfigs readPcieDeviceConfigs(const MctpVdmRecord& record)
+ 
      return pcieConfig;
  }
 +#endif
-
+ 
  void DeviceManager::processQueryDeviceIdResponse(
      const MctpVdmRecord& record, const sdbusplus::object_path& mctpObjectPath,
 @@ -215,6 +217,7 @@ void DeviceManager::processQueryDeviceIdResponse(
@@ -96,5 +100,5 @@ index 734beaf..dc94872 100644
          }
  
 -- 
-2.52.1
+2.53.1-Meta
 

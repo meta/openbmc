@@ -15,4 +15,4 @@
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 
-MTERM_CONSOLES = "57600;ttyS2"
+MTERM_CONSOLES:nexthopbmc = "57600;ttyS2"

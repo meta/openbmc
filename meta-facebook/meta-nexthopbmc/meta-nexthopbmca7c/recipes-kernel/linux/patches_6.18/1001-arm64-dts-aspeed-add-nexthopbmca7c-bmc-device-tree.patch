@@ -1,0 +1,460 @@
+From: Jack Cai <jack@nexthop.ai>
+Date: Wed, 22 Oct 2026 12:00:00 -0700
+Subject: [PATCH] arm64: dts: aspeed: Add Nexthop AST2720-A2 (nexthopbmca7c) BMC device tree
+
+Add the device tree for the Nexthop AST2720-A2 BMC card and its DTB
+build target:
+
+- BMC console on UART12, host console on UART1.
+- FMC flash with the Meta 128 MiB layout. Reads are quad I/O; page
+  program is single-bit because quad page program corrupts data with
+  spi-aspeed-smc.
+- Host BIOS flash (CS1) on SPI0 and TPM on SPI2, both on the
+  full-duplex txrx controller. spi-aspeed-smc would bind SPI0 first and
+  cannot map CS1.
+- MAC0 RGMII fixed-link to the CPU card's management switch. The switch
+  is unmanaged, so MDIO0 carries no switch node.
+- The x86-facing USB2B virtual hub (vhubb1), host SSIF on I2C1, GPIO
+  line names and the TPM reset hog.
+- I2C 2, 3, 8 and 9 (CPU card DPM, CPU card SVI VR, boot-mode select,
+  switch card DPM) stay disabled so the BMC cannot reach the host's power
+  devices. I2C 1 (host SSIF) is multi-master because the host drives it
+  too.
+
+EEPROMs and sensors are instantiated by setup_i2c.sh because several are
+fitted only on later CPU card revisions. Mainline does not provide
+AST2700 nodes for eMMC, eSPI, EDAC, RTC, LPC1 snoop, PWM or I3C yet, so
+the tree leaves them out.
+
+---
+ arch/arm64/boot/dts/aspeed/Makefile           |   1 +
+ .../aspeed-bmc-facebook-nexthopbmca7c.dts     | 407 ++++++++++++++++++
+ 2 files changed, 408 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-nexthopbmca7c.dts
+
+diff --git a/arch/arm64/boot/dts/aspeed/Makefile b/arch/arm64/boot/dts/aspeed/Makefile
+index ffe7e15..49f4c8a 100644
+--- a/arch/arm64/boot/dts/aspeed/Makefile
++++ b/arch/arm64/boot/dts/aspeed/Makefile
+@@ -1,4 +1,5 @@
+ # SPDX-License-Identifier: GPL-2.0
+ 
+ dtb-$(CONFIG_ARCH_ASPEED) += \
++	aspeed-bmc-facebook-nexthopbmca7c.dtb \
+ 	ast2700-evb.dtb
+diff --git a/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-nexthopbmca7c.dts b/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-nexthopbmca7c.dts
+new file mode 100644
+index 0000000..7c9774e
+--- /dev/null
++++ b/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-nexthopbmca7c.dts
+@@ -0,0 +1,407 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++// Copyright (c) Meta Platforms, Inc. and affiliates.
++//
++// Nexthop AST2720-A2 BMC card, fboss-lite machine nexthopbmca7c.
++// It plugs into the same CPU cards as nexthopbmc (AST2600); setup-gpio.sh
++// and setup_i2c.sh instantiate the GPIOs and I2C devices those cards share.
++
++/dts-v1/;
++
++#include "aspeed-g7-a35.dtsi"
++#include <dt-bindings/gpio/aspeed-gpio.h>
++#include <dt-bindings/clock/aspeed,ast2700-scu.h>
++#include <dt-bindings/reset/aspeed,ast2700-scu.h>
++
++/ {
++	model = "Facebook Nexthopbmc BMC AST2720";
++	compatible = "facebook,nexthopbmca7c-bmc", "aspeed,ast2700";
++
++	aliases {
++		i2c0 = &i2c0;
++		i2c1 = &i2c1;
++		i2c2 = &i2c2;
++		i2c3 = &i2c3;
++		i2c4 = &i2c4;
++		i2c5 = &i2c5;
++		i2c6 = &i2c6;
++		i2c7 = &i2c7;
++		i2c8 = &i2c8;
++		i2c9 = &i2c9;
++		i2c10 = &i2c10;
++		i2c11 = &i2c11;
++		i2c12 = &i2c12;
++		i2c13 = &i2c13;
++		i2c14 = &i2c14;
++		i2c15 = &i2c15;
++		spi0 = &fmc;
++		spi1 = &spi0;
++		spi2 = &spi2;
++		serial1 = &uart1;
++		serial12 = &uart12;
++	};
++
++	chosen {
++		stdout-path = &uart12;
++	};
++
++	/* U-Boot replaces the size with the detected DRAM size. */
++	memory@400000000 {
++		device_type = "memory";
++		reg = <0x4 0x00000000 0x0 0x40000000>;
++	};
++
++	/*
++	 * AST2700-A2 firmware carve-outs: SSP/TSP service processors, BootMCU
++	 * IPC mailboxes and the UEFI VBIOS.
++	 */
++	reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		ssp_memory: ssp-memory@42c000000 {
++			reg = <0x4 0x2c000000 0x0 0x2000000>;
++			no-map;
++		};
++
++		tsp_memory: tsp-memory@42e000000 {
++			reg = <0x4 0x2e000000 0x0 0x2000000>;
++			no-map;
++		};
++
++		ipc_ssp_share: ipc-ssp-share@431080000 {
++			reg = <0x4 0x31080000 0x0 0x800000>;
++			no-map;
++		};
++
++		ipc_bootmcu_share: ipc-bootmcu-share@431880000 {
++			reg = <0x4 0x31880000 0x0 0x2b0000>;
++			no-map;
++		};
++
++		vbios_base0: vbios-base0@431bb0000 {
++			reg = <0x4 0x31bb0000 0x0 0x10000>;
++			no-map;
++		};
++
++		vbios_base1: vbios-base1@431bc0000 {
++			reg = <0x4 0x31bc0000 0x0 0x10000>;
++			no-map;
++		};
++	};
++};
++
++/* Host console */
++&uart1 {
++	status = "okay";
++};
++
++/* BMC console */
++&uart12 {
++	status = "okay";
++};
++
++&jtag1 {
++	status = "okay";
++};
++
++&pinctrl1 {
++	pinctrl_fwqspi_driving: fwqspi-driving {
++		pins = "M16", "A15";
++		drive-strength = <16>;
++		bias-disable;
++	};
++
++	/* MAC0 RGMII pads drive the Marvell OOB switch. */
++	pinctrl_rgmii0_driving: rgmii0-driving {
++		pins = "C20", "C19", "A8", "R14", "A7", "P14",
++		       "D20", "A6", "B6", "N14", "B7", "B8";
++		drive-strength = <8>;
++	};
++
++	/*
++	 * MDC0/MDIO0 to the same switch.  At the 4 mA default about 1% of
++	 * MDIO reads come back corrupted or empty.
++	 */
++	pinctrl_mdio0_driving: mdio0-driving {
++		pins = "B9", "M14";
++		drive-strength = <8>;
++	};
++};
++
++&gpio1 {
++	gpio-line-names =
++	/*A0-A7*/	"","","","","","","","",
++	/*B0-B7*/	"","","","","","","","",
++	/*C0-C7*/	"","","","","","","pcb_id_0","pcb_id_1",
++	/*D0-D7*/	"bmc_gpio_10","bmc_gpio_11","fpga_grab","cpu_thermtrip_l",
++				"leak_fault_1","bmc_gpio_7","bmc_gpio_8","bmc_gpio_9",
++	/*E0-E7*/	"svi_vr_alert_l","bmc_mode","cpe_ctrl","fpga_prog",
++				"eeprom_wp","","","",
++	/*F0-F7*/	"pwr_cyc_req","cpu_alert_l","cpu_rst_l","",
++				"","","","",
++	/*G0-G7*/	"","","","",
++				"tpm_rst_l","tpm_pirq","tpm_gpio_0","tpm_gpio_1",
++	/*H0-H7*/	"tpm_gpio_2","bmc_led","bmc_main_power_off","leak_fault_0",
++				"","","","",
++	/*I0-I7*/	"","","","","","","","",
++	/*J0-J7*/	"","","","","","","","",
++	/*K0-K7*/	"","","","","","","","",
++	/*L0-L7*/	"","","","","","","","",
++	/*M0-M7*/	"","","","","","","","",
++	/*N0-N7*/	"","","","","","","","",
++	/*O0-O7*/	"","","","","","","","",
++	/*P0-P7*/	"","","","","","","","",
++	/*Q0-Q7*/	"","","","","","","","emmc_rst",
++	/*R0-R7*/	"","","","","","","","",
++	/*S0-S7*/	"","","","","","","","",
++	/*T0-T7*/	"","","","","","","","",
++	/*U0-U7*/	"","","","","","","","",
++	/*V0-V7*/	"","","","","","","","",
++	/*W0-W7*/	"","","","","","","","",
++	/*X0-X7*/	"","","","","","","","",
++	/*Y0-Y7*/	"","","","","","","","",
++	/*Z0-Z7*/	"","","","","","","","",
++	/*AA0-AA7*/	"","","","usb2b_vbus_sns",
++				"boot_ok","","bmc_swt_reset_l","fpga_done";
++
++	/* The SLB9672 is held in reset unless TPM_RST_L is driven high. */
++	tpm-rst-hog {
++		gpio-hog;
++		gpios = <ASPEED_GPIO(G, 4) GPIO_ACTIVE_HIGH>;
++		output-high;
++		line-name = "tpm_rst_l";
++	};
++};
++
++/* FMC SPI: BMC flash, quad I/O */
++&fmc {
++	status = "okay";
++	pinctrl-0 = <&pinctrl_fwspi_quad_default &pinctrl_fwqspi_driving>;
++	pinctrl-names = "default";
++
++	flash@0 {
++		status = "okay";
++		m25p,fast-read;
++		label = "bmc";
++		spi-max-frequency = <50000000>;
++		/*
++		 * Quad page program corrupts data on AST2700 with this driver
++		 * (flashcp verify fails); program single-bit, read quad.
++		 */
++		spi-tx-bus-width = <1>;
++		spi-rx-bus-width = <4>;
++
++#include "facebook-bmc-flash-layout-128.dtsi"
++	};
++
++	flash@1 {
++		status = "okay";
++		m25p,fast-read;
++		label = "fmc0:1";
++		spi-max-frequency = <50000000>;
++		/*
++		 * Quad page program corrupts data on AST2700 with this driver
++		 * (flashcp verify fails); program single-bit, read quad.
++		 */
++		spi-tx-bus-width = <1>;
++		spi-rx-bus-width = <4>;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			flash1@0 {
++				reg = <0x0 0x8000000>; /* 128MB */
++				label = "flash1";
++			};
++		};
++	};
++};
++
++/* SPI0: host BIOS flash on CS1, via the full-duplex controller */
++&spi0 {
++	/*
++	 * txrx only: with the spi-aspeed-smc fallback listed, that driver binds
++	 * first and cannot map CS1 ("CE1 window invalid"), losing the BIOS flash.
++	 */
++	compatible = "aspeed,ast2700-spi-txrx";
++	status = "okay";
++	pinctrl-0 = <&pinctrl_spi0_default &pinctrl_spi0_quad_default &pinctrl_spi0_cs1_default>;
++	pinctrl-names = "default";
++
++	spi-aspeed-full-duplex;
++
++	/delete-node/ flash@0;
++
++	flash@1 {
++		status = "okay";
++		compatible = "jedec,spi-nor";
++		m25p,fast-read;
++		reg = <1>;
++		spi-max-frequency = <50000000>;
++		spi-tx-bus-width = <1>;
++		spi-rx-bus-width = <1>;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			host_bios@0 {
++				label = "pnor";
++				reg = <0x0 0x4000000>; /* 64MB */
++			};
++		};
++	};
++};
++
++/* SPI2: TPM */
++&spi2 {
++	compatible = "aspeed,ast2700-spi-txrx";
++	pinctrl-0 = <&pinctrl_spi2_default>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	spi-aspeed-full-duplex;
++
++	/delete-node/ flash@0;
++
++	tpm0: tpmdev@0 {
++		compatible = "tcg,tpm_tis-spi";
++		spi-max-frequency = <25000000>;
++		reg = <0>;
++		status = "okay";
++	};
++};
++
++/* MAC0: RGMII fixed-link to the Marvell OOB switch */
++&mac0 {
++	status = "okay";
++	phy-mode = "rgmii-id";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_rgmii0_default &pinctrl_rgmii0_driving>;
++
++	fixed-link {
++		speed = <1000>;
++		full-duplex;
++		pause;
++	};
++};
++
++&mac1 {
++	status = "disabled";
++};
++
++/*
++ * MDIO to the CPU card's management switch, which loads its configuration
++ * from its own EEPROM; used for debug only.
++ */
++&mdio0 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_mdio0_default &pinctrl_mdio0_driving>;
++};
++
++&syscon1 {
++	assigned-clocks = <&syscon1 SCU1_CLK_MACHCLK>,
++			  <&syscon1 SCU1_CLK_RGMII>,
++			  <&syscon1 SCU1_CLK_RMII>;
++	assigned-clock-rates = <200000000>, <125000000>, <50000000>;
++};
++
++&lpc0_snoop {
++	status = "okay";
++	snoop-ports = <0x80>, <0x81>;
++};
++
++/*
++ * I2C buses.  setup_i2c.sh instantiates the EEPROMs and sensors so that
++ * devices only fitted on some CPU card revisions are probed first.
++ */
++
++&i2c0 {
++	status = "okay";
++};
++
++/* Host IPMI over SSIF; the BMC is the target. */
++&i2c1 {
++	status = "okay";
++	multi-master;
++
++	ssif-bmc@10 {
++		compatible = "ssif-bmc";
++		reg = <0x10>;
++	};
++};
++
++&i2c2 {
++	status = "disabled";
++};
++
++&i2c3 {
++	status = "disabled";
++};
++
++&i2c4 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_i2c4_default>;
++};
++
++&i2c5 {
++	status = "disabled";
++};
++
++&i2c6 {
++	status = "okay";
++};
++
++&i2c7 {
++	status = "disabled";
++};
++
++&i2c8 {
++	status = "disabled";
++};
++
++&i2c9 {
++	status = "disabled";
++};
++
++&i2c10 {
++	status = "okay";
++};
++
++&i2c11 {
++	status = "okay";
++};
++
++/* I2C12 is not wired; the I2C13 pins carry TPM_RST_L and TPM_PIRQ. */
++&i2c12 {
++	status = "disabled";
++};
++
++&i2c13 {
++	status = "disabled";
++};
++
++/* USB2B device port towards the x86; port A faces the front panel. */
++&vhubb1 {
++	pinctrl-0 = <&pinctrl_usb2bd1_default>;
++	status = "okay";
++};
++
++/* Watchdogs */
++&wdt0 {
++	status = "okay";
++};
++
++&wdt1 {
++	status = "okay";
++};
++
++&otp {
++	status = "okay";
++};
+-- 
+2.43.0
+

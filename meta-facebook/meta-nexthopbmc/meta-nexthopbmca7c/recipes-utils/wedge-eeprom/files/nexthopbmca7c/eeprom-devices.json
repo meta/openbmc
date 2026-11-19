@@ -1,0 +1,17 @@
+{
+  "platform" : "nexthopbmca7c",
+  "eeprom devices" : [
+    {
+      "name" : "chassis_eeprom",
+      "sysfs_path" : "/sys/bus/i2c/devices/i2c-10/10-0050/eeprom"
+    },
+    {
+      "name" : "bmc_eeprom",
+      "sysfs_path" : "/sys/bus/i2c/devices/i2c-4/4-0050/eeprom"
+    },
+    {
+      "name" : "scm_eeprom",
+      "sysfs_path" : "/sys/bus/i2c/devices/i2c-0/0-0050/eeprom"
+    }
+  ]
+}

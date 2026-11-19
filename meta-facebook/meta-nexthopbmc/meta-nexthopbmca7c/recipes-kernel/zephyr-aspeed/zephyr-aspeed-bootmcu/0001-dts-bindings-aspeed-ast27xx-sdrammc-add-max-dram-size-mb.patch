@@ -1,0 +1,26 @@
+From: Louis Maliyam <louis@nexthop.ai>
+Date: Wed, 28 Oct 2026 12:00:00 -0700
+Subject: [PATCH] dts: bindings: aspeed,ast27xx-sdrammc: add max-dram-size-mb
+
+Let a board cap the DRAM capacity that the AST2700 BootMCU detects. The
+wrap-around size probe can over-report the capacity: a 4 GiB DDR5 x16
+part on Nexthop's AST2720-A2 BMC card is detected as 8 GiB on cold boot.
+
+Signed-off-by: Louis Maliyam <louis@nexthop.ai>
+---
+diff --git a/dts/bindings/riscv/aspeed,ast27xx-sdrammc.yaml b/dts/bindings/riscv/aspeed,ast27xx-sdrammc.yaml
+index 0594e8b..c6e3122 100644
+--- a/dts/bindings/riscv/aspeed,ast27xx-sdrammc.yaml
++++ b/dts/bindings/riscv/aspeed,ast27xx-sdrammc.yaml
+@@ -27,3 +27,11 @@ properties:
+     type: int
+     required: false
+     description: Size of AES encryption in bytes
++  max-dram-size-mb:
++    type: int
++    required: false
++    description: |
++      Upper bound of the DRAM capacity in MiB (256, 512, 1024, 2048, 4096
++      or 8192). The wrap-around size probe result is clamped to this
++      value. Use it when the fitted part is known and the probe can
++      over-report the capacity.

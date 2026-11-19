@@ -1,0 +1,582 @@
+From 8b1607b1334e032c840955c04b6595a1aede57be Mon Sep 17 00:00:00 2001
+From: Alan Tsai <alan-tsai@quantatw.com>
+Date: Fri, 13 Nov 2026 16:34:46 +0800
+Subject: [PATCH] configurations: rainier: Add 3rd HPM VR combination
+
+According to EE's request to create a new HPM VR combination config.
+All six VRs are from MPS.
+
+Upstream-Status: Submitted [https://gerrit.openbmc.org/c/openbmc/entity-manager/+/97271]
+
+Change-Id: I7fc95e2e0e11958ddd9f22bac75358f53f6ce8ae
+Signed-off-by: Alan Tsai <alan-tsai@quantatw.com>
+---
+ configurations/meson.build                    |   1 +
+ .../rainier_hpm_vr_mps_v1p2vr_mps.json        | 543 ++++++++++++++++++
+ 2 files changed, 544 insertions(+)
+ create mode 100644 configurations/meta/rainier/rainier_hpm_vr_mps_v1p2vr_mps.json
+
+diff --git a/configurations/meson.build b/configurations/meson.build
+index 851dc63..05de0bb 100644
+--- a/configurations/meson.build
++++ b/configurations/meson.build
+@@ -188,6 +188,7 @@ configs = [
+     'meta/minerva/minerva_pttv.json',
+     'meta/minerva/minerva_sitv.json',
+     'meta/minerva/minerva_tahan_smb.json',
++    'meta/rainier/rainier_hpm_vr_mps_v1p2vr_mps.json',
+     'meta/rainier/rainier_hpm_vr_mps_v1p2vr_tic.json',
+     'meta/rainier/rainier_hpm_vr_rtt_v1p2vr_mps.json',
+     'meta/rainier/rainier_mb_ssd.json',
+diff --git a/configurations/meta/rainier/rainier_hpm_vr_mps_v1p2vr_mps.json b/configurations/meta/rainier/rainier_hpm_vr_mps_v1p2vr_mps.json
+new file mode 100644
+index 0000000..f7c56e1
+--- /dev/null
++++ b/configurations/meta/rainier/rainier_hpm_vr_mps_v1p2vr_mps.json
+@@ -0,0 +1,543 @@
++{
++    "Exposes": [
++        {
++            "Address": "0x4a",
++            "Bus": 11,
++            "Labels": [
++                "in0",
++                "in1",
++                "in2",
++                "in3",
++                "in4",
++                "in6",
++                "in7"
++            ],
++            "Name": "MB_ADC1",
++            "Thresholds": [
++                {
++                    "Direction": "less than",
++                    "Label": "in0",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 10.8
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in0",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 13.2
++                },
++                {
++                    "Direction": "less than",
++                    "Label": "in1",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 3.135
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 3.465
++                },
++                {
++                    "Direction": "less than",
++                    "Label": "in2",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 1.71
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in2",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 1.89
++                },
++                {
++                    "Direction": "less than",
++                    "Label": "in3",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 0.95
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in3",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 1.05
++                },
++                {
++                    "Direction": "less than",
++                    "Label": "in4",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 1.14
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in4",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 1.26
++                },
++                {
++                    "Direction": "less than",
++                    "Label": "in6",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 4.75
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in6",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 5.25
++                },
++                {
++                    "Direction": "less than",
++                    "Label": "in7",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 1.14
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in7",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 1.26
++                }
++            ],
++            "Type": "ADS7830",
++            "in0_Name": "MB_ADC_P12V_STBY_VOLT_V",
++            "in0_Scale": 157.5,
++            "in1_Name": "MB_ADC_P3V3_STBY_VOLT_V",
++            "in1_Scale": 500,
++            "in2_Name": "MB_ADC_V1P8_VOLT_V",
++            "in2_PowerState": "On",
++            "in3_Name": "MB_ADC_P1V0_STBY_VOLT_V",
++            "in4_Name": "MB_ADC_V1P2_VOLT_V",
++            "in4_PowerState": "On",
++            "in6_Name": "MB_ADC_P5V_STBY_VOLT_V",
++            "in6_Scale": 281.2939522,
++            "in7_Name": "MB_ADC_P1V2_STBY_VOLT_V"
++        },
++        {
++            "Address": "0x4b",
++            "Bus": 11,
++            "Labels": [
++                "in0",
++                "in1",
++                "in2",
++                "in5"
++            ],
++            "Name": "MB_ADC0",
++            "Thresholds": [
++                {
++                    "Direction": "less than",
++                    "Label": "in0",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 10.8
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in0",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 13.2
++                },
++                {
++                    "Direction": "less than",
++                    "Label": "in1",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 10.8
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 13.2
++                },
++                {
++                    "Direction": "less than",
++                    "Label": "in2",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 1.71
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in2",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 1.89
++                },
++                {
++                    "Direction": "less than",
++                    "Label": "in5",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 1.197
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in5",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 1.323
++                }
++            ],
++            "Type": "ADS7830",
++            "in0_Name": "MB_ADC_P12V_DIMM0_VOLT_V",
++            "in0_PowerState": "On",
++            "in0_Scale": 157.5,
++            "in1_Name": "MB_ADC_P12V_DIMM1_VOLT_V",
++            "in1_PowerState": "On",
++            "in1_Scale": 157.5,
++            "in2_Name": "MB_ADC_P1V8_STBY_VOLT_V",
++            "in5_Name": "MB_ADC_V1P2_GPIO_VOLT_V",
++            "in5_PowerState": "On"
++        },
++        {
++            "Address": "$address",
++            "Bus": "$bus",
++            "Name": "MB FRU",
++            "Type": "EEPROM"
++        },
++        {
++            "Name": "MB_E1S0",
++            "PresencePinNames": [
++                "PRSNT_BOOT_N"
++            ],
++            "PresencePinValues": [
++                0
++            ],
++            "Type": "GPIODeviceDetect"
++        },
++        {
++            "Name": "MB_E1S1",
++            "PresencePinNames": [
++                "PRSNT_MCIO_1A_N"
++            ],
++            "PresencePinValues": [
++                0
++            ],
++            "Type": "GPIODeviceDetect"
++        },
++        {
++            "FirmwareInfo": {
++                "CompatibleHardware": "com.meta.Hardware.Rainier.SPI.Host",
++                "VendorIANA": 40981
++            },
++            "MuxOutputs": [
++                {
++                    "Name": "FM_BMC_MUX1_SEL_R",
++                    "Polarity": "High"
++                }
++            ],
++            "Name": "Rainier_BIOS",
++            "SPIControllerIndex": 1,
++            "SPIDeviceIndex": 0,
++            "Type": "HostSPIFlash"
++        },
++        {
++            "Address": "0x40",
++            "Bus": 11,
++            "Labels": [
++                "in1",
++                "curr1",
++                "power1"
++            ],
++            "Name": "MB_PMON_DIMM_0",
++            "PowerState": "On",
++            "Thresholds": [
++                {
++                    "Direction": "less than",
++                    "Label": "in1",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 10.8
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 13.2
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "curr1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 7
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "power1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 84
++                }
++            ],
++            "Type": "INA230",
++            "curr1_Name": "MB_PMON_DIMM_0_P12V_CURR_A",
++            "curr1_Scale": 1105.4,
++            "in1_Name": "MB_PMON_DIMM_0_P12V_VOLT_V",
++            "power1_Name": "MB_PMON_DIMM_0_P12V_PWR_W",
++            "power1_Scale": 1105400
++        },
++        {
++            "Address": "0x41",
++            "Bus": 11,
++            "Labels": [
++                "in1",
++                "curr1",
++                "power1"
++            ],
++            "Name": "MB_PMON_DIMM_1",
++            "PowerState": "On",
++            "Thresholds": [
++                {
++                    "Direction": "less than",
++                    "Label": "in1",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 10.8
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 13.2
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "curr1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 7
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "power1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 84
++                }
++            ],
++            "Type": "INA230",
++            "curr1_Name": "MB_PMON_DIMM_1_P12V_CURR_A",
++            "curr1_Scale": 1016.1,
++            "in1_Name": "MB_PMON_DIMM_1_P12V_VOLT_V",
++            "power1_Name": "MB_PMON_DIMM_1_P12V_PWR_W",
++            "power1_Scale": 1016100
++        },
++        {
++            "Address": "0x44",
++            "Bus": 11,
++            "Labels": [
++                "in1",
++                "curr1",
++                "power1"
++            ],
++            "Name": "MB_PMON_SCM",
++            "Thresholds": [
++                {
++                    "Direction": "less than",
++                    "Label": "in1",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 10.8
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 13.2
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "curr1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 2.29
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "power1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 27.5
++                }
++            ],
++            "Type": "INA230",
++            "curr1_Name": "MB_PMON_SCM_P12V_CURR_A",
++            "curr1_Scale": 1042.5,
++            "in1_Name": "MB_PMON_SCM_P12V_VOLT_V",
++            "power1_Name": "MB_PMON_SCM_P12V_PWR_W",
++            "power1_Scale": 1042500
++        },
++        {
++            "Address": "0x45",
++            "Bus": 11,
++            "Labels": [
++                "in1",
++                "curr1",
++                "power1"
++            ],
++            "Name": "MB_PMON_NIC",
++            "Thresholds": [
++                {
++                    "Direction": "less than",
++                    "Label": "in1",
++                    "Name": "lower critical",
++                    "Severity": 1,
++                    "Value": 10.8
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "in1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 13.2
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "curr1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 3.2
++                },
++                {
++                    "Direction": "greater than",
++                    "Label": "power1",
++                    "Name": "upper critical",
++                    "Severity": 1,
++                    "Value": 38.5
++                }
++            ],
++            "Type": "INA230",
++            "curr1_Name": "MB_PMON_NIC_P12V_CURR_A",
++            "curr1_Scale": 1209,
++            "in1_Name": "MB_PMON_NIC_P12V_VOLT_V",
++            "power1_Name": "MB_PMON_NIC_P12V_PWR_W",
++            "power1_Scale": 1209000
++        },
++        {
++            "Address": "0x48",
++            "Bus": 13,
++            "Name": "MB_INLET_TEMP_C",
++            "Type": "LM75A"
++        },
++        {
++            "Address": "0x49",
++            "Bus": 13,
++            "Name": "MB_OUTLET_TEMP_C",
++            "Type": "LM75A"
++        },
++        {
++            "Address": "0x40",
++            "Bus": 15,
++            "FirmwareInfo": {
++                "CompatibleHardware": "com.meta.Hardware.Rainier.CPLD.LCMXO3D_9400HC_hpm",
++                "VendorIANA": 40981
++            },
++            "Name": "Rainier_MB_CPLD",
++            "Type": "LatticeLCMXO3D_9400Firmware"
++        },
++        {
++            "Address": "0x60",
++            "Bus": 11,
++            "FirmwareInfo": {
++                "CompatibleHardware": "com.meta.Hardware.Rainier.VR.MP29402_vcpu_vcpum_c0",
++                "VendorIANA": 40981
++            },
++            "Name": "MB_VR_CPU_CPU0_MEM0_Firmware",
++            "Type": "MP2940XFirmware"
++        },
++        {
++            "Address": "0x61",
++            "Bus": 11,
++            "FirmwareInfo": {
++                "CompatibleHardware": "com.meta.Hardware.Rainier.VR.MP29403_vsys_vsoc_c0",
++                "VendorIANA": 40981
++            },
++            "Name": "MB_VR_CPU_SYS0_SOC0_Firmware",
++            "Type": "MP2940XFirmware"
++        },
++        {
++            "Address": "0x62",
++            "Bus": 11,
++            "FirmwareInfo": {
++                "CompatibleHardware": "com.meta.Hardware.Rainier.VR.MP29402_vcpu_vcpum_c1",
++                "VendorIANA": 40981
++            },
++            "Name": "MB_VR_CPU_CPU1_MEM1_Firmware",
++            "Type": "MP2940XFirmware"
++        },
++        {
++            "Address": "0x63",
++            "Bus": 11,
++            "FirmwareInfo": {
++                "CompatibleHardware": "com.meta.Hardware.Rainier.VR.MP29403_vsys_vsoc_c1",
++                "VendorIANA": 40981
++            },
++            "Name": "MB_VR_CPU_SYS1_SOC1_Firmware",
++            "Type": "MP2940XFirmware"
++        },
++        {
++            "Address": "0x72",
++            "Bus": 11,
++            "FirmwareInfo": {
++                "CompatibleHardware": "com.meta.Hardware.Rainier.VR.MP29403_v0p75_pcie_vddq",
++                "VendorIANA": 40981
++            },
++            "Name": "MB_VR_CPU_V0P75_PCIE_VDDQ_Firmware",
++            "Type": "MP2940XFirmware"
++        },
++        {
++            "Address": "0x76",
++            "Bus": 11,
++            "FirmwareInfo": {
++                "CompatibleHardware": "com.meta.Hardware.Rainier.VR.MP9945_v1p2",
++                "VendorIANA": 40981
++            },
++            "Name": "MB_VR_CPU_V1P2_Firmware",
++            "Type": "MP994XFirmware"
++        }
++    ],
++    "Name": "Rainier HPM",
++    "Probe": "xyz.openbmc_project.FruDevice({'PRODUCT_PRODUCT_NAME': 'Rainier .*', 'BOARD_PRODUCT_NAME': 'Motherboard', 'BOARD_INFO_AM4': 'VR-MPS V1P2VR-MPS', 'BOARD_MANUFACTURER': 'Quanta'})",
++    "Type": "Board",
++    "xyz.openbmc_project.Inventory.Decorator.Asset": {
++        "BuildDate": "$BOARD_MANUFACTURE_DATE",
++        "Manufacturer": "$BOARD_MANUFACTURER",
++        "Model": "$BOARD_PRODUCT_NAME",
++        "PartNumber": "$BOARD_PART_NUMBER",
++        "SerialNumber": "$BOARD_SERIAL_NUMBER",
++        "SparePartNumber": "$BOARD_INFO_AM1"
++    },
++    "xyz.openbmc_project.Inventory.Decorator.AssetTag": {
++        "AssetTag": "$PRODUCT_ASSET_TAG"
++    },
++    "xyz.openbmc_project.Inventory.Decorator.Compatible": {
++        "Names": [
++            "com.meta.Hardware.Rainier.Boards.MB"
++        ]
++    },
++    "xyz.openbmc_project.Inventory.Decorator.Revision": {
++        "Version": "$PRODUCT_VERSION"
++    },
++    "xyz.openbmc_project.Inventory.Item.Board.Motherboard": {}
++}
+-- 
+2.25.1
+

@@ -1,0 +1,58 @@
+From 9e6256211cc12eff97a9ea901283c9ed7552bbd2 Mon Sep 17 00:00:00 2001
+From: Rex Fu <rex.fu@amd.com>
+Date: Fri, 17 Jul 2026 17:53:52 +0800
+Subject: [PATCH] fansensor: Log fan presence events
+
+Replace Redfish journal metadata with typed FanInserted and
+FanRemoved events.
+
+Change-Id: If0cfc056dc6a10f52db5d9a8de191a1ded962b76
+Signed-off-by: Rex Fu <rex.fu@amd.com>
+---
+
+diff --git a/src/fan/PresenceGpio.hpp b/src/fan/PresenceGpio.hpp
+index 1975785..27719bf 100644
+--- a/src/fan/PresenceGpio.hpp
++++ b/src/fan/PresenceGpio.hpp
+@@ -4,7 +4,9 @@
+ #include <boost/asio/posix/stream_descriptor.hpp>
+ #include <boost/asio/steady_timer.hpp>
+ #include <gpiod.hpp>
++#include <phosphor-logging/commit.hpp>
+ #include <phosphor-logging/lg2.hpp>
++#include <xyz/openbmc_project/State/Fan/event.hpp>
+ 
+ #include <memory>
+ #include <string>
+@@ -34,17 +36,25 @@
+     void logPresent(const std::string& device)
+     {
+         std::string summary = deviceType + " " + deviceName + " Inserted";
+-        std::string msg = "OpenBMC.0.1." + deviceType + "Inserted";
+-        lg2::info(summary.c_str(), "REDFISH_MESSAGE_ID", msg.c_str(),
+-                  "REDFISH_MESSAGE_ARGS", device);
++        lg2::info(summary.c_str());
++
++        const sdbusplus::object_path fanPath{
++            "/xyz/openbmc_project/inventory/" + device};
++        lg2::commit(
++            sdbusplus::event::xyz::openbmc_project::state::Fan::FanInserted(
++                "FAN_NAME", fanPath));
+     }
+ 
+     void logRemoved(const std::string& device)
+     {
+         std::string summary = deviceType + " " + deviceName + " Removed";
+-        std::string msg = "OpenBMC.0.1." + deviceType + "Removed";
+-        lg2::error(summary.c_str(), "REDFISH_MESSAGE_ID", msg.c_str(),
+-                   "REDFISH_MESSAGE_ARGS", device);
++        lg2::error(summary.c_str());
++
++        const sdbusplus::object_path fanPath{
++            "/xyz/openbmc_project/inventory/" + device};
++        lg2::commit(
++            sdbusplus::event::xyz::openbmc_project::state::Fan::FanRemoved(
++                "FAN_NAME", fanPath));
+     }
+ 
+     void updateAndTracePresence(int newValue);

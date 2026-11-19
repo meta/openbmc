@@ -1,0 +1,118 @@
+From: Louis Maliyam <louis@nexthop.ai>
+Date: Sun, 25 Oct 2026 12:00:00 -0700
+Subject: [PATCH] ARM: dts: aspeed: add Nexthop AST2720-A2 (nexthopbmca7c) BMC
+
+Add a U-Boot device tree for the Nexthop AST2720-A2 BMC card so
+U-Boot networking works: MAC0 is an RGMII fixed-link to the CPU card's
+unmanaged management switch, whereas the AST2700 EVB tree expects a PHY
+on MDIO0.  The FMC flash runs quad I/O at 50 MHz.
+
+Signed-off-by: Louis Maliyam <louis@nexthop.ai>
+---
+diff --git a/arch/arm/dts/Makefile b/arch/arm/dts/Makefile
+index 4195608f..65a6eb45 100644
+--- a/arch/arm/dts/Makefile
++++ b/arch/arm/dts/Makefile
+@@ -1284,6 +1284,7 @@ dtb-$(CONFIG_ASPEED_AST2600) += \
+ 	ast2600-ncsi.dtb
+ 
+ dtb-$(CONFIG_ASPEED_AST2700) += \
++	aspeed-bmc-facebook-nexthopbmca7c.dtb \
+ 	ast2700-evb.dtb \
+ 	ast2700-raw.dtb \
+ 	ast2700-slt.dtb \
+diff --git a/arch/arm/dts/aspeed-bmc-facebook-nexthopbmca7c.dts b/arch/arm/dts/aspeed-bmc-facebook-nexthopbmca7c.dts
+new file mode 100644
+index 00000000..5c36f5c1
+--- /dev/null
++++ b/arch/arm/dts/aspeed-bmc-facebook-nexthopbmca7c.dts
+@@ -0,0 +1,89 @@
++// SPDX-License-Identifier: GPL-2.0+
++// Copyright (c) Meta Platforms, Inc. and affiliates.
++
++/dts-v1/;
++
++#include "ast2700.dtsi"
++#include "ast2700-u-boot.dtsi"
++
++/ {
++	model = "Facebook Nexthopbmc BMC AST2720";
++	compatible = "facebook,nexthopbmca7c-bmc", "aspeed,ast2700";
++
++	aliases {
++		spi0 = &fmc;
++		ethernet0 = &mac0;
++	};
++
++	/* U-Boot sizes DRAM at run time; this is only the boot-time window. */
++	memory {
++		device_type = "memory";
++		reg = <0x4 0x00000000 0x0 0x20000000>;
++	};
++
++	chosen {
++		stdout-path = &uart12;
++	};
++
++	reserved-memory {
++		#address-cells = <2>;
++		#size-cells = <2>;
++
++		#include "ast2700-evb-reserved-mem.dtsi"
++	};
++};
++
++&uart12 {
++	status = "okay";
++};
++
++/*
++ * MAC0 RGMII fixed-link to the CPU card's management switch, which is
++ * unmanaged (its configuration loads from its own EEPROM).
++ */
++&mac0 {
++	status = "okay";
++	phy-mode = "rgmii-id";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_rgmii0_default>;
++
++	fixed-link {
++		speed = <1000>;
++		full-duplex;
++		pause;
++	};
++};
++
++&mac1 {
++	status = "disabled";
++};
++
++&mac2 {
++	status = "disabled";
++};
++
++&fmc {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&pinctrl_fwspi_quad_default>;
++
++	flash@0 {
++		status = "okay";
++		m25p,fast-read;
++		spi-max-frequency = <50000000>;
++		spi-tx-bus-width = <4>;
++		spi-rx-bus-width = <4>;
++	};
++
++	flash@1 {
++		status = "okay";
++		m25p,fast-read;
++		spi-max-frequency = <50000000>;
++		spi-tx-bus-width = <4>;
++		spi-rx-bus-width = <4>;
++	};
++};
++
++&wdt0 {
++	status = "okay";
++};

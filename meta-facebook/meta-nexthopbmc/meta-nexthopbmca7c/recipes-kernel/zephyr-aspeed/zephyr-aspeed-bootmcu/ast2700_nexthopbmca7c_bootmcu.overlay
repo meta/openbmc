@@ -1,0 +1,18 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * BootMCU (Zephyr mcu-runtime) overlay for nexthopbmca7c.
+ *
+ * The BootMCU shares the BMC debug console (UART12); run it at the same
+ * 9600 baud as U-Boot and Linux so early boot output is readable.
+ *
+ * The board carries 4 GiB of DDR5, which the BootMCU's size probe reports
+ * as 8 GiB on cold boot; cap it.
+ */
+&uart12 {
+	current-speed = <9600>;
+};
+
+&sdrammc {
+	max-dram-size-mb = <4096>;
+};

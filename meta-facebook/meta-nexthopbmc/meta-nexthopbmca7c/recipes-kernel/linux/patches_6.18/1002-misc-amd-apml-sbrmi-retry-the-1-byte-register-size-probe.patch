@@ -1,0 +1,45 @@
+From: Louis Maliyam <louis@nexthop.ai>
+Date: Thu, 12 Nov 2026 08:54:49 +0000
+Subject: [PATCH] misc: amd-apml: sbrmi: retry the 1-byte register-size probe
+
+On SB-RMI rev 0x10 (AMD Fire Range), the 2-byte register read the
+driver tries first is answered with an abnormal condition, and the
+AST2700 I2C controller then fails the next two transfers on the bus
+(EAGAIN, EPROTO, ENXIO). The driver falls back to a 1-byte read exactly
+once, which always lands on one of those failures, so the regmap is never
+configured. Every hwmon read then repeats the whole probe and fails with
+ENXIO after about 0.6 s, which makes `sensors` take about 20 s on
+nexthopbmca7c.
+
+Retry the 1-byte read like the 2-byte one, also when it reads back the
+0xFF revision that the driver says a 2-byte read can leave cached on rev
+0x10. It succeeds on the second or third attempt and the regmap is cached
+for the rest of the boot.
+
+Signed-off-by: Louis Maliyam <louis@nexthop.ai>
+---
+ drivers/misc/amd-apml/sbrmi.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/misc/amd-apml/sbrmi.c b/drivers/misc/amd-apml/sbrmi.c
+index f68cd41..c637576 100644
+--- a/drivers/misc/amd-apml/sbrmi.c
++++ b/drivers/misc/amd-apml/sbrmi.c
+@@ -669,7 +669,16 @@ static int sbrmi_i2c_identify_reg_addr_size(struct i2c_client *i2c, u32 *size, u
+ 	 */
+ 	if (ret != I3C_I2C_MSG_XFER_SIZE || *rev == 0xFF) {
+ 		reg_size = SBRMI_REG_ADDR_SIZE_DEF;
+-		ret = sbrmi_i2c_reg_read(i2c, reg_size, rev);
++		/*
++		 * A 2-byte read of SB-RMI rev 0x10 leaves the I2C controller failing
++		 * the next transfers and can leave 0xFF cached, so retry this too.
++		 */
++		for (i = 0; i < MAX_RETRY; i++) {
++			ret = sbrmi_i2c_reg_read(i2c, reg_size, rev);
++			if (ret == I3C_I2C_MSG_XFER_SIZE && *rev != 0xFF)
++				break;
++			usleep_range(10000, 20000);
++		}
+ 		if (ret != I3C_I2C_MSG_XFER_SIZE) {
+ 			pr_err("I2C reg read failed with return value:%d\n", ret);
+ 			return ret;

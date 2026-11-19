@@ -22,4 +22,14 @@ openbmc_rootfs_fixup() {
     # Remove all C files
     find ${IMAGE_ROOTFS} -type f -name "*.[ch]" -exec rm -f {} \;
 
+    # Runtime hwdb lookups use the compiled database. Drop the text sources
+    # after the package postinstall has compiled them, keeping hwdb.bin intact.
+    if [ -f "${IMAGE_ROOTFS}${sysconfdir}/udev/hwdb.bin" ] || \
+       [ -f "${IMAGE_ROOTFS}${nonarch_base_libdir}/udev/hwdb.bin" ] || \
+       [ -f "${IMAGE_ROOTFS}${nonarch_libdir}/udev/hwdb.bin" ]; then
+        rm -rf "${IMAGE_ROOTFS}${sysconfdir}/udev/hwdb.d" \
+               "${IMAGE_ROOTFS}${nonarch_base_libdir}/udev/hwdb.d" \
+               "${IMAGE_ROOTFS}${nonarch_libdir}/udev/hwdb.d"
+    fi
+
 }

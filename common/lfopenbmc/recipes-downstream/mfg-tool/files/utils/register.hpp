@@ -3,7 +3,9 @@
 #include <CLI/CLI.hpp>
 #include <sdbusplus/async.hpp>
 
+#include <exception>
 #include <functional>
+#include <iostream>
 #include <memory>
 
 namespace mfgtool
@@ -49,6 +51,26 @@ template <typename T>
 concept has_async_run =
     requires(T& t, sdbusplus::async::context& ctx) { ctx.spawn(t.run(ctx)); };
 
+/* Run an async command, turning an escaped exception (e.g. a D-Bus NoReply)
+ * into an error message and a failure flag instead of std::terminate, and
+ * always stopping the context so `ctx.run()` returns.
+ */
+template <typename T>
+auto run_guarded(sdbusplus::async::context& ctx, T& t, bool& failed)
+    -> sdbusplus::async::task<>
+{
+    try
+    {
+        co_await t.run(ctx);
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "mfg-tool: " << e.what() << std::endl;
+        failed = true;
+    }
+    ctx.request_stop();
+}
+
 } // namespace details
 
 template <typename T>
@@ -61,7 +83,21 @@ template <typename T>
 void init_callback(CLI::App* cmd, T& t)
     requires details::has_run<T>
 {
-    cmd->callback([&]() { t.run(); });
+    cmd->callback([&]() {
+        try
+        {
+            t.run();
+        }
+        catch (const CLI::Error&)
+        {
+            throw;
+        }
+        catch (const std::exception& e)
+        {
+            std::cerr << "mfg-tool: " << e.what() << std::endl;
+            throw CLI::RuntimeError(1);
+        }
+    });
 }
 
 template <typename T>
@@ -69,11 +105,16 @@ void init_callback(CLI::App* cmd, T& t)
     requires details::has_async_run<T>
 {
     cmd->callback([&]() {
-        sdbusplus::async::context ctx;
-        ctx.spawn(t.run(ctx) | sdbusplus::async::execution::then([&]() {
-                      ctx.request_stop();
-                  }));
-        ctx.run();
+        bool failed = false;
+        {
+            sdbusplus::async::context ctx;
+            ctx.spawn(details::run_guarded(ctx, t, failed));
+            ctx.run();
+        }
+        if (failed)
+        {
+            throw CLI::RuntimeError(1);
+        }
     });
 }
 

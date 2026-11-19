@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Zinc Lim <zinclim@meta.com>
+Date: Thu, 19 Nov 2026 14:27:14 -0800
+Subject: [PATCH] hw/misc/i2c-netdev2: opt out of short-frame padding
+
+Since upstream f448e6d9cf ("net: Pad short packets consistently
+regardless of backend"), qemu_send_packet() pads every frame shorter
+than ETH_ZLEN unless the receiving NetClientState sets do_not_pad, and
+the socket backend now does it too. A NIC from qemu_new_nic() does not
+set it, so i2c-netdev2 got the peer's 2-byte ACK as a 60-byte frame:
+not ACK_LEN, so it hit assert(len <= sizeof(s->rx_buf)) and QEMU
+aborted on the first transaction.
+
+The packet length is i2c-netdev2's framing (ACK, START, DATA, STOP and
+read replies are told apart by size), so it must see the bytes the peer
+sent. Opt out of the padding, as the commit says devices that handle
+short packets should.
+---
+ hw/misc/i2c-netdev2.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/hw/misc/i2c-netdev2.c b/hw/misc/i2c-netdev2.c
+index 67587b5f57..7f176cbd37 100644
+--- a/hw/misc/i2c-netdev2.c
++++ b/hw/misc/i2c-netdev2.c
+@@ -263,6 +263,8 @@ static void i2c_netdev2_realize(DeviceState *dev, Error **errp)
+     s->bus = I2C_BUS(qdev_get_parent_bus(dev));
+     s->nic = qemu_new_nic(&i2c_netdev2_client_info, &s->nic_conf, TYPE_I2C_NETDEV2,
+                           dev->id, &dev->mem_reentrancy_guard, s);
++    /* Packet length is the protocol; padding to ETH_ZLEN would corrupt it. */
++    qemu_get_queue(s->nic)->do_not_pad = true;
+     s->bh = qemu_bh_new(i2c_netdev2_slave_mode_rx, s);
+     s->rx_len = 0;
+ }
+-- 
+2.53.1-Meta
+

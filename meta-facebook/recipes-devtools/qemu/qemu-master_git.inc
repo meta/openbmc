@@ -203,6 +203,7 @@ SRC_URI:append = " \
            file://0721-tests-functional-arm-catalina-cover-the-USB-Ethernet.patch \
            file://0722-hw-i2c-aspeed_i2c-serialize-bus-accesses-across-vCPU.patch \
            file://0723-hw-misc-i2c-netdev2-bridge-several-targets-and-maste.patch \
+           file://0724-hw-misc-i2c-netdev2-opt-out-of-short-frame-padding.patch \
            "
 
 # slirp is a subproject: its patches need a patchdir, or they hit QEMU's tree.

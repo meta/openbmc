@@ -16,6 +16,7 @@ class Weutil(unittest.TestCase):
     def setUp(self):
         weutil_json_string = run_shell_cmd ("weutil --json")
         self.weutil_json = json.loads(weutil_json_string)
+        self.weutil_version = int(self.weutil_json["Version"])
         pass
 
     def tearDown(self):
@@ -57,6 +58,10 @@ class Weutil(unittest.TestCase):
         )
 
     def test_weutil_local_asset_tag(self):
+        if self.weutil_version >= 6:
+            self.assertIn("System Assembly Part Number", self.weutil_json)
+            return
+
         self.assertEqual(
             self.weutil_check("System Assembly Part Number"),
             True,
@@ -71,16 +76,30 @@ class Weutil(unittest.TestCase):
         )
 
     def test_weutil_product_version(self):
+        version_field = (
+            "Production State" if self.weutil_version >= 6 else "Product Version"
+        )
         self.assertEqual(
-            self.weutil_check("Product Version"),
+            self.weutil_check(version_field),
             True,
-            "weutil does not contain a valid Product Version",
+            "weutil does not contain a valid {}".format(version_field),
         )
 
     def test_weutil_product_sub_version(self):
-        self.assertEqual(
-            self.weutil_check("Product Sub-Version"),
-            True,
-            "weutil does not contain a valid Product Sub-Version",
+        sub_version_field = (
+            "Production Sub-State"
+            if self.weutil_version >= 6
+            else "Product Sub-Version"
         )
+        self.assertEqual(
+            self.weutil_check(sub_version_field),
+            True,
+            "weutil does not contain a valid {}".format(sub_version_field),
+        )
+        if self.weutil_version >= 6:
+            self.assertEqual(
+                self.weutil_check("Re-Spin/Variant Indicator"),
+                True,
+                "weutil does not contain a valid Re-Spin/Variant Indicator",
+            )
 

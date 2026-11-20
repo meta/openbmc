@@ -31,10 +31,12 @@ class CHASSISEepromTest(EepromV5Test, unittest.TestCase):
         self.eeprom_cmd = ["/usr/bin/weutil -e chassis_eeprom"]
 
     def set_product_name(self):
-        self.product_name = ["MORGAN800CC"]
+        self.get_eeprom_info()
+        self.product_name = ["M5120CSC" if self.eeprom_version >= 6 else "MORGAN800CC"]
 
     def set_location_on_fabric(self):
-        self.location_on_fabric = ["FCB"]
+        self.get_eeprom_info()
+        self.location_on_fabric = ["CHASSIS" if self.eeprom_version >= 6 else "FCB"]
 
     """
     Morgan800cc Chassis EEPROM have only BMC and ASIC switch info,

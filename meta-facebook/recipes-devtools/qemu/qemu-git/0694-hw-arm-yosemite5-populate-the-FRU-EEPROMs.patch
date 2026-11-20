@@ -3,10 +3,9 @@ From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 12 Aug 2026 15:58:44 +0200
 Subject: [PATCH] hw/arm: yosemite5: populate the FRU EEPROMs
 
-Back nine of the ten FRU EEPROMs with images read from hardware, so
-guest firmware can identify the medusa board, paddle board, SCM, BSM,
-E1.S backplane, CXL board, MB, CPU and OCP NIC instead of finding them
-blank. The CLKGEN FRU was absent from the sampled chassis and stays
+Back the nine FRU EEPROMs with images read from hardware, so guest
+firmware can identify the medusa board, paddle board, SCM, BSM, E1.S
+backplane, CXL board, MB, CPU and OCP NIC instead of finding them
 blank.
 
 The content is sanitized: part and serial numbers masked, dates fixed,
@@ -423,9 +422,7 @@ index 6f2bb0d061..12d27197c2 100644
  
      /* &i2c11 */
      /* gpio-expander@21 - nxp,pca9535 (MB) */
-@@ -178,9 +518,11 @@ static void yosemite5_bmc_i2c_init(AspeedMachineState *bmc)
-     /* eeprom@50 - atmel,24c16 (CLKGEN FRU) */
-     at24c_eeprom_init(i2c[13], 0x50, 2 * KiB);
+@@ -178,7 +518,9 @@ static void yosemite5_bmc_i2c_init(AspeedMachineState *bmc)
      /* eeprom@51 - atmel,24c128 (MB FRU) */
 -    at24c_eeprom_init(i2c[13], 0x51, 16 * KiB);
 +    at24c_eeprom_init_rom(i2c[13], 0x51, 16 * KiB, fru_13_0051,

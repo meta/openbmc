@@ -68,8 +68,9 @@ def _check_wedge() -> t.Tuple[bool, bool]:
 
     # Check if this is a wedge40 from fruinfo
     fruinfo = rest_fruid.get_fruid()
-    if re.match("WEDGE.*", fruinfo["Information"]["Product Name"], re.IGNORECASE):
-        return True, fruinfo["Information"]["Product Name"] in WEDGE40
+    product_name = fruinfo["Information"].get("Product Name", "")
+    if re.match("WEDGE.*", product_name, re.IGNORECASE):
+        return True, product_name in WEDGE40
 
     # Not a wedge
     return False, False

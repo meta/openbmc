@@ -32,8 +32,10 @@ def get_fruid(cmd=["weutil"]):  # noqa: B006
     try:
         data, err = proc.communicate(timeout=DEFAULT_TIMEOUT_SEC)
         data = data.decode(errors="ignore")
-    except proc.TimeoutError as ex:
-        data = ex.output
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        data, _ = proc.communicate()
+        data = data.decode(errors="ignore")
 
     # First, need to remove the first info line from weutil
     adata = data.split("\n", 1)

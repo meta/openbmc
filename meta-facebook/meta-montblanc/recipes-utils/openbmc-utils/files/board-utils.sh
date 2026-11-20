@@ -44,20 +44,25 @@ wedge_board_type() {
     echo 'MONTBLANC'
 }
 
-# read hardware revision from MCB CPLD register
+wedge_board_type_from_idprom() {
+    product_name=$(weutil | grep 'Product Name' | cut -d ' ' -f3)
+    product_name=${product_name%_*}
+
+    echo "$product_name"
+}
+
+# read board type from chassis EEPROM and
+# hardware revision from MCB CPLD register
 wedge_board_rev() {
-    board_id=$(head -n 1 < "$BOARD_ID" 2> /dev/null)
+    board_type=$(wedge_board_type_from_idprom)
+    if [ -z "$board_type" ]; then
+        board_id=$(head -n 1 < "$BOARD_ID" 2> /dev/null)
+        echo "Board type: unknown value [$board_id]"
+    else
+        echo "Board type: $board_type Switching System"
+    fi
+
     version_id=$(head -n 1 < "$VERSION_ID" 2> /dev/null)
-
-    case "$((board_id))" in
-        1)
-            echo "Board type: Minipack3 Switching System"
-            ;;
-        *)
-            echo "Board type: unknown value [$board_id]"
-            ;;
-    esac
-
     case "$((version_id))" in
         0)
             echo "Revision: EVT-1"

@@ -31,7 +31,7 @@ class CHASSISEepromTest(EepromV5Test, unittest.TestCase):
         self.eeprom_cmd = ["/usr/bin/weutil -e chassis_eeprom"]
 
     def set_product_name(self):
-        self.product_name = ["MINIPACK3", "MINIPACK3M"]
+        self.product_name = ["MINIPACK3", "MINIPACK3M", "M4052CLSI", "M4052CLSM"]
 
     def set_location_on_fabric(self):
         self.location_on_fabric = ["FCB"]

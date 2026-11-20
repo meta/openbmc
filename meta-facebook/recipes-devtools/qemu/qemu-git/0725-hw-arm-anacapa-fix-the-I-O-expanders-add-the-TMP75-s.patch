@@ -1,0 +1,132 @@
+From d87bad58593f1c877ed288203d023be0645275e1 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Tue, 17 Nov 2026 06:20:15 -0800
+Subject: [PATCH] hw/arm: anacapa: fix the I/O expanders, add the TMP75 sensors
+
+Replace the six PCA9552 with PCA9555, as in the device tree. Add the two
+PCA9554 from the device tree and the six TMP75 from entity-manager.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+---
+ hw/arm/aspeed_ast2600_anacapa.c | 48 +++++++++++++++++++++++++++------
+ 1 file changed, 40 insertions(+), 8 deletions(-)
+
+diff --git a/hw/arm/aspeed_ast2600_anacapa.c b/hw/arm/aspeed_ast2600_anacapa.c
+index 25578db589..050f3d8d6d 100644
+--- a/hw/arm/aspeed_ast2600_anacapa.c
++++ b/hw/arm/aspeed_ast2600_anacapa.c
+@@ -13,7 +13,9 @@
+ #include "hw/arm/aspeed_soc.h"
+ #include "hw/i2c/i2c_mux_pca954x.h"
+ #include "hw/gpio/pca9552.h"
++#include "hw/gpio/pca9554.h"
+ #include "hw/nvram/eeprom_at24c.h"
++#include "hw/sensor/tmp105.h"
+ 
+ #define ANACAPA_BMC_HW_STRAP1 0x00002002
+ #define ANACAPA_BMC_HW_STRAP2 0x00000000
+@@ -231,9 +233,22 @@ static void anacapa_add_adc128d818(I2CBus *bus, uint8_t addr,
+     i2c_slave_realize_and_unref(I2C_SLAVE(dev), bus, &error_fatal);
+ }
+ 
++/* hw-dir: the pin%d properties drive input levels, as on the pca9555 */
++static void anacapa_add_pca9554(I2CBus *bus, uint8_t addr)
++{
++    I2CSlave *dev = i2c_slave_new(TYPE_PCA9554, addr);
++
++    object_property_set_bool(OBJECT(dev), "hw-dir", true, &error_fatal);
++    i2c_slave_realize_and_unref(dev, bus, &error_fatal);
++}
++
+ static void anacapa_bmc_i2c_init(AspeedMachineState *bmc)
+ {
+-    /* Reference: aspeed-bmc-facebook-anacapa.dts */
++    /*
++     * Reference: aspeed-bmc-facebook-anacapa.dts. The TMP75 sensors are not
++     * in the device tree: entity-manager instantiates them at runtime from
++     * its Anacapa MB, L-PDB and SCM configurations.
++     */
+ 
+     AspeedSoCState *soc = bmc->soc;
+     I2CBus *i2c[16] = {};
+@@ -271,12 +286,15 @@ static void anacapa_bmc_i2c_init(AspeedMachineState *bmc)
+     /* i2c8mux ch0 */
+     /* adc128d818@1f - R-PDB ADC (mode 1: 8 voltage channels) */
+     anacapa_add_adc128d818(pca954x_i2c_get_bus(i2c_mux, 0), 0x1f, "i2c8:0:1f");
++    /* fan-controller@21 - nuvoton,nct7363, no model */
+     /* pca9555@22 */
+     i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 0),
+-                            TYPE_PCA9552, 0x22);
++                            TYPE_PCA9555, 0x22);
+     /* pca9555@24 */
+     i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 0),
+-                            TYPE_PCA9552, 0x24);
++                            TYPE_PCA9555, 0x24);
++    /* pca9554@38 */
++    anacapa_add_pca9554(pca954x_i2c_get_bus(i2c_mux, 0), 0x38);
+     /* eeprom@50 */
+     at24c_eeprom_init_rom(pca954x_i2c_get_bus(i2c_mux, 0), 0x50, 16 * KiB,
+                           rpdb_eeprom, rpdb_eeprom_len);
+@@ -284,15 +302,22 @@ static void anacapa_bmc_i2c_init(AspeedMachineState *bmc)
+     /* i2c8mux ch1 */
+     /* pca9555@22 */
+     i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 1),
+-                            TYPE_PCA9552, 0x22);
++                            TYPE_PCA9555, 0x22);
++    /* fan-controller@23 - nuvoton,nct7363, no model */
+     /* pca9555@24 */
+     i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 1),
+-                            TYPE_PCA9552, 0x24);
++                            TYPE_PCA9555, 0x24);
++    /* pca9554@38 */
++    anacapa_add_pca9554(pca954x_i2c_get_bus(i2c_mux, 1), 0x38);
++    /* tmp75@48 - L-PDB inlet (entity-manager) */
++    i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 1), TYPE_TMP75, 0x48);
+     /* eeprom@50 */
+     at24c_eeprom_init_rom(pca954x_i2c_get_bus(i2c_mux, 1), 0x50, 16 * KiB,
+                           lpdb_eeprom, lpdb_eeprom_len);
+ 
+     /* &i2c9 */
++    /* tmp75@4b - SCM inlet (entity-manager) */
++    i2c_slave_create_simple(i2c[9], TYPE_TMP75, 0x4b);
+     /* eeprom@50 */
+     at24c_eeprom_init_rom(i2c[9], 0x50, 16 * KiB,
+                           scm_eeprom, scm_eeprom_len);
+@@ -305,9 +330,9 @@ static void anacapa_bmc_i2c_init(AspeedMachineState *bmc)
+     i2c_mux = i2c_slave_create_simple(i2c[10], TYPE_PCA9548, 0x71);
+ 
+     /* i2c10mux ch5 */
+-    /* pca9555@22*/
++    /* pca9555@22 */
+     i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 5),
+-                            TYPE_PCA9552, 0x22);
++                            TYPE_PCA9555, 0x22);
+     /* eeprom@52 */
+     at24c_eeprom_init_rom(pca954x_i2c_get_bus(i2c_mux, 5), 0x52, 32 * KiB,
+                           rbb_eeprom, rbb_eeprom_len);
+@@ -321,7 +346,7 @@ static void anacapa_bmc_i2c_init(AspeedMachineState *bmc)
+     /* i2c11mux ch5 */
+     /* pca9555@22 */
+     i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 5),
+-                            TYPE_PCA9552, 0x22);
++                            TYPE_PCA9555, 0x22);
+     /* eeprom@52 */
+     at24c_eeprom_init_rom(pca954x_i2c_get_bus(i2c_mux, 5), 0x52, 32 * KiB,
+                           lbb_eeprom, lbb_eeprom_len);
+@@ -330,6 +355,13 @@ static void anacapa_bmc_i2c_init(AspeedMachineState *bmc)
+     /* i2c-mux@70 (PCA9548) */
+     i2c_mux = i2c_slave_create_simple(i2c[13], TYPE_PCA9548, 0x70);
+ 
++    /* i2c13mux ch0 */
++    /* tmp75@48,4a,4b,4d - MB inlet, outlet L/R, CPU rear (entity-manager) */
++    i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 0), TYPE_TMP75, 0x48);
++    i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 0), TYPE_TMP75, 0x4a);
++    i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 0), TYPE_TMP75, 0x4b);
++    i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 0), TYPE_TMP75, 0x4d);
++
+     /* i2c13mux ch3 */
+     /* adc128d818@1f - MB ADC (mode 1: 8 voltage channels) */
+     anacapa_add_adc128d818(pca954x_i2c_get_bus(i2c_mux, 3), 0x1f, "i2c13:3:1f");
+-- 
+2.53.1-Meta
+

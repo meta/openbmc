@@ -33,7 +33,7 @@ void read_local_mac(char *buffer)
   sprintf(buffer, "NA");
   fp = fopen(BMC_MGMT_MACADDR, "r");
   if (fp){
-     fscanf(fp, "%s", buffer);
+     fscanf(fp, "%19s", buffer);
      fclose(fp);
   }
   return;

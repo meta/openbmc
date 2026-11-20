@@ -25,15 +25,17 @@
 #include <string.h>
 #define BMC_MGMT_MACADDR "/sys/class/net/eth0/address"
 
-void read_local_mac(char *buffer)
+void read_local_mac(char *buffer, size_t buffer_len)
 {
-  if (!buffer)
+  if (!buffer || buffer_len == 0)
     return;
   FILE *fp;
-  sprintf(buffer, "NA");
+  snprintf(buffer, buffer_len, "NA");
   fp = fopen(BMC_MGMT_MACADDR, "r");
   if (fp){
-     fscanf(fp, "%s", buffer);
+     if (fscanf(fp, "%19s", buffer) != 1) {
+       snprintf(buffer, buffer_len, "NA");
+     }
      fclose(fp);
   }
   return;
@@ -79,7 +81,7 @@ static int dump_eeprom(const char *fn)
     return -1;
   }
 
-  read_local_mac(local_mac);
+  read_local_mac(local_mac, sizeof(local_mac));
   elbert_parse_mac(parsed_mac,local_mac,0);
 
   printf("Wedge EEPROM %s:\n", fn ? fn : "");

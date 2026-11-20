@@ -1,0 +1,33 @@
+From 3eb7a75e17d587d356744cd9b7b3016409847bb5 Mon Sep 17 00:00:00 2001
+From: Colin Ian King <coking@nvidia.com>
+Date: Thu, 16 Oct 2025 16:30:00 +0100
+Subject: [PATCH 5/7] spi: aspeed: fix spelling mistake "triming" -> "trimming"
+
+There is a spelling mistake in a dev_warn message. Fix it.
+
+Signed-off-by: Colin Ian King <coking@nvidia.com>
+Link: https://patch.msgid.link/20251016153000.9142-1-coking@nvidia.com
+Signed-off-by: Mark Brown <broonie@kernel.org>
+
+(cherry picked from commit d77daa49085b067137d0adbe3263f75a7ee13a1b)
+Signed-off-by: Nate White <nate@nexthop.ai>
+---
+ drivers/spi/spi-aspeed-smc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/spi/spi-aspeed-smc.c b/drivers/spi/spi-aspeed-smc.c
+index 083fab1..b1198e7 100644
+--- a/drivers/spi/spi-aspeed-smc.c
++++ b/drivers/spi/spi-aspeed-smc.c
+@@ -548,7 +548,7 @@ static int aspeed_spi_trim_window_size(struct aspeed_spi *aspi)
+ 	} while (total_sz > aspi->ahb_window_size);
+ 
+ 	if (trimmed) {
+-		dev_warn(aspi->dev, "Window size after triming:\n");
++		dev_warn(aspi->dev, "Window size after trimming:\n");
+ 		for (cs = 0; cs < aspi->data->max_cs; cs++) {
+ 			dev_warn(aspi->dev, "CE%d: 0x%08x\n",
+ 				 cs, chips[cs].ahb_window_size);
+-- 
+2.43.0
+

@@ -16,7 +16,7 @@ Signed-off-by: Carter Chen <carter.chen.wiwynn@gmail.com>
  1 file changed, 102 insertions(+), 5 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-yosemite5a7.dts b/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-yosemite5a7.dts
-index d6f874933313..dbb9a9733f0f 100644
+index 36333f80e6a7..4ada9fc15f3f 100644
 --- a/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-yosemite5a7.dts
 +++ b/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-yosemite5a7.dts
 @@ -89,6 +89,10 @@ aliases {
@@ -159,13 +159,16 @@ index d6f874933313..dbb9a9733f0f 100644
  		i2c8mux0ch3: i2c@3 {
  			#address-cells = <1>;
  			#size-cells = <0>;
-@@ -1836,9 +1925,17 @@ &i2c13 {
+@@ -1853,12 +1942,20 @@ &i2c13 {
  
  /* MCIO 2A I2C */
  &i2c14 {
 +	multi-master;
 +	i2c-scl-clk-low-timeout-us = <31744>;
 +	mctp-controller;
+ 	debounce-level = <15>;
+ 	manual-data-hold = <1>;
+ 	i2c-clk-high-min-percent = <50>;
  	status = "okay";
  	pinctrl-0 = <&pinctrl_di2c14_default>;
  
@@ -174,9 +177,9 @@ index d6f874933313..dbb9a9733f0f 100644
 +		reg = <(0x10 | I2C_OWN_SLAVE_ADDRESS)>;
 +	};
 +
- 	/* RIO GRANDE IOEXP2 U263 */
- 	rio_io_expander2: gpio-expander@26 {
- 		compatible = "nxp,pca9506";
+ 	/* RIO GRANDE IOEXP U264 */
+ 	rio_io_expander9: gpio-expander@21 {
+ 		compatible = "nxp,pca9555";
 -- 
 2.43.0
 

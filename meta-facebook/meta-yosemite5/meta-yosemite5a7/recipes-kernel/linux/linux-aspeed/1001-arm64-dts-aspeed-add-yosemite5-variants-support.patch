@@ -1,4 +1,4 @@
-From 2a0e851d85b2f25bbd5daf2d9ca1800e14775bb5 Mon Sep 17 00:00:00 2001
+From 4c1b5ad65c7581237c493bb899f662b9591c4d67 Mon Sep 17 00:00:00 2001
 From: Pat Lin <pat.lin.wiwynn@gmail.com>
 Date: Wed, 22 Jul 2026 03:19:20 +0000
 Subject: [PATCH] arm64: dts: aspeed: add yosemite5 variants support
@@ -24,11 +24,11 @@ Changes include:
 Note: Lowering the I2C frequency will significantly increase the PLDM
 update time for CXL devices on i2c12 in the T2 platform.
 ---
- .../aspeed-bmc-facebook-yosemite5a7.dts       | 967 +++++++++++++++++-
- 1 file changed, 949 insertions(+), 18 deletions(-)
+ .../aspeed-bmc-facebook-yosemite5a7.dts       | 993 +++++++++++++++++-
+ 1 file changed, 975 insertions(+), 18 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-yosemite5a7.dts b/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-yosemite5a7.dts
-index 93a559712..fee928fad 100644
+index 93a5597128b0..36333f80e6a7 100644
 --- a/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-yosemite5a7.dts
 +++ b/arch/arm64/boot/dts/aspeed/aspeed-bmc-facebook-yosemite5a7.dts
 @@ -5,6 +5,7 @@
@@ -531,12 +531,15 @@ index 93a559712..fee928fad 100644
  	/* I2C MUX on E1S x4 board */
  	i2c-mux@73 {
  		compatible = "nxp,pca9543";
-@@ -974,13 +1374,214 @@ &i2c8 {
+@@ -974,13 +1374,222 @@ &i2c8 {
  	multi-master;
  	i2c-scl-clk-low-timeout-us = <31744>;
  	mctp-controller;
 -	clock-frequency = <400000>;
 +	clock-frequency = <100000>;
++	debounce-level = <15>;
++	manual-data-hold = <1>;
++	i2c-clk-high-min-percent = <50>;
  	status = "okay";
  
  	mctp@10 {
@@ -544,11 +547,73 @@ index 93a559712..fee928fad 100644
  		reg = <(0x10 | I2C_OWN_SLAVE_ADDRESS)>;
  	};
 +
-+	/* RIO GRANDE IOEXP0 U255 */
-+	rio_io_expander0: gpio-expander@26 {
-+		compatible = "nxp,pca9506";
-+		reg = <0x26>;
++	/* RIO GRANDE IOEXP U253 */
++	rio_io_expander0: gpio-expander@21 {
++		compatible = "nxp,pca9555";
++		reg = <0x21>;
++		interrupt-parent = <&rio_io_expander1>;
++		interrupts = <11 IRQ_TYPE_LEVEL_LOW>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names =
++				  /*00-07*/
++				  "EN_P12V_U2_1_R", "PG_P12V_U2_1",
++				  "FAULT_P3V3_AUX_U2_1_N", "ALT_P12V_U2_1_N",
++				  "MFG_U2_ACCL1", "FAULT_U2_ACCL_1_N",
++				  "PWRDIS_U2_1", "IFDET_U2_1_N",
++				  /*10-17*/
++				  "EN_P12V_U2_2_R", "PG_P12V_U2_2",
++				  "FAULT_P3V3_AUX_U2_2_N", "ALT_P12V_U2_2_N",
++				  "MFG_U2_ACCL2", "FAULT_U2_ACCL_2_N",
++				  "PWRDIS_U2_2", "IFDET_U2_2_N";
++	};
 +
++	/* RIO GRANDE IOEXP U256 */
++	rio_io_expander3: gpio-expander@22 {
++		compatible = "nxp,pca9555";
++		reg = <0x22>;
++		interrupt-parent = <&rio_io_expander1>;
++		interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names =
++				  /*00-07*/
++				  "PWRDIS_U2_3", "PWRDIS_U2_4",
++				  "PWRDIS_U2_5", "PWRDIS_U2_6",
++				  "PWRDIS_U2_7", "PWRDIS_U2_8",
++				  "PWRDIS_U2_9", "PWRDIS_U2_10",
++				  /*10-17*/
++				  "ALT_P12V_U2_3_N", "ALT_P12V_U2_4_N",
++				  "ALT_P12V_U2_5_N", "ALT_P12V_U2_6_N",
++				  "ALT_P12V_U2_7_N", "ALT_P12V_U2_8_N",
++				  "ALT_P12V_U2_9_N", "ALT_P12V_U2_10_N";
++	};
++
++	/* RIO GRANDE IOEXP10 U270 */
++	rio_io_expander10: gpio-expander@24 {
++		compatible = "nxp,pca9555";
++		reg = <0x24>;
++		interrupt-parent = <&rio_io_expander1>;
++		interrupts = <12 IRQ_TYPE_LEVEL_LOW>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names =
++				  /*00-07*/
++				  "", "RST_PCIE_MCIO3B_N",
++				  "", "RST_3A_IOEXP5_AND3_R_N",
++				  "RST_3A_IOEXP5_AND5_R_N", "RST_3A_IOEXP5_AND7_R_N",
++				  "RST_3A_IOEXP5_AND9_R_N", "",
++				  /*10-17*/
++				  "", "",
++				  "RST_3A_IOEXP5_AND10_R_N", "RST_3A_IOEXP5_AND8_R_N",
++				  "RST_3A_IOEXP5_AND6_R_N", "RST_3A_IOEXP5_AND4_R_N",
++				  "RST_3A_IOEXP5_AND2_R_N", "RST_3A_IOEXP5_AND1_R_N";
++	};
++
++	/* RIO GRANDE IOEXP U254 */
++	rio_io_expander1: gpio-expander@25 {
++		compatible = "nxp,pca9555";
++		reg = <0x25>;
 +		interrupt-parent = <&sgpiom0>;
 +		interrupts = <114 IRQ_TYPE_LEVEL_LOW>;
 +		interrupt-controller;
@@ -562,109 +627,52 @@ index 93a559712..fee928fad 100644
 +				  "IFDET_U2_7_R1_N", "IFDET_U2_8_R1_N",
 +				  "IFDET_U2_9_R1_N", "IFDET_U2_10_R1_N",
 +				  /*10-17*/
++				  "PG_HOST_CPLD_MCIO3A_R1", "INT_MCIO3A_IOEXP2_R1_N",
++				  "INT_MCIO3A_IOEXP6_R_N", "INT_MCIO3A_IOEXP4_R1_N",
++				  "INT_MCIO3A_IOEXP5_R1_N", "ALT_SMB_TMP1_R1_N",
++				  "PG_P12V_1_SB4_R1", "INT_MCIO3A_IOEXP7_R_N";
++	};
++
++	/* RIO GRANDE IOEXP U255 */
++	rio_io_expander2: gpio-expander@26 {
++		compatible = "nxp,pca9555";
++		reg = <0x26>;
++		interrupt-parent = <&rio_io_expander1>;
++		interrupts = <10 IRQ_TYPE_LEVEL_LOW>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names =
++				  /*00-07*/
 +				  "EN_P12V_U2_3_R1", "EN_P12V_U2_4_R1",
 +				  "EN_P12V_U2_5_R1", "EN_P12V_U2_6_R1",
 +				  "EN_P12V_U2_7_R1", "EN_P12V_U2_8_R1",
 +				  "EN_P12V_U2_9_R1", "EN_P12V_U2_10_R1",
-+				  /*20-27*/
++				  /*10-17*/
 +				  "PG_P12V_U2_3_R1", "PG_P12V_U2_4_R1",
 +				  "PG_P12V_U2_5_R1", "PG_P12V_U2_6_R1",
 +				  "PG_P12V_U2_7_R1", "PG_P12V_U2_8_R1",
-+				  "PG_P12V_U2_9_R1", "PG_P12V_U2_10_R1",
-+				  /*30-37*/
++				  "PG_P12V_U2_9_R1", "PG_P12V_U2_10_R1";
++	};
++
++	/* RIO GRANDE IOEXP U331 */
++	rio_io_expander13: gpio-expander@27 {
++		compatible = "nxp,pca9555";
++		reg = <0x27>;
++		interrupt-parent = <&rio_io_expander1>;
++		interrupts = <15 IRQ_TYPE_LEVEL_LOW>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names =
++				  /*00-07*/
++				  "FAULT_U2_ACCL_3_N", "FAULT_U2_ACCL_4_N",
++				  "FAULT_U2_ACCL_5_N", "FAULT_U2_ACCL_6_N",
++				  "FAULT_U2_ACCL_7_N", "FAULT_U2_ACCL_8_N",
++				  "FAULT_U2_ACCL_9_N", "FAULT_U2_ACCL_10_N",
++				  /*10-17*/
 +				  "FAULT_P3V3_AUX_U2_3_R1_N", "FAULT_P3V3_AUX_U2_4_R1_N",
 +				  "FAULT_P3V3_AUX_U2_5_R1_N", "FAULT_P3V3_AUX_U2_6_R1_N",
 +				  "FAULT_P3V3_AUX_U2_7_R1_N", "FAULT_P3V3_AUX_U2_8_R1_N",
-+				  "FAULT_P3V3_AUX_U2_9_R1_N", "FAULT_P3V3_AUX_U2_10_R1_N",
-+				  /*40-47*/
-+				  "PG_HOST_CPLD_MCIO3A_R1", "INT_MCIO3A_IOEXP2_R1_N",
-+				  "INT_MCIO3A_IOEXP3_R1_N", "INT_MCIO3A_IOEXP4_R1_N",
-+				  "INT_MCIO3A_IOEXP5_R1_N", "ALT_SMB_TMP1_R1_N",
-+				  "PG_P12V_1_SB4_R1", "";
-+	};
-+
-+	/* RIO GRANDE IOEXP3 U253 */
-+	rio_io_expander3: gpio-expander@21 {
-+		compatible = "nxp,pca9555";
-+		reg = <0x21>;
-+		interrupt-parent = <&rio_io_expander0>;
-+		interrupts = <35 IRQ_TYPE_LEVEL_LOW>;
-+		gpio-controller;
-+		#gpio-cells = <2>;
-+		gpio-line-names =
-+				  /*00-07*/
-+				  "EN_P12V_U2_1_R", "PG_P12V_U2_1",
-+				  "FAULT_P3V3_AUX_U2_1_N", "ALT_P12V_U2_1_N",
-+				  "CLKREQ_U2_1_N", "WAKE_U2_1_N",
-+				  "PWRDIS_U2_1", "IFDET_U2_1_N",
-+				  /*10-17*/
-+				  "EN_P12V_U2_2_R", "PG_P12V_U2_2",
-+				  "FAULT_P3V3_AUX_U2_2_N", "ALT_P12V_U2_2_N",
-+				  "CLKREQ_U2_2_N", "WAKE_U2_2_N",
-+				  "PWRDIS_U2_2", "IFDET_U2_2_N";
-+	};
-+
-+	/* RIO GRANDE IOEXP4 U256 */
-+	rio_io_expander4: gpio-expander@22 {
-+		compatible = "nxp,pca9555";
-+		reg = <0x22>;
-+		interrupt-parent = <&rio_io_expander0>;
-+		interrupts = <33 IRQ_TYPE_LEVEL_LOW>;
-+		gpio-controller;
-+		#gpio-cells = <2>;
-+		gpio-line-names =
-+				  /*00-07*/
-+				  "CLKREQ_U2_3_N", "CLKREQ_U2_4_N",
-+				  "CLKREQ_U2_5_N", "CLKREQ_U2_6_N",
-+				  "CLKREQ_U2_7_N", "CLKREQ_U2_8_N",
-+				  "CLKREQ_U2_9_N", "CLKREQ_U2_10_N",
-+				  /*10-17*/
-+				  "ALT_P12V_U2_3_N", "ALT_P12V_U2_4_N",
-+				  "ALT_P12V_U2_5_N", "ALT_P12V_U2_6_N",
-+				  "ALT_P12V_U2_7_N", "ALT_P12V_U2_8_N",
-+				  "ALT_P12V_U2_9_N", "ALT_P12V_U2_10_N";
-+	};
-+
-+	/* RIO GRANDE IOEXP5 U257 */
-+	rio_io_expander5: gpio-expander@23 {
-+		compatible = "nxp,pca9555";
-+		reg = <0x23>;
-+		interrupt-parent = <&rio_io_expander0>;
-+		interrupts = <34 IRQ_TYPE_LEVEL_LOW>;
-+		gpio-controller;
-+		#gpio-cells = <2>;
-+		gpio-line-names =
-+				  /*00-07*/
-+				  "WAKE_U2_3_N", "WAKE_U2_4_N",
-+				  "WAKE_U2_5_N", "WAKE_U2_6_N",
-+				  "WAKE_U2_7_N", "WAKE_U2_8_N",
-+				  "WAKE_U2_9_N", "WAKE_U2_10_N",
-+				  /*10-17*/
-+				  "PWRDIS_U2_3", "PWRDIS_U2_4",
-+				  "PWRDIS_U2_5", "PWRDIS_U2_6",
-+				  "PWRDIS_U2_7", "PWRDIS_U2_8",
-+				  "PWRDIS_U2_9", "PWRDIS_U2_10";
-+	};
-+
-+	/* RIO GRANDE IOEXP10 U270 */
-+	rio_io_expander10: gpio-expander@24 {
-+		compatible = "nxp,pca9555";
-+		reg = <0x24>;
-+		interrupt-parent = <&rio_io_expander0>;
-+		interrupts = <36 IRQ_TYPE_LEVEL_LOW>;
-+		gpio-controller;
-+		#gpio-cells = <2>;
-+		gpio-line-names =
-+				  /*00-07*/
-+				  "RST_PCIE_MCIO4B_N", "RST_PCIE_MCIO3B_N",
-+				  "", "RST_3A_IOEXP5_AND3_R_N",
-+				  "RST_3A_IOEXP5_AND5_R_N", "RST_3A_IOEXP5_AND7_R_N",
-+				  "RST_3A_IOEXP5_AND9_R_N", "",
-+				  /*10-17*/
-+				  "", "",
-+				  "RST_3A_IOEXP5_AND10_R_N", "RST_3A_IOEXP5_AND8_R_N",
-+				  "RST_3A_IOEXP5_AND6_R_N", "RST_3A_IOEXP5_AND4_R_N",
-+				  "RST_3A_IOEXP5_AND2_R_N", "RST_3A_IOEXP5_AND1_R_N";
++				  "FAULT_P3V3_AUX_U2_9_R1_N", "FAULT_P3V3_AUX_U2_10_R1_N";
 +	};
 +
 +	/* RIO GRANDE I2C MUX U249 */
@@ -747,12 +755,15 @@ index 93a559712..fee928fad 100644
  };
  
  &i2c9 {
-@@ -1048,13 +1649,177 @@ &i2c11 {
+@@ -1048,13 +1657,186 @@ &i2c11 {
  	multi-master;
  	i2c-scl-clk-low-timeout-us = <31744>;
  	mctp-controller;
 -	clock-frequency = <400000>;
 +	clock-frequency = <100000>;
++	debounce-level = <15>;
++	manual-data-hold = <1>;
++	i2c-clk-high-min-percent = <50>;
  	status = "okay";
  
  	mctp@10 {
@@ -760,10 +771,52 @@ index 93a559712..fee928fad 100644
  		reg = <(0x10 | I2C_OWN_SLAVE_ADDRESS)>;
  	};
 +
-+	/* RIO GRANDE IOEXP1 U259 */
-+	rio_io_expander1: gpio-expander@26 {
-+		compatible = "nxp,pca9506";
-+		reg = <0x26>;
++	/* RIO GRANDE IOEXP U260 */
++	rio_io_expander6: gpio-expander@21 {
++		compatible = "nxp,pca9555";
++		reg = <0x21>;
++		interrupt-parent = <&rio_io_expander4>;
++		interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names =
++				  /*00-07*/
++				  "PWRDIS_U2_11", "PWRDIS_U2_12",
++				  "PWRDIS_U2_13", "PWRDIS_U2_14",
++				  "PWRDIS_U2_15", "PWRDIS_U2_16",
++				  "PWRDIS_U2_17", "PWRDIS_U2_18",
++				  /*10-17*/
++				  "ALT_P12V_U2_11_N", "ALT_P12V_U2_12_N",
++				  "ALT_P12V_U2_13_N", "ALT_P12V_U2_14_N",
++				  "ALT_P12V_U2_15_N", "ALT_P12V_U2_16_N",
++				  "ALT_P12V_U2_17_N", "ALT_P12V_U2_18_N";
++	};
++
++	/* RIO GRANDE IOEXP U271 */
++	rio_io_expander11: gpio-expander@24 {
++		compatible = "nxp,pca9555";
++		reg = <0x24>;
++		interrupt-parent = <&rio_io_expander4>;
++		interrupts = <11 IRQ_TYPE_LEVEL_LOW>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names =
++				  /*00-07*/
++				  "", "",
++				  "RST_2A_IOEXP4_AND12_R_N", "RST_2A_IOEXP4_AND14_R_N",
++				  "RST_2A_IOEXP4_AND16_R_N", "RST_2A_IOEXP4_AND18_R_N",
++				  "MFG_U2_ACCL3_6", "MFG_U2_ACCL7_10",
++				  /*10-17*/
++				  "MFG_U2_ACCL11_14", "MFG_U2_ACCL15_18",
++				  "MFG_U2_ACCL19_22", "MFG_U2_ACCL23_26",
++				  "RST_2A_IOEXP4_AND17_R_N", "RST_2A_IOEXP4_AND15_R_N",
++				  "RST_2A_IOEXP4_AND13_R_N", "RST_2A_IOEXP4_AND11_R_N";
++	};
++
++	/* RIO GRANDE IOEXP U258 */
++	rio_io_expander4: gpio-expander@25 {
++		compatible = "nxp,pca9555";
++		reg = <0x25>;
 +		interrupt-parent = <&sgpiom0>;
 +		interrupts = <110 IRQ_TYPE_LEVEL_LOW>;
 +		interrupt-controller;
@@ -777,88 +830,52 @@ index 93a559712..fee928fad 100644
 +				  "IFDET_U2_15_R1_N", "IFDET_U2_16_R1_N",
 +				  "IFDET_U2_17_R1_N", "IFDET_U2_18_R1_N",
 +				  /*10-17*/
++				  "PG_HOST_CPLD_MCIO2A_R1", "INT_MCIO2A_IOEXP2_R1_N",
++				  "INT_MCIO2A_IOEXP5_N", "INT_MCIO2A_IOEXP4_R1_N",
++				  "ALT_SMB_TMP2_R1_N", "INT_MCIO2A_IOEXP6_N",
++				  "", "EN_MCIO3A_PWR_R1";
++	};
++
++	/* RIO GRANDE IOEXP U259 */
++	rio_io_expander5: gpio-expander@26 {
++		compatible = "nxp,pca9555";
++		reg = <0x26>;
++		interrupt-parent = <&rio_io_expander4>;
++		interrupts = <10 IRQ_TYPE_LEVEL_LOW>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names =
++				  /*00-07*/
 +				  "EN_P12V_U2_11_R1", "EN_P12V_U2_12_R1",
 +				  "EN_P12V_U2_13_R1", "EN_P12V_U2_14_R1",
 +				  "EN_P12V_U2_15_R1", "EN_P12V_U2_16_R1",
 +				  "EN_P12V_U2_17_R1", "EN_P12V_U2_18_R1",
-+				  /*20-27*/
++				  /*10-17*/
 +				  "PG_P12V_U2_11_R1", "PG_P12V_U2_12_R1",
 +				  "PG_P12V_U2_13_R1", "PG_P12V_U2_14_R1",
 +				  "PG_P12V_U2_15_R1", "PG_P12V_U2_16_R1",
-+				  "PG_P12V_U2_17_R1", "PG_P12V_U2_18_R1",
-+				  /*30-37*/
++				  "PG_P12V_U2_17_R1", "PG_P12V_U2_18_R1";
++	};
++
++	/* RIO GRANDE IOEXP U332 */
++	rio_io_expander14: gpio-expander@27 {
++		compatible = "nxp,pca9555";
++		reg = <0x27>;
++		interrupt-parent = <&rio_io_expander4>;
++		interrupts = <13 IRQ_TYPE_LEVEL_LOW>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names =
++				  /*00-07*/
++				  "FAULT_U2_ACCL_11_N", "FAULT_U2_ACCL_12_N",
++				  "FAULT_U2_ACCL_13_N", "FAULT_U2_ACCL_14_N",
++				  "FAULT_U2_ACCL_15_N", "FAULT_U2_ACCL_16_N",
++				  "FAULT_U2_ACCL_17_N", "FAULT_U2_ACCL_18_N",
++				  /*10-17*/
 +				  "FAULT_P3V3_AUX_U2_11_R1_N", "FAULT_P3V3_AUX_U2_12_R1_N",
 +				  "FAULT_P3V3_AUX_U2_13_R1_N", "FAULT_P3V3_AUX_U2_14_R1_N",
 +				  "FAULT_P3V3_AUX_U2_15_R1_N", "FAULT_P3V3_AUX_U2_16_R1_N",
-+				  "FAULT_P3V3_AUX_U2_17_R1_N", "FAULT_P3V3_AUX_U2_18_R1_N",
-+				  /*40-47*/
-+				  "PG_HOST_CPLD_MCIO2A_R1", "INT_MCIO2A_IOEXP2_R1_N",
-+				  "INT_MCIO2A_IOEXP3_R1_N", "INT_MCIO2A_IOEXP4_R1_N",
-+				  "ALT_SMB_TMP2_R1_N", "PG_P12V_2_SB4_R1",
-+				  "EN_MCIO3B_PWR_R1", "EN_MCIO3A_PWR_R1";
-+	};
-+
-+	/* RIO GRANDE IOEXP6 U260 */
-+	rio_io_expander6: gpio-expander@21 {
-+		compatible = "nxp,pca9555";
-+		reg = <0x21>;
-+		interrupt-parent = <&rio_io_expander1>;
-+		interrupts = <33 IRQ_TYPE_LEVEL_LOW>;
-+		gpio-controller;
-+		#gpio-cells = <2>;
-+		gpio-line-names =
-+				  /*00-07*/
-+				  "CLKREQ_U2_11_N", "CLKREQ_U2_12_N",
-+				  "CLKREQ_U2_13_N", "CLKREQ_U2_14_N",
-+				  "CLKREQ_U2_15_N", "CLKREQ_U2_16_N",
-+				  "CLKREQ_U2_17_N", "CLKREQ_U2_18_N",
-+				  /*10-17*/
-+				  "ALT_P12V_U2_11_N", "ALT_P12V_U2_12_N",
-+				  "ALT_P12V_U2_13_N", "ALT_P12V_U2_14_N",
-+				  "ALT_P12V_U2_15_N", "ALT_P12V_U2_16_N",
-+				  "ALT_P12V_U2_17_N", "ALT_P12V_U2_18_N";
-+	};
-+
-+	/* RIO GRANDE IOEXP7 U261 */
-+	rio_io_expander7: gpio-expander@22 {
-+		compatible = "nxp,pca9555";
-+		reg = <0x22>;
-+		interrupt-parent = <&rio_io_expander1>;
-+		interrupts = <34 IRQ_TYPE_LEVEL_LOW>;
-+		gpio-controller;
-+		#gpio-cells = <2>;
-+		gpio-line-names =
-+				  /*00-07*/
-+				  "WAKE_U2_11_N", "WAKE_U2_12_N",
-+				  "WAKE_U2_13_N", "WAKE_U2_14_N",
-+				  "WAKE_U2_15_N", "WAKE_U2_16_N",
-+				  "WAKE_U2_17_N", "WAKE_U2_18_N",
-+				  /*10-17*/
-+				  "PWRDIS_U2_11", "PWRDIS_U2_12",
-+				  "PWRDIS_U2_13", "PWRDIS_U2_14",
-+				  "PWRDIS_U2_15", "PWRDIS_U2_16",
-+				  "PWRDIS_U2_17", "PWRDIS_U2_18";
-+	};
-+
-+	/* RIO GRANDE IOEXP11 U271 */
-+	rio_io_expander11: gpio-expander@24 {
-+		compatible = "nxp,pca9555";
-+		reg = <0x24>;
-+		interrupt-parent = <&rio_io_expander1>;
-+		interrupts = <35 IRQ_TYPE_LEVEL_LOW>;
-+		gpio-controller;
-+		#gpio-cells = <2>;
-+		gpio-line-names =
-+				  /*00-07*/
-+				  "RST_PCIE_MCIO2B_N", "",
-+				  "RST_2A_IOEXP4_AND12_R_N", "RST_2A_IOEXP4_AND14_R_N",
-+				  "RST_2A_IOEXP4_AND16_R_N", "RST_2A_IOEXP4_AND18_R_N",
-+				  "", "",
-+				  /*10-17*/
-+				  "", "",
-+				  "", "",
-+				  "RST_2A_IOEXP4_AND17_R_N", "RST_2A_IOEXP4_AND15_R_N",
-+				  "RST_2A_IOEXP4_AND13_R_N", "RST_2A_IOEXP4_AND11_R_N";
++				  "FAULT_P3V3_AUX_U2_17_R1_N", "FAULT_P3V3_AUX_U2_18_R1_N";
 +	};
 +
 +	/* RIO GRANDE I2C MUX U251 */
@@ -926,15 +943,62 @@ index 93a559712..fee928fad 100644
  };
  
  /* MB CPLD I2C */
-@@ -1073,6 +1838,164 @@ &i2c13 {
+@@ -1071,8 +1853,175 @@ &i2c13 {
+ 
+ /* MCIO 2A I2C */
  &i2c14 {
++	debounce-level = <15>;
++	manual-data-hold = <1>;
++	i2c-clk-high-min-percent = <50>;
  	status = "okay";
  	pinctrl-0 = <&pinctrl_di2c14_default>;
 +
-+	/* RIO GRANDE IOEXP2 U263 */
-+	rio_io_expander2: gpio-expander@26 {
-+		compatible = "nxp,pca9506";
-+		reg = <0x26>;
++	/* RIO GRANDE IOEXP U264 */
++	rio_io_expander9: gpio-expander@21 {
++		compatible = "nxp,pca9555";
++		reg = <0x21>;
++		interrupt-parent = <&rio_io_expander7>;
++		interrupts = <9 IRQ_TYPE_LEVEL_LOW>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names =
++				  /*00-07*/
++				  "PWRDIS_U2_19", "PWRDIS_U2_20",
++				  "PWRDIS_U2_21", "PWRDIS_U2_22",
++				  "PWRDIS_U2_23", "PWRDIS_U2_24",
++				  "PWRDIS_U2_25", "PWRDIS_U2_26",
++				  /*10-17*/
++				  "ALT_P12V_U2_19_N", "ALT_P12V_U2_20_N",
++				  "ALT_P12V_U2_21_N", "ALT_P12V_U2_22_N",
++				  "ALT_P12V_U2_23_N", "ALT_P12V_U2_24_N",
++				  "ALT_P12V_U2_25_N", "ALT_P12V_U2_26_N";
++	};
++
++	/* RIO GRANDE IOEXP U272 */
++	rio_io_expander12: gpio-expander@24 {
++		compatible = "nxp,pca9555";
++		reg = <0x24>;
++		interrupt-parent = <&rio_io_expander7>;
++		interrupts = <11 IRQ_TYPE_LEVEL_LOW>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names =
++				  /*00-07*/
++				  "FAULT_U2_ACCL_20_N", "FAULT_U2_ACCL_22_N",
++				  "RST_1A_IOEXP4_AND20_R_N", "RST_1A_IOEXP4_AND22_R_N",
++				  "RST_1A_IOEXP4_AND24_R_N", "RST_1A_IOEXP4_AND26_R_N",
++				  "FAULT_U2_ACCL_24_N", "FAULT_U2_ACCL_26_N",
++				  /*10-17*/
++				  "FAULT_U2_ACCL_25_N", "FAULT_U2_ACCL_23_N",
++				  "FAULT_U2_ACCL_21_N", "FAULT_U2_ACCL_19_N",
++				  "RST_1A_IOEXP4_AND25_R_N", "RST_1A_IOEXP4_AND23_R_N",
++				  "RST_1A_IOEXP4_AND21_R_N", "RST_1A_IOEXP4_AND19_R_N";
++	};
++
++	/* RIO GRANDE IOEXP U262 */
++	rio_io_expander7: gpio-expander@25 {
++		compatible = "nxp,pca9555";
++		reg = <0x25>;
 +		interrupt-parent = <&sgpiom0>;
 +		interrupts = <106 IRQ_TYPE_LEVEL_LOW>;
 +		interrupt-controller;
@@ -948,88 +1012,52 @@ index 93a559712..fee928fad 100644
 +				  "IFDET_U2_23_R1_N", "IFDET_U2_24_R1_N",
 +				  "IFDET_U2_25_R1_N", "IFDET_U2_26_R1_N",
 +				  /*10-17*/
++				  "PG_HOST_CPLD_MCIO1A_R1", "INT_MCIO1A_IOEXP2_R1_N",
++				  "INT_MCIO1A_IOEXP5_N", "INT_MCIO1A_IOEXP4_R1_N",
++				  "INT_MCIO1A_IOEXP6_N", "",
++				  "", "";
++	};
++
++	/* RIO GRANDE IOEXP U263 */
++	rio_io_expander8: gpio-expander@26 {
++		compatible = "nxp,pca9555";
++		reg = <0x26>;
++		interrupt-parent = <&rio_io_expander7>;
++		interrupts = <10 IRQ_TYPE_LEVEL_LOW>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names =
++				  /*00-07*/
 +				  "EN_P12V_U2_19_R1", "EN_P12V_U2_20_R1",
 +				  "EN_P12V_U2_21_R1", "EN_P12V_U2_22_R1",
 +				  "EN_P12V_U2_23_R1", "EN_P12V_U2_24_R1",
 +				  "EN_P12V_U2_25_R1", "EN_P12V_U2_26_R1",
-+				  /*20-27*/
++				  /*10-17*/
 +				  "PG_P12V_U2_19_R1", "PG_P12V_U2_20_R1",
 +				  "PG_P12V_U2_21_R1", "PG_P12V_U2_22_R1",
 +				  "PG_P12V_U2_23_R1", "PG_P12V_U2_24_R1",
-+				  "PG_P12V_U2_25_R1", "PG_P12V_U2_26_R1",
-+				  /*30-37*/
++				  "PG_P12V_U2_25_R1", "PG_P12V_U2_26_R1";
++	};
++
++	/* RIO GRANDE IOEXP U333 */
++	rio_io_expander15: gpio-expander@27 {
++		compatible = "nxp,pca9555";
++		reg = <0x27>;
++		interrupt-parent = <&rio_io_expander7>;
++		interrupts = <12 IRQ_TYPE_LEVEL_LOW>;
++		gpio-controller;
++		#gpio-cells = <2>;
++		gpio-line-names =
++				  /*00-07*/
++				  "", "",
++				  "", "",
++				  "", "STRAP_BOARD_REV0",
++				  "STRAP_BOARD_REV1", "STRAP_BOARD_REV2",
++				  /*10-17*/
 +				  "FAULT_P3V3_AUX_U2_19_R1_N", "FAULT_P3V3_AUX_U2_20_R1_N",
 +				  "FAULT_P3V3_AUX_U2_21_R1_N", "FAULT_P3V3_AUX_U2_22_R1_N",
 +				  "FAULT_P3V3_AUX_U2_23_R1_N", "FAULT_P3V3_AUX_U2_24_R1_N",
-+				  "FAULT_P3V3_AUX_U2_25_R1_N", "FAULT_P3V3_AUX_U2_26_R1_N",
-+				  /*40-47*/
-+				  "PG_HOST_CPLD_MCIO1A_R1", "INT_MCIO1A_IOEXP2_R1_N",
-+				  "INT_MCIO1A_IOEXP3_R1_N", "INT_MCIO1A_IOEXP4_R1_N",
-+				  "EN_MCIO2B_PWR_R1", "EN_MCIO2A_PWR_R1",
-+				  "EN_MCIO1A_PWR_R1", "EN_MCIO1B_PWR_R1";
-+	};
-+
-+	/* RIO GRANDE IOEXP8 U264 */
-+	rio_io_expander8: gpio-expander@21 {
-+		compatible = "nxp,pca9555";
-+		reg = <0x21>;
-+		interrupt-parent = <&rio_io_expander2>;
-+		interrupts = <33 IRQ_TYPE_LEVEL_LOW>;
-+		gpio-controller;
-+		#gpio-cells = <2>;
-+		gpio-line-names =
-+				  /*00-07*/
-+				  "CLKREQ_U2_19_N", "CLKREQ_U2_20_N",
-+				  "CLKREQ_U2_21_N", "CLKREQ_U2_22_N",
-+				  "CLKREQ_U2_23_N", "CLKREQ_U2_24_N",
-+				  "CLKREQ_U2_25_N", "CLKREQ_U2_26_N",
-+				  /*10-17*/
-+				  "ALT_P12V_U2_19_N", "ALT_P12V_U2_20_N",
-+				  "ALT_P12V_U2_21_N", "ALT_P12V_U2_22_N",
-+				  "ALT_P12V_U2_23_N", "ALT_P12V_U2_24_N",
-+				  "ALT_P12V_U2_25_N", "ALT_P12V_U2_26_N";
-+	};
-+
-+	/* RIO GRANDE IOEXP9 U265 */
-+	rio_io_expander9: gpio-expander@22 {
-+		compatible = "nxp,pca9555";
-+		reg = <0x22>;
-+		interrupt-parent = <&rio_io_expander2>;
-+		interrupts = <34 IRQ_TYPE_LEVEL_LOW>;
-+		gpio-controller;
-+		#gpio-cells = <2>;
-+		gpio-line-names =
-+				  /*00-07*/
-+				  "WAKE_U2_19_N", "WAKE_U2_20_N",
-+				  "WAKE_U2_21_N", "WAKE_U2_22_N",
-+				  "WAKE_U2_23_N", "WAKE_U2_24_N",
-+				  "WAKE_U2_25_N", "WAKE_U2_26_N",
-+				  /*10-17*/
-+				  "PWRDIS_U2_19", "PWRDIS_U2_20",
-+				  "PWRDIS_U2_21", "PWRDIS_U2_22",
-+				  "PWRDIS_U2_23", "PWRDIS_U2_24",
-+				  "PWRDIS_U2_25", "PWRDIS_U2_26";
-+	};
-+
-+	/* RIO GRANDE IOEXP12 U272 */
-+	rio_io_expander12: gpio-expander@24 {
-+		compatible = "nxp,pca9555";
-+		reg = <0x24>;
-+		interrupt-parent = <&rio_io_expander2>;
-+		interrupts = <35 IRQ_TYPE_LEVEL_LOW>;
-+		gpio-controller;
-+		#gpio-cells = <2>;
-+		gpio-line-names =
-+				  /*00-07*/
-+				  "", "RST_PCIE_MCIO1B_N",
-+				  "RST_1A_IOEXP4_AND20_R_N", "RST_1A_IOEXP4_AND22_R_N",
-+				  "RST_1A_IOEXP4_AND24_R_N", "RST_1A_IOEXP4_AND26_R_N",
-+				  "", "",
-+				  /*10-17*/
-+				  "", "",
-+				  "", "",
-+				  "RST_1A_IOEXP4_AND25_R_N", "RST_1A_IOEXP4_AND23_R_N",
-+				  "RST_1A_IOEXP4_AND21_R_N", "RST_1A_IOEXP4_AND19_R_N";
++				  "FAULT_P3V3_AUX_U2_25_R1_N", "FAULT_P3V3_AUX_U2_26_R1_N";
 +	};
 +
 +	/* RIO GRANDE I2C MUX U252 */
@@ -1091,7 +1119,7 @@ index 93a559712..fee928fad 100644
  };
  
  &i2c15 {
-@@ -1120,6 +2043,14 @@ &mac0 {
+@@ -1120,6 +2069,14 @@ &mac0 {
  	status = "okay";
  };
  
@@ -1106,7 +1134,7 @@ index 93a559712..fee928fad 100644
  /*
  &mdio0 {
  	status = "okay";
-@@ -1263,9 +2194,9 @@ &sgpiom0 {
+@@ -1263,9 +2220,9 @@ &sgpiom0 {
  	"PRSNT_MCIO1A_N_FF","",
  	"NIC_PRSNT_N","",
  	"FM_CPU_BMC_RST_N","",
@@ -1118,7 +1146,7 @@ index 93a559712..fee928fad 100644
  	/*bit104-bit111*/
  	"MASTER_PWR_EN","",
  	"MASTER_PWR2_EN","",
-@@ -1283,10 +2214,10 @@ &sgpiom0 {
+@@ -1283,10 +2240,10 @@ &sgpiom0 {
  	"","",
  	"PRSNT_BOOT_N","",
  	"PRSNT_MCIO1A_N","",

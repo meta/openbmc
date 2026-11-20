@@ -1,0 +1,36 @@
+From: Louis Maliyam <louis@nexthop.ai>
+Date: Wed, 28 Oct 2026 12:00:00 -0700
+Subject: [PATCH] mcu-runtime: sdram_ast2700: cap the detected size
+
+sdramc_size_detect() writes one word at the top of each candidate size
+and reads offset 0 once to see whether it wrapped. On Nexthop's AST2720-A2
+BMC card (4 GiB DDR5 x16) the probe misses the wrap on cold boot
+and reports 8 GiB; Linux then crashes once it uses memory above 4 GiB.
+Clamp the result to the board's max-dram-size-mb when the DT sets it.
+
+Signed-off-by: Louis Maliyam <louis@nexthop.ai>
+---
+diff --git a/apps/mcu-runtime/soc/ast2700/sdram_ast2700.c b/apps/mcu-runtime/soc/ast2700/sdram_ast2700.c
+index fb9a1bc..b43781d 100644
+--- a/apps/mcu-runtime/soc/ast2700/sdram_ast2700.c
++++ b/apps/mcu-runtime/soc/ast2700/sdram_ast2700.c
+@@ -944,6 +944,19 @@ static int sdramc_size_detect(struct sdramc *sdramc)
+ 	}
+ 
+ 	sz--;
++
++#if DT_NODE_HAS_PROP(SDRAMMC_NODE, max_dram_size_mb)
++	/*
++	 * The wrap-around probe can over-report the capacity (e.g. a 4GB DDR5
++	 * x16 part detected as 8GB). Clamp to the board-specified maximum.
++	 * ram_size_ary[] is in 16-byte units, so >> 16 gives MiB.
++	 */
++	while (sz > SDRAM_SIZE_256MB &&
++	       (ram_size_ary[sz] >> 16) > DT_PROP(SDRAMMC_NODE, max_dram_size_mb)) {
++		sz--;
++	}
++#endif
++
+ 	sdramc->sz = sz;
+ 
+ 	/* re-configure ram size to dramc. */

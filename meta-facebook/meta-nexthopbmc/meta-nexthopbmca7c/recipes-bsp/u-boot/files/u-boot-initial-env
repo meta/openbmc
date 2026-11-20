@@ -1,0 +1,4 @@
+bootargs=console=ttyS12,9600n8 root=/dev/ram rw
+bootcmd=run bootspi
+bootspi=fdt addr ${fdtspiaddr} && fdt header get fitsize totalsize && cp.b ${fdtspiaddr} ${loadaddr} ${fitsize} && bootm ${loadaddr}; echo Error loading kernel FIT image
+loadaddr=0x403000000

@@ -1,0 +1,2 @@
+Common targets are:
+    nexthopbmca7c-image

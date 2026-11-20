@@ -36,8 +36,18 @@ USERVER_PWR_OFF_PULSE_GAP_SEC=0.005 # Minimum gap between level changes
 # reset, before it is powered back on).
 USERVER_PWR_OFF_WAIT_SEC=6
 
+# This file is shared by the meta-nexthopbmc machines; the board compatible in
+# the device tree tells them apart.
+wedge_is_nexthopbmca7c() {
+    grep -qs "facebook,nexthopbmca7c-bmc" /proc/device-tree/compatible
+}
+
 wedge_board_type() {
-    echo 'nexthopbmc'
+    if wedge_is_nexthopbmca7c; then
+        echo 'nexthopbmca7c'
+    else
+        echo 'nexthopbmc'
+    fi
 }
 
 wedge_board_rev() {

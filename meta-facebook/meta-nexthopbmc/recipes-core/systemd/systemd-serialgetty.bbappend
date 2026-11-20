@@ -1,1 +1,1 @@
-SERIAL_CONSOLES = "9600;ttyS4"
+SERIAL_CONSOLES:nexthopbmc = "9600;ttyS4"

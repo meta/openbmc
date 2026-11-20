@@ -1,9 +1,9 @@
 From 8517120826d8a308a796d8e1cf6b96d7ee108812 Mon Sep 17 00:00:00 2001
 From: Bianca Giocas <bgiocas@arista.com>
 Date: Fri, 16 Oct 2026 14:17:49 +0000
-Subject: [PATCH] ARM: aspeed: limit Aristabmc U-Boot relocation
+Subject: [PATCH] ARM: aspeed: limit AST2700 U-Boot relocation
 
-Aristabmc DRAM starts at 0x400000000. MAC0 ping succeeds when both the
+AST2700 DRAM starts at 0x400000000. MAC0 ping succeeds when both the
 descriptor rings and packet buffers are below 0x4f0000000, which is 3.75
 GiB above that base. Splitting the allocations across the boundary fails:
 low rings with buffers at 0x4f0000000 fail ARP, while rings at that address

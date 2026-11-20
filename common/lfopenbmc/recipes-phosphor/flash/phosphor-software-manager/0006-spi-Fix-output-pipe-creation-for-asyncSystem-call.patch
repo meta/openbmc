@@ -1,0 +1,204 @@
+From 90722a536393b6135696c6d8f87d1586295017c7 Mon Sep 17 00:00:00 2001
+From: Alan Tsai <alan-tsai@quantatw.com>
+Date: Fri, 20 Nov 2026 17:07:36 +0800
+Subject: [PATCH] spi: Fix output pipe creation for asyncSystem callback
+
+The asyncSystem() function supports capturing command output through
+either a result string or an output callback. However, the output pipe
+is only created when a result string is provided.
+
+When only an output callback is supplied, captureOutput is true but
+the output pipe remains uninitialized. This causes the parent process
+to use an invalid file descriptor and prevents the callback from
+receiving command output.
+
+Fix the pipe creation condition to use captureOutput, ensuring that
+the output pipe is created when either a result string or an output
+callback is provided.
+
+This fixes the BIOS flashcp progress monitoring introduced by
+commit b406a15, where asyncSystem() is called with only an output
+callback to update ActivationProgress.
+
+Fixes: "Change-Id : Id774da76cbd8174be271c14202c280f2e30c0516"
+("spi: Report flashcp update progress during BIOS update")
+
+Tested on rainiera7:
+'''
+1.load factory default On rainiera7 & power off the host.
+
+2.flashed 134.2MB bios image by redfish command.
+
+Step 1: Set Environment Variables
+export bmc=10.10.12.56 # Target BMC IP
+export creds="-k -u user:password" # BMC login credentials
+export fwpath="firmware_name.pldm" # Firmware image file path
+export target="Rainier_BIOS" # Redfish component target (prefix match supported)
+export applytime="Immediate" # Apply time: Immediate or OnReset
+
+Step 2: Identify Firmware Inventory Path
+export targetpath=$(curl --silent $creds https://$bmc/redfish/v1/UpdateService/FirmwareInventory/ | \
+jq -r '.Members[]."@odata.id"' | \
+grep "^/redfish/v1/UpdateService/FirmwareInventory/${target}")
+
+Step 3: Upload and Apply the Firmware
+curl -k $creds \
+  -H "Content-Type:multipart/form-data" \
+  -X POST \
+  -F UpdateParameters="{\"Targets\":[\"$targetpath\"],\"@Redfish.OperationApplyTime\":\"$applytime\"};type=application/json" \
+  -F "UpdateFile=@$fwpath;type=application/octet-stream" \
+  https://${bmc}/redfish/v1/UpdateService/update-multipart
+
+Step 4: Check Firmware Update Progress
+curl -k $creds -H 'Content-Type: application/json' https://$bmc/redfish/v1/TaskService/Tasks/0
+
+3.Check update task until success.
+curl -k $creds -H 'Content-Type: application/json' https://$bmc/redfish/v1/TaskService/Tasks/0
+{
+  "@odata.id": "/redfish/v1/TaskService/Tasks/0",
+  "@odata.type": "#Task.v1_4_3.Task",
+  "EndTime": "2026-11-20T01:09:49-08:00",
+  "HidePayload": false,
+  "Id": "0",
+  "Messages": [
+    {
+      "@odata.type": "#Message.v1_1_1.Message",
+      "Message": "The task with Id '0' has started.",
+      "MessageArgs": [
+        "0"
+      ],
+      "MessageId": "TaskEvent.1.0.TaskStarted",
+      "MessageSeverity": "OK",
+      "Resolution": "None."
+    },
+    {
+      "@odata.type": "#Message.v1_1_1.Message",
+      "Message": "The target device '/redfish/v1/UpdateService/FirmwareInventory/Rainier_BIOS_2333' will be updated with image 'F0QA2A04'.",
+      "MessageArgs": [
+        "/redfish/v1/UpdateService/FirmwareInventory/Rainier_BIOS_2333",
+        "F0QA2A04"
+      ],
+      "MessageId": "Update.1.2.TargetDetermined",
+      "MessageSeverity": "OK",
+      "Resolution": "None."
+    },
+    {
+      "@odata.type": "#Message.v1_1_1.Message",
+      "Message": "The task with Id '0' has changed to progress 10 percent complete.",
+      "MessageArgs": [
+        "0",
+        "10"
+      ],
+      "MessageId": "TaskEvent.1.0.TaskProgressChanged",
+      "MessageSeverity": "OK",
+      "Resolution": "None."
+    },
+    {
+      "@odata.type": "#Message.v1_1_1.Message",
+      "Message": "The task with Id '0' has changed to progress 30 percent complete.",
+      "MessageArgs": [
+        "0",
+        "30"
+      ],
+      "MessageId": "TaskEvent.1.0.TaskProgressChanged",
+      "MessageSeverity": "OK",
+      "Resolution": "None."
+    },
+    {
+      "@odata.type": "#Message.v1_1_1.Message",
+      "Message": "The task with Id '0' has changed to progress 31 percent complete.",
+      "MessageArgs": [
+        "0",
+        "31"
+      ],
+      "MessageId": "TaskEvent.1.0.TaskProgressChanged",
+      "MessageSeverity": "OK",
+      "Resolution": "None."
+    },
+    {
+      "@odata.type": "#Message.v1_1_1.Message",
+      "Message": "The task with Id '0' has changed to progress 32 percent complete.",
+      "MessageArgs": [
+        "0",
+        "32"
+      ],
+      "MessageId": "TaskEvent.1.0.TaskProgressChanged",
+      "MessageSeverity": "OK",
+      "Resolution": "None."
+    },
+.
+.
+.
+
+    {
+      "@odata.type": "#Message.v1_1_1.Message",
+      "Message": "Device '/redfish/v1/UpdateService/FirmwareInventory/Rainier_BIOS_2333' successfully updated with image 'F0QA2A04'.",
+      "MessageArgs": [
+        "/redfish/v1/UpdateService/FirmwareInventory/Rainier_BIOS_2333",
+        "F0QA2A04"
+      ],
+      "MessageId": "Update.1.2.UpdateSuccessful",
+      "MessageSeverity": "OK",
+      "Resolution": "None."
+    },
+    {
+      "@odata.type": "#Message.v1_1_1.Message",
+      "Message": "In order to apply changes, recover from errors, or complete the operation, a component reset is required with the Reset action URI '' and ResetType 'PowerCycle'.",
+      "MessageArgs": [
+        "",
+        "PowerCycle"
+      ],
+      "MessageId": "Base.1.19.ResetRequired",
+      "MessageSeverity": "Warning",
+      "Resolution": "Perform the required reset action on the specified component."
+    },
+    {
+      "@odata.type": "#Message.v1_1_1.Message",
+      "Message": "The task with Id '0' has completed.",
+      "MessageArgs": [
+        "0"
+      ],
+      "MessageId": "TaskEvent.1.0.TaskCompletedOK",
+      "MessageSeverity": "OK",
+      "Resolution": "None."
+    }
+  ],
+  "Name": "Task 0",
+  "Payload": {
+    "HttpHeaders": [],
+    "HttpOperation": "POST",
+    "TargetUri": "/redfish/v1/UpdateService/update-multipart"
+  },
+  "PercentComplete": 100,
+  "StartTime": "2026-11-20T00:57:38-08:00",
+  "TaskMonitor": "/redfish/v1/TaskService/TaskMonitors/0",
+  "TaskState": "Completed",
+  "TaskStatus": "OK"
+
+'''
+
+The corresponding change is under review in Gerrit [1].
+[1] https://gerrit.openbmc.org/c/openbmc/phosphor-bmc-code-mgmt/+/97576
+
+Change-Id: I82a45fb488a1c7e707fdb867f319679ed0008dd1
+Signed-off-by: Alan Tsai <alan-tsai@quantatw.com>
+---
+ common/src/utils.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/common/src/utils.cpp b/common/src/utils.cpp
+index a5d1bd2..7f6e839 100644
+--- a/common/src/utils.cpp
++++ b/common/src/utils.cpp
+@@ -120,7 +120,7 @@ sdbusplus::async::task<bool> asyncSystem(
+         result.has_value() || static_cast<bool>(outputCallback);
+ 
+     int resultPipefd[2] = {-1, -1};
+-    if (result && pipe2(resultPipefd, O_CLOEXEC) == -1)
++    if (captureOutput && pipe2(resultPipefd, O_CLOEXEC) == -1)
+     {
+         error("Failed to create pipe for command: {CMD}", "CMD", cmd);
+         close(exitPipefd[0]);
+-- 
+2.25.1
+

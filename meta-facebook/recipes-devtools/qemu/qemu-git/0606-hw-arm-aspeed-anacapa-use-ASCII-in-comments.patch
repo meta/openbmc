@@ -1,0 +1,62 @@
+From 588941c7db4d1004fc0239f842f62ec950336bb5 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Tue, 7 Jul 2026 11:16:00 +0200
+Subject: [PATCH 606/631] hw/arm/aspeed: anacapa: use ASCII in comments
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The anacapa machine source contains a few comments using the U+2014 EM
+DASH character. Replace them with plain ASCII hyphens so the file stays
+ASCII-only.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Link: https://lore.kernel.org/qemu-devel/20260707091609.97759-8-emmanuel.blot@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ hw/arm/aspeed_ast2600_anacapa.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/hw/arm/aspeed_ast2600_anacapa.c b/hw/arm/aspeed_ast2600_anacapa.c
+index a1c8111a934..bd6cc006860 100644
+--- a/hw/arm/aspeed_ast2600_anacapa.c
++++ b/hw/arm/aspeed_ast2600_anacapa.c
+@@ -242,7 +242,7 @@ static void anacapa_bmc_i2c_init(AspeedMachineState *bmc)
+     /* &i2c1 */
+     /* eeprom@50 */
+     at24c_eeprom_init(i2c[1], 0x50, 256 * KiB);
+-    /* i2c-mux@70 (PCA9546) — 4 channels, empty */
++    /* i2c-mux@70 (PCA9546) - 4 channels, empty */
+     i2c_slave_create_simple(i2c[1], TYPE_PCA9546, 0x70);
+ 
+     /* &i2c4 */
+@@ -259,7 +259,7 @@ static void anacapa_bmc_i2c_init(AspeedMachineState *bmc)
+     i2c_mux = i2c_slave_create_simple(i2c[8], TYPE_PCA9546, 0x72);
+ 
+     /* i2c8mux ch0 */
+-    /* adc128d818@1f — no model */
++    /* adc128d818@1f - no model */
+     /* pca9555@22 */
+     i2c_slave_create_simple(pca954x_i2c_get_bus(i2c_mux, 0),
+                             TYPE_PCA9552, 0x22);
+@@ -305,7 +305,7 @@ static void anacapa_bmc_i2c_init(AspeedMachineState *bmc)
+     /* i2c-mux@71 (PCA9548) */
+     i2c_mux = i2c_slave_create_simple(i2c[11], TYPE_PCA9548, 0x71);
+ 
+-    /* i2c11mux ch0-ch4 — empty */
++    /* i2c11mux ch0-ch4 - empty */
+ 
+     /* i2c11mux ch5 */
+     /* pca9555@22 */
+@@ -328,7 +328,7 @@ static void anacapa_bmc_i2c_init(AspeedMachineState *bmc)
+                           hpm_brd_id_eeprom, hpm_brd_id_eeprom_len);
+ 
+     /* i2c13mux ch7 */
+-    /* nfc@28 — no model */
++    /* nfc@28 - no model */
+ }
+ 
+ static void aspeed_machine_anacapa_class_init(ObjectClass *oc,
+-- 
+2.50.1
+

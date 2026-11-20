@@ -1,0 +1,91 @@
+From d7b944a145cd49d620545a2aa7089260fafc8b2d Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 9 Jul 2026 17:23:39 +0200
+Subject: [PATCH 607/631] hw/gpio: pca9552: register types with DEFINE_TYPES()
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Replace the separate TypeInfo definitions and pca955x_register_types()
+registration function with a single type array registered through the
+DEFINE_TYPES() macro, to prepare addition of new PCA955x-derived devices.
+
+No functional change.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
+Link: https://lore.kernel.org/qemu-devel/20260709-catalina-upgrade-v1-1-814575bc076b@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ hw/gpio/pca9552.c | 49 ++++++++++++++++++++---------------------------
+ 1 file changed, 21 insertions(+), 28 deletions(-)
+
+diff --git a/hw/gpio/pca9552.c b/hw/gpio/pca9552.c
+index b13ac9fd9ce..50e868a6e9a 100644
+--- a/hw/gpio/pca9552.c
++++ b/hw/gpio/pca9552.c
+@@ -492,16 +492,6 @@ static void pca955x_class_init(ObjectClass *klass, const void *data)
+     device_class_set_props(dc, pca955x_properties);
+ }
+ 
+-static const TypeInfo pca955x_info = {
+-    .name          = TYPE_PCA955X,
+-    .parent        = TYPE_I2C_SLAVE,
+-    .instance_init = pca955x_initfn,
+-    .instance_size = sizeof(PCA955xState),
+-    .class_init    = pca955x_class_init,
+-    .class_size    = sizeof(PCA955xClass),
+-    .abstract      = true,
+-};
+-
+ static void pca9552_class_init(ObjectClass *oc, const void *data)
+ {
+     DeviceClass *dc = DEVICE_CLASS(oc);
+@@ -526,23 +516,26 @@ static void pca9535_class_init(ObjectClass *oc, const void *data)
+     pc->has_led_support = false;
+ }
+ 
+-static const TypeInfo pca9552_info = {
+-    .name          = TYPE_PCA9552,
+-    .parent        = TYPE_PCA955X,
+-    .class_init    = pca9552_class_init,
++static const TypeInfo pca955x_types[] = {
++    {
++        .name          = TYPE_PCA955X,
++        .parent        = TYPE_I2C_SLAVE,
++        .instance_init = pca955x_initfn,
++        .instance_size = sizeof(PCA955xState),
++        .class_init    = pca955x_class_init,
++        .class_size    = sizeof(PCA955xClass),
++        .abstract      = true,
++    },
++    {
++        .name          = TYPE_PCA9552,
++        .parent        = TYPE_PCA955X,
++        .class_init    = pca9552_class_init,
++    },
++    {
++        .name          = TYPE_PCA9535,
++        .parent        = TYPE_PCA955X,
++        .class_init    = pca9535_class_init,
++    }
+ };
+ 
+-static const TypeInfo pca9535_info = {
+-    .name          = TYPE_PCA9535,
+-    .parent        = TYPE_PCA955X,
+-    .class_init    = pca9535_class_init,
+-};
+-
+-static void pca955x_register_types(void)
+-{
+-    type_register_static(&pca955x_info);
+-    type_register_static(&pca9552_info);
+-    type_register_static(&pca9535_info);
+-}
+-
+-type_init(pca955x_register_types)
++DEFINE_TYPES(pca955x_types)
+-- 
+2.50.1
+

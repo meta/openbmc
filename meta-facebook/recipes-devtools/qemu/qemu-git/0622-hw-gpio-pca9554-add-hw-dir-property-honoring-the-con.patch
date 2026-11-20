@@ -1,0 +1,167 @@
+From 770199e88db2830fb9624159927598b10f3a79ed Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 9 Jul 2026 17:23:08 +0200
+Subject: [PATCH 622/631] hw/gpio: pca9554: add hw-dir property honoring the
+ configured pin direction
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The pinN QOM accessors are meant to let external agents observe and
+stimulate the expander's pins, but their default behaviour does not
+match real hardware:
+
+ - to "drive" a pin, set_pin writes the OUTPUT register and then clears
+   the pin's Configuration bit to force it into output mode. On a real
+   device the pin direction is owned solely by the host (programmed
+   through the Configuration register over I2C); an external agent can
+   neither flip a pin's direction nor impose a level on a pin the host
+   drives as an output -- the latter is a voltage conflict, not a legal
+   operation.
+ - get_pin returns a CONFIG|OUTPUT composite, i.e. the guest's intent,
+   rather than the level actually sampled on the pin.
+
+The PCA9555 GPIO variant (hw/gpio/pca9552.c) already models this
+correctly and unconditionally: only input-configured pins can be driven
+from outside, and reads return the sampled INPUT register.
+
+Add a "hw-dir" property to bring the pca9554 pin accessors in line with
+the hardware (and with the PCA9555 model), without changing the
+behaviour seen by existing users:
+
+ - hw-dir=true: set_pin only drives pins the guest has configured as
+   inputs; a set on an output pin is refused with a LOG_UNIMP warning.
+   get_pin returns the sampled INPUT register.
+ - hw-dir=false (default): keeps the legacy, non-conformant behaviour
+   for backward compatibility.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
+Link: https://lore.kernel.org/qemu-devel/20260709-catalina-upgrade-v1-16-82a63fead90c@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ hw/gpio/pca9554.c         | 65 +++++++++++++++++++++++++--------------
+ include/hw/gpio/pca9554.h |  1 +
+ 2 files changed, 43 insertions(+), 23 deletions(-)
+
+diff --git a/hw/gpio/pca9554.c b/hw/gpio/pca9554.c
+index b44ec0d9991..ed38fe102b1 100644
+--- a/hw/gpio/pca9554.c
++++ b/hw/gpio/pca9554.c
+@@ -154,6 +154,14 @@ static int pca9554_event(I2CSlave *i2c, enum i2c_event event)
+     return 0;
+ }
+ 
++static void pca9554_set_ext_state(PCA9554State *s, int pin, int level)
++{
++    if (s->ext_state[pin] != level) {
++        s->ext_state[pin] = level;
++        pca9554_update_pin_input(s);
++    }
++}
++
+ static void pca9554_get_pin(Object *obj, Visitor *v, const char *name,
+                             void *opaque, Error **errp)
+ {
+@@ -171,9 +179,13 @@ static void pca9554_get_pin(Object *obj, Visitor *v, const char *name,
+         return;
+     }
+ 
+-    state = pca9554_read(s, PCA9554_CONFIG);
+-    state |= pca9554_read(s, PCA9554_OUTPUT);
+-    state = (state >> pin) & 0x1;
++    /*
++     * Report the physical pin level. The input register is kept in sync by
++     * pca9554_update_pin_input(): output pins mirror the OUTPUT register and
++     * input pins reflect the externally driven (or pulled-up) level, so it
++     * holds the wire level regardless of the configured direction.
++     */
++    state = (s->regs[PCA9554_INPUT] >> pin) & 0x1;
+     visit_type_str(v, name, (char **)&pin_state[state], errp);
+ }
+ 
+@@ -208,20 +220,34 @@ static void pca9554_set_pin(Object *obj, Visitor *v, const char *name,
+         return;
+     }
+ 
+-    /* First, modify the output register bit */
+-    val = pca9554_read(s, PCA9554_OUTPUT);
+-    mask = 0x1 << pin;
+-    if (state == PCA9554_PIN_LOW) {
+-        val &= ~(mask);
++    if (s->hw_dir) {
++        /* Warn and ignore if the guest has configured this pin as output */
++        if (!((s->regs[PCA9554_CONFIG] >> pin) & 0x1)) {
++            qemu_log_mask(LOG_UNIMP,
++                          "%s: pin %d is configured as output, "
++                          "ignoring external set\n",
++                          s->description, pin);
++            return;
++        }
++        /* Drive the external input level */
++        pca9554_set_ext_state(s, pin, state != PCA9554_PIN_LOW);
+     } else {
+-        val |= mask;
+-    }
+-    pca9554_write(s, PCA9554_OUTPUT, val);
++        /* Legacy behavior: force output mode and drive */
++        /* First, modify the output register bit */
++        val = pca9554_read(s, PCA9554_OUTPUT);
++        mask = 0x1 << pin;
++        if (state == PCA9554_PIN_LOW) {
++            val &= ~(mask);
++        } else {
++            val |= mask;
++        }
++        pca9554_write(s, PCA9554_OUTPUT, val);
+ 
+-    /* Then, clear the config register bit for output mode */
+-    val = pca9554_read(s, PCA9554_CONFIG);
+-    val &= ~mask;
+-    pca9554_write(s, PCA9554_CONFIG, val);
++        /* Then, clear the config register bit for output mode */
++        val = pca9554_read(s, PCA9554_CONFIG);
++        val &= ~mask;
++        pca9554_write(s, PCA9554_CONFIG, val);
++    }
+ }
+ 
+ static const VMStateDescription pca9554_vmstate = {
+@@ -271,14 +297,6 @@ static void pca9554_initfn(Object *obj)
+     }
+ }
+ 
+-static void pca9554_set_ext_state(PCA9554State *s, int pin, int level)
+-{
+-    if (s->ext_state[pin] != level) {
+-        s->ext_state[pin] = level;
+-        pca9554_update_pin_input(s);
+-    }
+-}
+-
+ static void pca9554_gpio_in_handler(void *opaque, int pin, int level)
+ {
+     PCA9554State *s = PCA9554(opaque);
+@@ -303,6 +321,7 @@ static void pca9554_realize(DeviceState *dev, Error **errp)
+ 
+ static const Property pca9554_properties[] = {
+     DEFINE_PROP_STRING("description", PCA9554State, description),
++    DEFINE_PROP_BOOL("hw-dir", PCA9554State, hw_dir, false),
+ };
+ 
+ static void pca9554_class_init(ObjectClass *klass, const void *data)
+diff --git a/include/hw/gpio/pca9554.h b/include/hw/gpio/pca9554.h
+index c09108e8b65..ac835371aac 100644
+--- a/include/hw/gpio/pca9554.h
++++ b/include/hw/gpio/pca9554.h
+@@ -33,6 +33,7 @@ struct PCA9554State {
+     qemu_irq gpio_out[PCA9554_PIN_COUNT];
+     uint8_t ext_state[PCA9554_PIN_COUNT];
+     char *description; /* For debugging purpose only */
++    bool hw_dir; /* Honor pin direction */
+ };
+ 
+ #endif
+-- 
+2.50.1
+

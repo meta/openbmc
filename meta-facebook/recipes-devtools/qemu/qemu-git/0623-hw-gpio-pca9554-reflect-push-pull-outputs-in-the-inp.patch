@@ -1,0 +1,85 @@
+From d08f268a9e4fa59f483582302f6b05bfefe765d1 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 9 Jul 2026 17:23:09 +0200
+Subject: [PATCH 623/631] hw/gpio: pca9554: reflect push-pull outputs in the
+ input register
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+pca9554_update_pin_input() derived the pin level from CONFIG | OUTPUT,
+which treated an output driven high as Hi-Z and let ext_state pull it
+low. The PCA9554/PCA9536 output stage is push-pull, so a pin configured
+as an output drives the OUTPUT register level regardless of any external
+agent. Reflect the output value directly for output pins and keep the
+pull-up/ext_state behaviour for input pins, matching the PCA9555 GPIO
+variant.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
+Link: https://lore.kernel.org/qemu-devel/20260709-catalina-upgrade-v1-17-82a63fead90c@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ hw/gpio/pca9554.c | 29 +++++++++--------------------
+ 1 file changed, 9 insertions(+), 20 deletions(-)
+
+diff --git a/hw/gpio/pca9554.c b/hw/gpio/pca9554.c
+index ed38fe102b1..d4746719f91 100644
+--- a/hw/gpio/pca9554.c
++++ b/hw/gpio/pca9554.c
+@@ -43,43 +43,32 @@ static void pca9554_update_pin_input(PCA9554State *s)
+     int i;
+     uint8_t config = s->regs[PCA9554_CONFIG];
+     uint8_t output = s->regs[PCA9554_OUTPUT];
+-    uint8_t internal_state = config | output;
+ 
+     for (i = 0; i < pc->pin_count; i++) {
+         uint8_t bit_mask = 1 << i;
+-        uint8_t internal_pin_state = (internal_state >> i) & 0x1;
+         uint8_t old_value = s->regs[PCA9554_INPUT] & bit_mask;
+         uint8_t new_value;
+ 
+-        switch (internal_pin_state) {
+-        case PCA9554_PIN_LOW:
+-            s->regs[PCA9554_INPUT] &= ~bit_mask;
+-            break;
+-        case PCA9554_PIN_HIZ:
++        if (config & bit_mask) {
+             /*
+-             * pullup sets it to a logical 1 unless
+-             * external device drives it low.
++             * Input: the pin is Hi-Z with a pull-up, so it reads high
++             * unless an external device drives it low.
+              */
+             if (s->ext_state[i] == PCA9554_PIN_LOW) {
+                 s->regs[PCA9554_INPUT] &= ~bit_mask;
+             } else {
+-                s->regs[PCA9554_INPUT] |=  bit_mask;
++                s->regs[PCA9554_INPUT] |= bit_mask;
+             }
+-            break;
+-        default:
+-            break;
++        } else {
++            /* Output: the push-pull stage drives the output register level. */
++            s->regs[PCA9554_INPUT] = (s->regs[PCA9554_INPUT] & ~bit_mask) |
++                                     (output & bit_mask);
+         }
+ 
+         /* drive the per-pin GPIO output only if the pin level changed */
+         new_value = s->regs[PCA9554_INPUT] & bit_mask;
+         if (new_value != old_value) {
+-            if (new_value) {
+-                /* changed from 0 to 1 */
+-                qemu_set_irq(s->gpio_out[i], 1);
+-            } else {
+-                /* changed from 1 to 0 */
+-                qemu_set_irq(s->gpio_out[i], 0);
+-            }
++            qemu_set_irq(s->gpio_out[i], !!new_value);
+         }
+     }
+ }
+-- 
+2.50.1
+

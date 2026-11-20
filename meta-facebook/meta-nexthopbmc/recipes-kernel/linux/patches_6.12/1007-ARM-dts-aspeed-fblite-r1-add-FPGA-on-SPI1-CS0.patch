@@ -1,0 +1,29 @@
+From: Nate White <nate@nexthop.ai>
+Date: Mon, 10 Aug 2026 16:20:00 +0000
+Subject: [PATCH] ARM: dts: aspeed: fblite-r1: add FPGA on SPI1 CS0
+
+Add a device node for the Nexthop FPGA SPI bridge (nh_fpga_reg driver)
+on SPI1 chip-select 0, giving the BMC access to the FPGA register space
+and the FPGA config flash upgrade path.
+---
+ arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
+--- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
++++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
+@@ -110,3 +110,14 @@
+ 		output-high;
+ 	};
+ };
++
++&spi1 {
++	fpga@0 {
++		status = "okay";
++		compatible = "nh,fpga-spi-bridge";
++		spi-max-frequency = <16000000>;
++		reg = <0>;
++		spi-tx-bus-width = <1>;
++		spi-rx-bus-width = <1>;
++	};
++};

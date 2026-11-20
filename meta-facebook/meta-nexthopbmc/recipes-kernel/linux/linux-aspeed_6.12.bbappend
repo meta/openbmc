@@ -26,4 +26,5 @@ SRC_URI:append = " \
     file://1003-ARM-dts-aspeed-fblite-r1-fix-usb-device.patch \
     file://1004-ARM-dts-aspeed-fblite-r1-Add-ssif.patch \
     file://1005-i2c-aspeed-Acknowledge-Tx-ack-late-when-in-SLAVE_REA.patch \
+    file://1007-ARM-dts-aspeed-fblite-r1-add-FPGA-on-SPI1-CS0.patch \
 "

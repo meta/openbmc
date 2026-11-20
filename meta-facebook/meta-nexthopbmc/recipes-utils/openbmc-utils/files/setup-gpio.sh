@@ -69,8 +69,8 @@ setup_gpio TPM_GPIO_0  GPIOO0 in
 setup_gpio TPM_GPIO_1  GPIOO1 in 
 # TPM_GPIO_2
 setup_gpio TPM_GPIO_2  GPIOO2 in 
-# BMC_GPIO_4
-setup_gpio BMC_GPIO_4  GPIOO3 in 
+# FPGA_GRAB
+setup_gpio FPGA_GRAB  GPIOO3 out 0
 # BMC_GPIO_5
 setup_gpio BMC_GPIO_5  GPIOO4 in 
 # BMC_GPIO_6

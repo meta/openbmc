@@ -1,0 +1,35 @@
+From ed242bebc98493f22354025215e9c0ef12c9f49e Mon Sep 17 00:00:00 2001
+From: Tomer Maimon <tmaimon77@gmail.com>
+Date: Mon, 13 Feb 2023 16:11:54 +0200
+Subject: [PATCH] iio: adc: fix adc driver issue
+
+1. add syscon node for probe miss
+2. fix unbind call trace issue
+
+We will push this change upstream for reviewing soon.
+
+Signed-off-by: Tomer Maimon <tmaimon77@gmail.com>
+---
+ drivers/iio/adc/npcm_adc.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/iio/adc/npcm_adc.c b/drivers/iio/adc/npcm_adc.c
+index ec723eb772f3..4628b314b740 100644
+--- a/drivers/iio/adc/npcm_adc.c
++++ b/drivers/iio/adc/npcm_adc.c
+@@ -429,6 +429,12 @@ static int npcm_adc_probe(struct platform_device *pdev)
+ 	div = div >> NPCM_ADCCON_DIV_SHIFT;
+ 	info->adc_sample_hz = clk_get_rate(info->adc_clk) / ((div + 1) * 2);
+ 
++	ret = clk_prepare_enable(info->adc_clk);
++	if (ret) {
++		dev_warn(&pdev->dev, "failed to enable the clock\n");
++		goto err_disable_clk;
++	}
++
+ 	irq = platform_get_irq(pdev, 0);
+ 	if (irq < 0) {
+ 		ret = irq;
+-- 
+2.34.1
+

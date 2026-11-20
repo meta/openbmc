@@ -1,0 +1,32 @@
+From e727f4959a096d4fd79b547307b89b159cfd176b Mon Sep 17 00:00:00 2001
+From: Tomer Maimon <tmaimon77@gmail.com>
+Date: Thu, 7 Dec 2023 08:33:19 +0200
+Subject: [PATCH] iio: adc: npcm: clear interrupt status at probe
+
+Clear interrupt status at probe.
+
+We will push this change upstream for reviewing soon.
+
+Signed-off-by: Tomer Maimon <tmaimon77@gmail.com>
+---
+ drivers/iio/adc/npcm_adc.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/iio/adc/npcm_adc.c b/drivers/iio/adc/npcm_adc.c
+index e9e685c9b045..b947f853a727 100644
+--- a/drivers/iio/adc/npcm_adc.c
++++ b/drivers/iio/adc/npcm_adc.c
+@@ -427,6 +427,10 @@ static int npcm_adc_probe(struct platform_device *pdev)
+ 
+ 	/* calculate ADC clock sample rate */
+ 	reg_con = ioread32(info->regs + NPCM_ADCCON);
++	/* clear ADC interrupt status */
++	if (reg_con & NPCM_ADCCON_ADC_INT_ST)
++		iowrite32(reg_con, info->regs + NPCM_ADCCON);
++	reg_con = ioread32(info->regs + NPCM_ADCCON);
+ 	div = reg_con & NPCM_ADCCON_DIV_MASK;
+ 	div = div >> NPCM_ADCCON_DIV_SHIFT;
+ 	info->adc_sample_hz = clk_get_rate(info->adc_clk) / ((div + 1) * 2);
+-- 
+2.34.1
+

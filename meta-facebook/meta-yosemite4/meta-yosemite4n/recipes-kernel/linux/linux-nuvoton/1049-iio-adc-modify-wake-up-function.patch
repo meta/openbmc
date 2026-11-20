@@ -1,0 +1,60 @@
+From e1d87d98ff0315f75b518a4fe6440fcea3b04dd7 Mon Sep 17 00:00:00 2001
+From: Tomer Maimon <tmaimon77@gmail.com>
+Date: Tue, 4 Apr 2023 16:39:03 +0300
+Subject: [PATCH] iio: adc: modify wake up function
+
+Modify the wait_event_interruptible_timeout function to wait_event_timeout
+to stabilize the ADC read function.
+
+We will push this change upstream for reviewing soon.
+
+Signed-off-by: Tomer Maimon <tmaimon77@gmail.com>
+---
+ drivers/iio/adc/npcm_adc.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/iio/adc/npcm_adc.c b/drivers/iio/adc/npcm_adc.c
+index a2bd1a619c95..e9e685c9b045 100644
+--- a/drivers/iio/adc/npcm_adc.c
++++ b/drivers/iio/adc/npcm_adc.c
+@@ -264,8 +264,8 @@ static irqreturn_t npcm_adc_isr(int irq, void *data)
+ 	regtemp = ioread32(info->regs + NPCM_ADCCON);
+ 	if (regtemp & NPCM_ADCCON_ADC_INT_ST) {
+ 		iowrite32(regtemp, info->regs + NPCM_ADCCON);
+-		wake_up_interruptible(&info->wq);
+ 		info->int_status = true;
++		wake_up(&info->wq);
+ 	}
+ 
+ 	return IRQ_HANDLED;
+@@ -283,9 +283,9 @@ static int npcm_adc_read(struct npcm_adc *info, int *val, u8 channel)
+ 	iowrite32(regtemp | NPCM_ADCCON_CH(channel) |
+ 		  NPCM_ADCCON_ADC_CONV, info->regs + NPCM_ADCCON);
+ 
+-	ret = wait_event_interruptible_timeout(info->wq, info->int_status,
+-					       msecs_to_jiffies(10));
+-	if (ret <= 0) {
++	ret = wait_event_timeout(info->wq, info->int_status,
++				 msecs_to_jiffies(10));
++	if ((ret == 0) && (info->int_status == false)) {
+ 		regtemp = ioread32(info->regs + NPCM_ADCCON);
+ 		if (regtemp & NPCM_ADCCON_ADC_CONV) {
+ 			/* if conversion failed - reset ADC module */
+@@ -300,11 +300,11 @@ static int npcm_adc_read(struct npcm_adc *info, int *val, u8 channel)
+ 			dev_err(info->dev, "RESET ADC Complete\n");
+ 		}
+ 
+-		if (ret == 0)
+-			return -ETIMEDOUT;
++		return -ETIMEDOUT;
++	}
+ 
++	if (ret < 0)
+ 		return ret;
+-	}
+ 
+ 	*val = ioread32(info->regs + NPCM_ADCDATA);
+ 	*val &= info->data->data_mask;
+-- 
+2.34.1
+

@@ -1,0 +1,71 @@
+From 3f5e6c104110b85c3d01177890ca4894ea5f1bf5 Mon Sep 17 00:00:00 2001
+From: Tyrone Ting <kfting@nuvoton.com>
+Date: Tue, 28 Jun 2022 15:41:46 +0800
+Subject: [PATCH 2/6] i2c: npcm: use a software flag to indicate a BER
+ condition
+
+If not clearing the BB (bus busy) condition in the BER (bus error)
+interrupt, the driver causes a timeout and hence the i2c core doesn't
+do the i2c transfer retry but returns the driver's return value to
+the upper layer instead.
+
+Clear the BB condition in the BER interrupt and a software flag is
+used. The driver does an i2c recovery without causing the timeout if
+the flag is set.
+
+This change was pushed upstream and under reviewing:
+https://lore.kernel.org/all/20240913101445.16513-3-kfting@nuvoton.com/
+
+Signed-off-by: Tyrone Ting <kfting@nuvoton.com>
+---
+ drivers/i2c/busses/i2c-npcm7xx.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/busses/i2c-npcm7xx.c b/drivers/i2c/busses/i2c-npcm7xx.c
+index 16bf9e6985a6..4c3743007cbc 100644
+--- a/drivers/i2c/busses/i2c-npcm7xx.c
++++ b/drivers/i2c/busses/i2c-npcm7xx.c
+@@ -448,6 +448,7 @@ struct npcm_i2c {
+ 	u64 nack_cnt;
+ 	u64 timeout_cnt;
+ 	u64 tx_complete_cnt;
++	bool ber_state;
+ };
+ 
+ static inline void npcm_i2c_select_bank(struct npcm_i2c *bus,
+@@ -1638,6 +1639,7 @@ static void npcm_i2c_irq_handle_ber(struct npcm_i2c *bus)
+ 	if (npcm_i2c_is_master(bus)) {
+ 		npcm_i2c_master_abort(bus);
+ 	} else {
++		bus->ber_state = true;
+ 		npcm_i2c_clear_master_status(bus);
+ 
+ 		/* Clear BB (BUS BUSY) bit */
+@@ -1819,6 +1821,7 @@ static int npcm_i2c_recovery_tgclk(struct i2c_adapter *_adap)
+ 		dev_dbg(bus->dev, "bus%d-0x%x recovery skipped, bus not stuck",
+ 			bus->num, bus->dest_addr);
+ 		npcm_i2c_reset(bus);
++		bus->ber_state = false;
+ 		return 0;
+ 	}
+ 
+@@ -1883,6 +1886,7 @@ static int npcm_i2c_recovery_tgclk(struct i2c_adapter *_adap)
+ 		if (bus->rec_succ_cnt < ULLONG_MAX)
+ 			bus->rec_succ_cnt++;
+ 	}
++	bus->ber_state = false;
+ 	return status;
+ }
+ 
+@@ -2223,7 +2227,7 @@ static int npcm_i2c_master_xfer(struct i2c_adapter *adap, struct i2c_msg *msgs,
+ 
+ 	} while (time_is_after_jiffies(time_left) && bus_busy);
+ 
+-	if (bus_busy) {
++	if (bus_busy || bus->ber_state) {
+ 		iowrite8(NPCM_I2CCST_BB, bus->reg + NPCM_I2CCST);
+ 		npcm_i2c_reset(bus);
+ 		i2c_recover_bus(adap);
+-- 
+2.34.1
+

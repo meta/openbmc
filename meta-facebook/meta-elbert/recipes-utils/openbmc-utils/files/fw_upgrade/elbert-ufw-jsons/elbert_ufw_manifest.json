@@ -1,8 +1,8 @@
 {
     "bios" : {
         "priority" : 1,
-        "upgrade_cmd" : "/usr/local/bin/wedge_power.sh off && sleep 60 && /usr/local/bin/bios_util.sh write {filename} --init-aconf; RC=$?; /usr/local/bin/wedge_power.sh on; exit $RC",
-        "get_version": "/usr/local/bin/bios_ver.sh"
+        "upgrade_cmd" : "/usr/local/bin/bios_util.sh write {filename}",
+        "get_version" : "/usr/local/bin/bios_ver.sh"
     },
     "scm" : {
         "upgrade_cmd" : "/usr/local/bin/fpga_util.sh scm program {filename}",

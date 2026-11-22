@@ -1,0 +1,115 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Unive Tien <unive.tien.wiwynn@gmail.com>
+Date: Tue, 17 Nov 2026 06:39:10 +0000
+Subject: [PATCH] fw-update: Make aborting on missing component index optional
+
+Commit 71b1b2b ("fw-update: abort on missing component index") aborts
+the firmware update of an endpoint when a package component is not in
+the endpoint's GetFirmwareParameters component table. Some devices
+leave a component out of that table, e.g. a bridge IC that does not
+report its own firmware, so their update now always fails.
+
+Add a fw-update-abort-missing-comp-index option. It defaults to
+enabled, which keeps the upstream behavior; platforms whose devices do
+not report every component can disable it to log the error and carry
+on with component classification index 0, as before that commit.
+---
+ fw-update/device_updater.cpp | 26 ++++++++++++++++++++++++--
+ meson.build                  |  4 ++++
+ meson.options                |  8 ++++++++
+ 3 files changed, 36 insertions(+), 2 deletions(-)
+
+diff --git a/fw-update/device_updater.cpp b/fw-update/device_updater.cpp
+index 2e198b4..2f467c6 100644
+--- a/fw-update/device_updater.cpp
++++ b/fw-update/device_updater.cpp
+@@ -272,6 +272,7 @@ void DeviceUpdater::sendPassCompTableRequest(size_t offset)
+     auto compInfoIter = compInfo.find(compKey);
+     if (compInfoIter == compInfo.end())
+     {
++#ifdef FW_UPDATE_ABORT_MISSING_COMP_INDEX
+         updateManager->instanceIdDb.free(eid, instanceId);
+         error(
+             "Failed to find component classification '{CLASSIFICATION}' and identifier '{IDENTIFIER}' for endpoint ID '{EID}'",
+@@ -279,8 +280,18 @@ void DeviceUpdater::sendPassCompTableRequest(size_t offset)
+             "EID", eid);
+         updateManager->updateDeviceCompletion(eid, false);
+         return;
++#else
++        // Some devices leave a component, e.g. their own firmware, out of
++        // the component table; carry on with classification index 0
++        error(
++            "Failed to find component classification '{CLASSIFICATION}' and identifier '{IDENTIFIER}' for endpoint ID '{EID}', using component classification index 0",
++            "CLASSIFICATION", compClassification, "IDENTIFIER", compIdentifier,
++            "EID", eid);
++#endif
+     }
+-    CompClassificationIndex compClassificationIndex = compInfoIter->second;
++    CompClassificationIndex compClassificationIndex =
++        compInfoIter != compInfo.end() ? compInfoIter->second
++                                       : CompClassificationIndex{};
+     CompComparisonStamp compComparisonStamp =
+         componentInfo.component_comparison_stamp;
+     const auto& componentVersion = std::get<CompVersion>(componentTuple);
+@@ -406,6 +417,7 @@ void DeviceUpdater::sendUpdateComponentRequest(size_t offset)
+     auto compInfoIter = compInfo.find(compKey);
+     if (compInfoIter == compInfo.end())
+     {
++#ifdef FW_UPDATE_ABORT_MISSING_COMP_INDEX
+         updateManager->instanceIdDb.free(eid, instanceId);
+         error(
+             "Failed to find component classification '{CLASSIFICATION}' and identifier '{IDENTIFIER}' for endpoint ID '{EID}'",
+@@ -413,8 +425,18 @@ void DeviceUpdater::sendUpdateComponentRequest(size_t offset)
+             "EID", eid);
+         updateManager->updateDeviceCompletion(eid, false);
+         return;
++#else
++        // Some devices leave a component, e.g. their own firmware, out of
++        // the component table; carry on with classification index 0
++        error(
++            "Failed to find component classification '{CLASSIFICATION}' and identifier '{IDENTIFIER}' for endpoint ID '{EID}', using component classification index 0",
++            "CLASSIFICATION", compClassification, "IDENTIFIER", compIdentifier,
++            "EID", eid);
++#endif
+     }
+-    CompClassificationIndex compClassificationIndex = compInfoIter->second;
++    CompClassificationIndex compClassificationIndex =
++        compInfoIter != compInfo.end() ? compInfoIter->second
++                                       : CompClassificationIndex{};
+ 
+     bitfield32_t updateOptionFlags;
+     updateOptionFlags.bits.bit0 = componentInfo.component_options.bits.bit0;
+diff --git a/meson.build b/meson.build
+index 315745c..0507fca 100644
+--- a/meson.build
++++ b/meson.build
+@@ -161,6 +161,10 @@ conf_data.set(
+     'FW_UPDATE_SKIP_MISSING_COMP_INFO',
+     get_option('fw-update-skip-missing-comp-info').allowed(),
+ )
++conf_data.set(
++    'FW_UPDATE_ABORT_MISSING_COMP_INDEX',
++    get_option('fw-update-abort-missing-comp-index').allowed(),
++)
+ 
+ configure_file(output: 'config.h', configuration: conf_data)
+ 
+diff --git a/meson.options b/meson.options
+index c21bd97..366bf00 100644
+--- a/meson.options
++++ b/meson.options
+@@ -242,3 +242,11 @@ option(
+     value: 'enabled',
+     description: 'Skip endpoints matching the firmware update package whose GetFirmwareParameters component info is missing or empty, and fail the package update for them.',
+ )
++
++# Control whether a missing component classification index aborts the update.
++option(
++    'fw-update-abort-missing-comp-index',
++    type: 'feature',
++    value: 'enabled',
++    description: 'Abort the firmware update of an endpoint when a package component is not in its GetFirmwareParameters component table, instead of using component classification index 0.',
++)
+-- 
+2.43.0
+

@@ -1,0 +1,165 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Unive Tien <unive.tien.wiwynn@gmail.com>
+Date: Tue, 17 Nov 2026 06:39:03 +0000
+Subject: [PATCH] fw-update: Make skipping devices without component info
+ optional
+
+Commit 7823d9b ("fw-update: skip devices missing component info")
+skips endpoints that match the firmware update package but have
+missing or empty GetFirmwareParameters component info, and fails the
+whole package update for them. This breaks the update of devices that
+are still expected to be updated in that state.
+
+Add a fw-update-skip-missing-comp-info option. It defaults to enabled,
+which keeps the upstream behavior; platforms that need the previous
+behavior can disable it. When disabled, matched endpoints are not
+skipped, and an endpoint without component info is updated with an
+empty one instead of tripping the assert.
+---
+ fw-update/test/update_manager_test.cpp |  4 ++++
+ fw-update/update_manager.cpp           | 30 +++++++++++++++++++++++---
+ meson.build                            |  4 ++++
+ meson.options                          |  8 +++++++
+ 4 files changed, 43 insertions(+), 3 deletions(-)
+
+diff --git a/fw-update/test/update_manager_test.cpp b/fw-update/test/update_manager_test.cpp
+index 7271db7..53363d8 100644
+--- a/fw-update/test/update_manager_test.cpp
++++ b/fw-update/test/update_manager_test.cpp
+@@ -190,6 +190,9 @@ TEST_F(UpdateManagerTest, StartsTheNextUpdateBeforeAPendingRelease)
+     EXPECT_EQ(updateManager.activationProgress->progress(), 0);
+ }
+ 
++// These tests cover skipping endpoints without component info, which only
++// happens when the fw-update-skip-missing-comp-info option is enabled.
++#ifdef FW_UPDATE_SKIP_MISSING_COMP_INFO
+ // Discovery states where matched endpoints lack GetFirmwareParameters data
+ class UpdateManagerCompInfoTest : public testing::Test
+ {
+@@ -360,3 +363,4 @@ TEST_F(UpdateManagerCompInfoTest, skippedDeviceFailsUpdate)
+     EXPECT_EQ(manager.activation->activation(),
+               software::Activation::Activations::Failed);
+ }
++#endif
+diff --git a/fw-update/update_manager.cpp b/fw-update/update_manager.cpp
+index ff8b52d..dbb9498 100644
+--- a/fw-update/update_manager.cpp
++++ b/fw-update/update_manager.cpp
+@@ -32,6 +32,11 @@ namespace fw_update
+ namespace fs = std::filesystem;
+ namespace software = sdbusplus::xyz::openbmc_project::Software::server;
+ 
++#ifndef FW_UPDATE_SKIP_MISSING_COMP_INFO
++/** @brief Component info for endpoints without GetFirmwareParameters data */
++static const ComponentInfo emptyComponentInfo{};
++#endif
++
+ std::string UpdateManager::getSwId()
+ {
+     return std::to_string(
+@@ -190,13 +195,21 @@ int UpdateManager::processPackage(const std::filesystem::path& packageFilePath)
+             deviceIDRecord = fwDeviceIDRecords[offset];
+         }
+         auto search = componentInfoMap.find(eid);
++#ifdef FW_UPDATE_SKIP_MISSING_COMP_INFO
+         // associatePkgToDevices only returns EIDs with non-empty comp info
+         assert(search != componentInfoMap.end());
++        const auto& deviceCompInfo = search->second;
++#else
++        // Endpoints without component info are not skipped
++        const auto& deviceCompInfo = search != componentInfoMap.end()
++                                         ? search->second
++                                         : emptyComponentInfo;
++#endif
+         try
+         {
+             auto [it, inserted] = deviceUpdaterMap.emplace(
+                 eid, std::make_unique<DeviceUpdater>(
+-                         eid, deviceIDRecord, compImageInfos, search->second,
++                         eid, deviceIDRecord, compImageInfos, deviceCompInfo,
+                          MAXIMUM_TRANSFER_SIZE, this));
+             if (!inserted)
+             {
+@@ -366,13 +379,21 @@ void UpdateManager::processStream(std::istream& package, uintmax_t packageSize)
+             deviceIDRecord = fwDeviceIDRecords[offset];
+         }
+         auto search = componentInfoMap.find(eid);
++#ifdef FW_UPDATE_SKIP_MISSING_COMP_INFO
+         // associatePkgToDevices only returns EIDs with non-empty comp info
+         assert(search != componentInfoMap.end());
++        const auto& deviceCompInfo = search->second;
++#else
++        // Endpoints without component info are not skipped
++        const auto& deviceCompInfo = search != componentInfoMap.end()
++                                         ? search->second
++                                         : emptyComponentInfo;
++#endif
+         try
+         {
+             auto [it2, inserted2] = deviceUpdaterMap.emplace(
+                 eid, std::make_unique<DeviceUpdater>(
+-                         eid, deviceIDRecord, compImageInfos, search->second,
++                         eid, deviceIDRecord, compImageInfos, deviceCompInfo,
+                          MAXIMUM_TRANSFER_SIZE, this));
+             if (!inserted2)
+             {
+@@ -415,7 +436,8 @@ DeviceUpdaterInfos UpdateManager::associatePkgToDevices(
+     const DownstreamDeviceIDRecords& downstreamDeviceIDRecords,
+     const DescriptorMap& descriptorMap,
+     const DownstreamDescriptorMap& downstreamDescriptorMap,
+-    const ComponentInfoMap& componentInfoMap,
++    // Only used to skip endpoints with fw-update-skip-missing-comp-info
++    [[maybe_unused]] const ComponentInfoMap& componentInfoMap,
+     TotalComponentUpdates& totalNumComponentUpdates)
+ {
+     DeviceUpdaterInfos deviceUpdaterInfos;
+@@ -435,6 +457,7 @@ DeviceUpdaterInfos UpdateManager::associatePkgToDevices(
+                               deviceIDDescriptorsVec.begin(),
+                               deviceIDDescriptorsVec.end()))
+             {
++#ifdef FW_UPDATE_SKIP_MISSING_COMP_INFO
+                 // Skip endpoints without usable GetFirmwareParameters data
+                 auto compInfoSearch = componentInfoMap.find(eid);
+                 if (compInfoSearch == componentInfoMap.end() ||
+@@ -449,6 +472,7 @@ DeviceUpdaterInfos UpdateManager::associatePkgToDevices(
+                     }
+                     continue;
+                 }
++#endif
+                 deviceUpdaterInfos.emplace_back(
+                     std::make_tuple(eid, false, index));
+                 const auto& applicableComponents =
+diff --git a/meson.build b/meson.build
+index 00344c1..315745c 100644
+--- a/meson.build
++++ b/meson.build
+@@ -157,6 +157,10 @@ conf_data.set_quoted(
+     'FW_UPDATE_TARGETS_JSON',
+     get_option('fw-update-targets-json'),
+ )
++conf_data.set(
++    'FW_UPDATE_SKIP_MISSING_COMP_INFO',
++    get_option('fw-update-skip-missing-comp-info').allowed(),
++)
+ 
+ configure_file(output: 'config.h', configuration: conf_data)
+ 
+diff --git a/meson.options b/meson.options
+index b6e0712..c21bd97 100644
+--- a/meson.options
++++ b/meson.options
+@@ -234,3 +234,11 @@ option(
+     value: '/var/lib/pldmd/fw-update-targets.json',
+     description: 'Path to firmware update targets configuration JSON file',
+ )
++
++# Control whether endpoints without component info are skipped.
++option(
++    'fw-update-skip-missing-comp-info',
++    type: 'feature',
++    value: 'enabled',
++    description: 'Skip endpoints matching the firmware update package whose GetFirmwareParameters component info is missing or empty, and fail the package update for them.',
++)
+-- 
+2.43.0
+

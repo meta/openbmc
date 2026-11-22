@@ -73,6 +73,15 @@ SRC_URI:append:openbmc-fb-lf = " \
 "
 EXTRA_OEMESON:append:openbmc-fb-lf = " -Dterminus-name-instance-suffix=disabled"
 
+# Make upstream fw-update changes 7823d9b (skip devices missing component
+# info) and 71b1b2b (abort on missing component index) optional. Both options
+# default to enabled, which keeps the upstream behavior; platforms whose
+# devices rely on the previous behavior disable them.
+SRC_URI:append:openbmc-fb-lf = " \
+    file://0036-fw-update-Make-skipping-devices-without-component-in.patch \
+    file://0037-fw-update-Make-aborting-on-missing-component-index-o.patch \
+"
+
 # Must apply after common/lfopenbmc pldm patches.
 SRC_URI:append:yosemite4 = " \
     file://0100-yosemite4-pldm-remove-firmware-update-entry.patch \

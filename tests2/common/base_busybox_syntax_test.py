@@ -317,7 +317,8 @@ KNOWN_USAGE_STRINGS = {
     "runsvdir": ["runsvdir [-P] [-s SCRIPT] DIR"],
     "rx": [
         "rx FILE",
-        "rx [options] [filename.if.xmodem]",  # rx version 0.12.20
+        "rx [options] [filename.if.xmodem]",  # lrzsz 0.12.20
+        "rx (lrz) [options] [filename.if.xmodem]",  # lrzsz 0.13.1
     ],
     "sed": [
         "sed [-inrE] [-f FILE]... [-e CMD]... [FILE]...",  # noqa: B950

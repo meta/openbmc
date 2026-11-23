@@ -1,0 +1,37 @@
+From 9b7183970dad920b8e7f0d964f5e5e7dcc73fd9a Mon Sep 17 00:00:00 2001
+From: Rick Yazwinski <rickyaz@meta.com>
+Date: Sun, 22 Nov 2026 12:11:43 -0800
+Subject: [PATCH] stdexec: allow opting out of the runtime downcast assertion
+
+The runtime downcast check is useful for catching bad type-erasure
+invariants, but it can dominate CPU time in a hot asynchronous path.
+For example, OpenBMC's PLDM sensor loop awaits a request per reading,
+and the erased scheduler and sender exercise this helper on every
+round trip.
+
+Keep the check enabled by default. Let a consumer consistently define
+STDEXEC_DISABLE_POLYMORPHIC_DOWNCAST_ASSERT for a build that needs to
+opt out of this one check. Preserve the existing static cast,
+compile-time constraints, and all other assertions.
+Upstream-Status: Pending
+
+---
+ include/stdexec/__detail/__utility.hpp | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/include/stdexec/__detail/__utility.hpp b/include/stdexec/__detail/__utility.hpp
+index cdf5ef6..c5a5803 100644
+--- a/include/stdexec/__detail/__utility.hpp
++++ b/include/stdexec/__detail/__utility.hpp
+@@ -314,7 +314,10 @@ namespace STDEXEC
+     static_assert(std::derived_from<__value_type, _CvInterface>,
+                   "__polymorphic_downcast requires From to be a base class of To");
+ 
+-#  if !STDEXEC_NO_STDCPP_RTTI()
++    // This diagnostic can be expensive in frequently used type-erased operations.
++    // Define STDEXEC_DISABLE_POLYMORPHIC_DOWNCAST_ASSERT consistently across all
++    // translation units that share these definitions to opt out of this check.
++#  if !STDEXEC_NO_STDCPP_RTTI() && !defined(STDEXEC_DISABLE_POLYMORPHIC_DOWNCAST_ASSERT)
+     STDEXEC_IF_NOT_CONSTEVAL
+     {
+       STDEXEC_ASSERT(dynamic_cast<__value_type*>(__from_ptr) != nullptr);

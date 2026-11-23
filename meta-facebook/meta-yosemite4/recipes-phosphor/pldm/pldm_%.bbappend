@@ -37,3 +37,6 @@ do_install:append() {
     install -m 0644 ${UNPACKDIR}/pldmd-exit-handler.service ${D}${systemd_system_unitdir}
 }
 
+# Keep other assertions enabled and leave other stdexec consumers unchanged.
+CXXFLAGS:append:yosemite4 = " -DSTDEXEC_DISABLE_POLYMORPHIC_DOWNCAST_ASSERT"
+

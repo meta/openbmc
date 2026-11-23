@@ -55,6 +55,7 @@ LOCAL_URI += " \
     file://i2c_sensor_fixup.sh \
     file://reset_pim_i2c_mux.sh \
     file://improve_aura_pll.sh \
+    file://oob-status.sh \
     "
 
 OPENBMC_UTILS_FILES += " \
@@ -84,6 +85,7 @@ OPENBMC_UTILS_FILES += " \
     i2c_sensor_fixup.sh \
     reset_pim_i2c_mux.sh \
     improve_aura_pll.sh \
+    oob-status.sh \
     "
 DEPENDS:append = " update-rc.d-native"
 inherit systemd
@@ -179,6 +181,9 @@ FILES:${PN} += "${sysconfdir}"
 
 SYSTEMD_SERVICE:${PN} += "mount_data1.service setup_gpio.service"
 SYSTEMD_SERVICE:${PN} += "setup_i2c.service"
+
+# oob-status.sh reads the OOB switch and its PHYs through the kernel MDIO bus
+RDEPENDS:${PN} += "mii-read"
 
 #Not needed for fuji
 SYSTEMD_SERVICE:${PN}:remove = "enable_watchdog_ext_signal.service"

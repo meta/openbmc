@@ -28,6 +28,7 @@ LOCAL_URI += " \
     file://cpld_rev.sh \
     file://cpld_upgrade.sh \
     file://internal_switch_version.sh \
+    file://oob-status.sh \
     file://cp2112_i2c_flush.sh \
     file://reset_qsfp_mux.sh \
     file://setup_i2c.sh \
@@ -45,6 +46,7 @@ OPENBMC_UTILS_FILES += " \
     cpld_upgrade.sh \
     cpld_rev.sh \
     internal_switch_version.sh \
+    oob-status.sh \
     ec_version.sh \
     cp2112_i2c_flush.sh \
     reset_qsfp_mux.sh \
@@ -124,5 +126,8 @@ do_install_board() {
 }
 
 FILES:${PN} += "${sysconfdir}"
+
+# oob-status.sh: mdio-bb (bitbang) for the OOB switch, mii-read for the MGMT PHY
+RDEPENDS:${PN} += "bitbang mii-read"
 
 SYSTEMD_SERVICE:${PN} += "setup_i2c.service"

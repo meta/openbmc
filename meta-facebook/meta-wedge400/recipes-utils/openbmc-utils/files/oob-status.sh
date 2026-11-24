@@ -21,9 +21,13 @@
 # Wedge400/Wedge400C have one of two OOB switches on AST2500 MAC1's MDIO
 # (mdio-util bus 1, enabled by setup_mgmt.sh). The BCM5389 is probed first:
 # its pseudo-PHY does not respond, so status comes from the per-port SerDes
-# MII blocks (0x0-0x7) and the front MGMT port's BCM54616S PHY (0xe). Port
-# map per the Wedge400 system spec (2.5.3.2): 0 SCM/microserver (SGMII),
-# 4 BMC (1000BASE-X), 5 front RJ45 (SGMII), 6/7 Rackmon, others unused.
+# MII blocks (0x0-0x7). Port map per the Wedge400 system spec (2.5.3.2):
+# 0 SCM/microserver (SGMII), 4 BMC (1000BASE-X), 5 front RJ45 (SGMII),
+# 6/7 Rackmon, others unused. The SGMII ports' link partner word carries the
+# copper side's negotiated speed.
+# MAC1 is disabled in the kernel, so nothing else drives this bus and raw
+# mdio-util access does not race with phylib (the BMC's own PHY, 0xd, is on
+# MAC2's MDIO bus).
 # Otherwise fall back to the 88E6321, read through its SMI registers (0x12)
 # like the other platforms' oob-status.sh and oob-mdio-util.sh.
 
@@ -34,14 +38,9 @@ trap 'echo "Exiting because of signal" >&2; exit 1' INT TERM QUIT
 
 OOB_MDIO_BUS=1
 MV_SMI_ADDR=0x12
-BCM_MGMT_PHY=0xe
 
 SPEEDS=("10   Mb/s" "100  Mb/s" "1000 Mb/s" "unknown  ")
 DUPLEX=("half-duplex" "full-duplex")
-# BCM54616S Auxiliary Status Summary (reg 0x19) bits 10:8, autoneg result
-AUX_HCD=("speed unresolved" "10   Mb/s half-duplex" "10   Mb/s full-duplex"
-         "100  Mb/s half-duplex" "100  Mb/s half-duplex" "100  Mb/s full-duplex"
-         "1000 Mb/s half-duplex" "1000 Mb/s full-duplex")
 
 usage() {
     echo "Usage: oob-status.sh"
@@ -115,13 +114,6 @@ do_read() {
     done
 }
 
-do_read_mgmt_phy() {
-    local val status="Link Down"
-    val=$(mdio_read "$BCM_MGMT_PHY" 0x19)
-    [ $(( (val >> 2) & 0x1 )) -eq 1 ] && status="Link Up   - ${AUX_HCD[$(( (val >> 8) & 0x7 ))]}"
-    printf "\tMGMT port PHY (%s): %s\n" "$BCM_MGMT_PHY" "$status"
-}
-
 [ $# -gt 0 ] && { usage; exit 1; }
 
 # Only allow one instance of script to run at a time.
@@ -131,7 +123,6 @@ flock -n 100 || { echo "ERROR: $0 already running" && exit 1; }
 chip="88E6321"; max_port=6
 bcm5389_present && { chip="BCM5389"; max_port=7; }
 
-printf "OOB switch: %s\nStatus:\n" "$chip"
-[ "$chip" = "BCM5389" ] && do_read_mgmt_phy
+printf "Status:\n"
 do_read status
 do_read speed

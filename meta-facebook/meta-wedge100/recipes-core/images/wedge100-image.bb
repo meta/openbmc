@@ -1,6 +1,9 @@
 # Copyright 2018-present Facebook. All Rights Reserved.
 
-# Use the default LZMA rootfs to keep this image within its FIT partition.
+# Keep the zstd ramdisk. On the AST2400 the kernel takes ~20s to unpack an
+# LZMA ramdisk, and those builds reset in a loop during early boot. The
+# dbus bbappend drops X11 support to keep the zstd image under 28 MiB.
+require recipes-core/images/fb-zstd-rootfs.inc
 inherit kernel_fitimage
 
 require recipes-core/images/fb-openbmc-image.bb

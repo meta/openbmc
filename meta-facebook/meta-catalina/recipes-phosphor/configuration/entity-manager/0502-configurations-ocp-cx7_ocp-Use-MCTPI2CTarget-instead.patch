@@ -1,4 +1,4 @@
-From 4b80277df1b424988626c8993e847df13b2a8920 Mon Sep 17 00:00:00 2001
+From 1267facd1d37036e42b101aba3ab464d7a588045 Mon Sep 17 00:00:00 2001
 From: Bruce Hung <bruce.jy.hung@fii-foxconn.com>
 Date: Sun, 23 Aug 2026 06:51:49 -0700
 Subject: [PATCH] configurations: ocp: cx7_ocp: Use MCTPI2CTarget instead of
@@ -7,15 +7,31 @@ Subject: [PATCH] configurations: ocp: cx7_ocp: Use MCTPI2CTarget instead of
 Converts the NIC$bus % 2 TEMP_C ExternalSensor entry to a real
 MCTPI2CTarget record, so mctp-reactor creates and owns the endpoint
 and pldmd's own platform-mc polls it directly.
+
+Also names the CX7 Ethernet port link speed sensor (PLDM sensor ID 16).
+The NIC reports it as a numeric sensor with base unit Bits, unit
+modifier 8 and rate unit Per Second, i.e. a nominal reading of 4000
+means 400 Gb/s. pldm platform-mc now supports the Bits unit and
+exposes it under /xyz/openbmc_project/metric/bytes/. Without an entry
+here it shows up with the generic name NIC<n>_Sensor_16.
+
+PLDM sensor mapping:
+  ID 1  -> NIC<n>_TEMP_C     (Degrees C)
+  ID 16 -> NIC<n>_LinkSpeed  (bits per second)
+
+Tested:
+  busctl tree xyz.openbmc_project.PLDM shows
+  /xyz/openbmc_project/metric/bytes/NIC0_LinkSpeed and
+  /xyz/openbmc_project/metric/bytes/NIC1_LinkSpeed
 ---
- configurations/ocp/cx7_ocp.json | 29 ++++++++---------------------
- 1 file changed, 8 insertions(+), 21 deletions(-)
+ configurations/ocp/cx7_ocp.json | 29 ++++++++++-------------------
+ 1 file changed, 10 insertions(+), 19 deletions(-)
 
 diff --git a/configurations/ocp/cx7_ocp.json b/configurations/ocp/cx7_ocp.json
-index 0c16355..a8b0952 100644
+index 0c16355..ca37dc0 100644
 --- a/configurations/ocp/cx7_ocp.json
 +++ b/configurations/ocp/cx7_ocp.json
-@@ -7,30 +7,17 @@
+@@ -7,30 +7,21 @@
              "Type": "EEPROM"
          },
          {
@@ -25,19 +41,21 @@ index 0c16355..a8b0952 100644
 -            "MaxValue": 255,
 -            "Timeout": 30.0,
 -            "Thresholds": [
--                {
++            "Address": "0x32",
++            "Bus": "$bus",
++            "Name": "NIC$bus % 2",
++            "NetworkId": 1,
++            "PLDMSensors": [
+                 {
 -                    "Direction": "less than",
 -                    "Hysteresis": 0.1,
 -                    "Index": 2,
 -                    "Name": "lower critical",
 -                    "Severity": 1,
 -                    "Value": 5
--                },
-+            "Address": "0x32",
-+            "Bus": "$bus",
-+            "Name": "NIC$bus % 2",
-+            "NetworkId": 1,
-+            "PLDMSensors": [
++                    "ID": 1,
++                    "Name": "TEMP_C"
+                 },
                  {
 -                    "Direction": "greater than",
 -                    "Hysteresis": 2.1,
@@ -45,8 +63,8 @@ index 0c16355..a8b0952 100644
 -                    "Name": "upper critical",
 -                    "Severity": 1,
 -                    "Value": 105
-+                    "ID": 1,
-+                    "Name": "TEMP_C"
++                    "ID": 16,
++                    "Name": "LinkSpeed"
                  }
              ],
 -            "Type": "ExternalSensor"
@@ -55,5 +73,5 @@ index 0c16355..a8b0952 100644
      ],
      "Name": "OCP CX7 NIC $bus % 2",
 -- 
-2.53.0-Meta
+2.43.0
 

@@ -1544,6 +1544,47 @@ pal_get_sensor_poll_interval(uint8_t fru, uint8_t sensor_num, uint32_t *value)
   return PAL_EOK;
 }
 
+void pal_sensor_assert_handle(uint8_t fru, uint8_t snr_num, float val, uint8_t thresh) {
+  char thresh_name[10];
+
+  switch (thresh) {
+    case UNR_THRESH:
+      sprintf(thresh_name, "UNR");
+      break;
+    case UCR_THRESH:
+      sprintf(thresh_name, "UCR");
+      break;
+    case UNC_THRESH:
+      sprintf(thresh_name, "UNC");
+      break;
+    case LNR_THRESH:
+      sprintf(thresh_name, "LNR");
+      break;
+    case LCR_THRESH:
+      sprintf(thresh_name, "LCR");
+      break;
+    case LNC_THRESH:
+      sprintf(thresh_name, "LNC");
+      break;
+    default:
+      syslog(LOG_WARNING, "%s: wrong thresh enum value", __func__);
+      return;
+  }
+
+  if ((fru == FRU_SERVER) && (thresh == UNR_THRESH)) {
+    char snr_name[MAX_SENSOR_NAME_SIZE] = {0};
+    switch (snr_num) {
+      case SOC_TEMP:
+        pal_get_sensor_name(fru, snr_num, snr_name);
+        syslog(LOG_CRIT, "SERVER_POWER_OFF due to %s over %s", snr_name, thresh_name);
+        pal_set_server_power(fru, SERVER_POWER_OFF);
+        break;
+      default:
+        break;
+    }
+  }
+}
+
 static
 int read_rpm(uint8_t id, float *value) {
   int rpm = 0;

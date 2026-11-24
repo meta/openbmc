@@ -1,4 +1,4 @@
-From 993b3ee87357b219105b2b2a6b9ad6db0e5dfb07 Mon Sep 17 00:00:00 2001
+From 4e2c25cdbbb25ab630a4549bb4969f04eb97b0ea Mon Sep 17 00:00:00 2001
 From: Chau Ly <chaul@amperecomputing.com>
 Date: Wed, 25 Feb 2026 10:23:30 +0000
 Subject: [PATCH] platform-mc: NumericSensor: Introduce non-DBus implementation
@@ -34,15 +34,15 @@ Change-Id: I8fb8b4691f7107bdce2da2bff0b352765a2568f5
 Signed-off-by: Chau Ly <chaul@amperecomputing.com>
 (cherry picked from commit 7d97f63725b16f87578116867d99b63806736f74)
 ---
- platform-mc/numeric_sensor.cpp | 155 +++++++++++++++++++++++++--------
+ platform-mc/numeric_sensor.cpp | 159 +++++++++++++++++++++++++--------
  platform-mc/numeric_sensor.hpp |  35 +++++++-
- 2 files changed, 154 insertions(+), 36 deletions(-)
+ 2 files changed, 156 insertions(+), 38 deletions(-)
 
 diff --git a/platform-mc/numeric_sensor.cpp b/platform-mc/numeric_sensor.cpp
-index 3b708f0..2b4e939 100644
+index 81a3a33..0b1a757 100644
 --- a/platform-mc/numeric_sensor.cpp
 +++ b/platform-mc/numeric_sensor.cpp
-@@ -110,7 +110,14 @@ inline double getRangeFieldValue(uint8_t range_field_format,
+@@ -111,7 +111,14 @@ inline double getRangeFieldValue(uint8_t range_field_format,
      return ret;
  }
  
@@ -58,7 +58,7 @@ index 3b708f0..2b4e939 100644
  {
      sensorUnit = SensorUnit::DegreesC;
      switch (baseUnit)
-@@ -163,12 +170,10 @@ void NumericSensor::setSensorUnit(uint8_t baseUnit)
+@@ -164,12 +171,10 @@ void NumericSensor::setSensorUnit(uint8_t baseUnit)
              useMetricInterface = true;
              break;
          default:
@@ -74,7 +74,7 @@ index 3b708f0..2b4e939 100644
  }
  
  NumericSensor::NumericSensor(const pldm_tid_t tid, const bool sensorDisabled,
-@@ -182,12 +187,26 @@ NumericSensor::NumericSensor(const pldm_tid_t tid, const bool sensorDisabled,
+@@ -183,12 +188,26 @@ NumericSensor::NumericSensor(const pldm_tid_t tid, const bool sensorDisabled,
          throw sdbusplus::xyz::openbmc_project::Common::Error::InvalidArgument();
      }
  
@@ -105,7 +105,7 @@ index 3b708f0..2b4e939 100644
      }
  
      sensorId = pdr->sensor_id;
-@@ -206,6 +225,15 @@ NumericSensor::NumericSensor(const pldm_tid_t tid, const bool sensorDisabled,
+@@ -207,6 +226,15 @@ NumericSensor::NumericSensor(const pldm_tid_t tid, const bool sensorDisabled,
          updateTime = pdr->update_interval * 1000000;
      }
  
@@ -121,7 +121,7 @@ index 3b708f0..2b4e939 100644
      // D-Bus Sensor Initialization
      std::string path;
      path = sensorNameSpace + sensorName;
-@@ -455,12 +483,26 @@ NumericSensor::NumericSensor(
+@@ -456,12 +484,26 @@ NumericSensor::NumericSensor(
          throw sdbusplus::xyz::openbmc_project::Common::Error::InvalidArgument();
      }
  
@@ -152,7 +152,7 @@ index 3b708f0..2b4e939 100644
      }
  
      sensorId = pdr->sensor_id;
-@@ -476,6 +518,15 @@ NumericSensor::NumericSensor(
+@@ -477,6 +519,15 @@ NumericSensor::NumericSensor(
       */
      updateTime = DEFAULT_SENSOR_UPDATER_INTERVAL * 1000;
  
@@ -168,7 +168,7 @@ index 3b708f0..2b4e939 100644
      // D-Bus Sensor Initialization
      std::string path;
      path = sensorNameSpace + sensorName;
-@@ -728,16 +779,21 @@ double NumericSensor::unitModifier(double value) const
+@@ -729,16 +780,21 @@ double NumericSensor::unitModifier(double value) const
  
  void NumericSensor::updateReading(bool available, bool functional, double value)
  {
@@ -198,7 +198,7 @@ index 3b708f0..2b4e939 100644
  
      double curValue = 0;
      if (valueIntf)
-@@ -748,6 +804,10 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
+@@ -749,6 +805,10 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
      {
          curValue = metricIntf->value();
      }
@@ -209,7 +209,7 @@ index 3b708f0..2b4e939 100644
  
      double newValue = std::numeric_limits<double>::quiet_NaN();
      if (functional && available)
-@@ -773,6 +833,10 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
+@@ -774,6 +834,10 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
              {
                  metricIntf->value(newValue);
              }
@@ -220,7 +220,7 @@ index 3b708f0..2b4e939 100644
          }
      }
      else
-@@ -788,28 +852,39 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
+@@ -789,33 +853,44 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
              {
                  metricIntf->value(std::numeric_limits<double>::quiet_NaN());
              }
@@ -236,44 +236,51 @@ index 3b708f0..2b4e939 100644
  {
 -    if (!availabilityIntf || !operationalStatusIntf ||
 -        (!valueIntf && !metricIntf))
--    {
++    if (!valueIntf && !metricIntf)
+     {
 -        lg2::error("Failed to handle error in get sensor reading {NAME} D-Bus "
 -                   "interfaces don't exist.",
 -                   "NAME", sensorName);
 -        return;
--    }
--    operationalStatusIntf->functional(false);
--    if (valueIntf)
-+    if (!valueIntf && !metricIntf)
-     {
--        valueIntf->value(std::numeric_limits<double>::quiet_NaN());
 +        sensorValue = std::numeric_limits<double>::quiet_NaN();
      }
--    else if (metricIntf)
+-    operationalStatusIntf->functional(false);
+-    if (valueIntf)
 +    else
      {
--        metricIntf->value(std::numeric_limits<double>::quiet_NaN());
+-        if (!std::isnan(valueIntf->value()))
 +        if (!availabilityIntf || !operationalStatusIntf)
-+        {
+         {
+-            valueIntf->value(std::numeric_limits<double>::quiet_NaN());
 +            lg2::error(
 +                "Failed to handle error in get sensor reading {NAME} D-Bus "
 +                "interfaces don't exist.",
 +                "NAME", sensorName);
 +            return;
-+        }
+         }
+-    }
+-    else if (metricIntf)
+-    {
+-        if (!std::isnan(metricIntf->value()))
 +        operationalStatusIntf->functional(false);
 +        if (valueIntf)
-+        {
-+            valueIntf->value(std::numeric_limits<double>::quiet_NaN());
+         {
+-            metricIntf->value(std::numeric_limits<double>::quiet_NaN());
++            if (!std::isnan(valueIntf->value()))
++            {
++                valueIntf->value(std::numeric_limits<double>::quiet_NaN());
++            }
 +        }
 +        else if (metricIntf)
 +        {
-+            metricIntf->value(std::numeric_limits<double>::quiet_NaN());
-+        }
++            if (!std::isnan(metricIntf->value()))
++            {
++                metricIntf->value(std::numeric_limits<double>::quiet_NaN());
++            }
+         }
      }
  }
- 
-@@ -1103,6 +1178,11 @@ void NumericSensor::createNormalRangeLog(double value) const
+@@ -1110,6 +1185,11 @@ void NumericSensor::createNormalRangeLog(double value) const
  
  void NumericSensor::updateThresholds()
  {
@@ -285,7 +292,7 @@ index 3b708f0..2b4e939 100644
      double value = std::numeric_limits<double>::quiet_NaN();
      if (valueIntf)
      {
-@@ -1138,6 +1218,11 @@ int NumericSensor::triggerThresholdEvent(
+@@ -1145,6 +1225,11 @@ int NumericSensor::triggerThresholdEvent(
      pldm::utils::Level eventType, pldm::utils::Direction direction,
      double rawValue, bool newAlarm, bool assert)
  {
@@ -358,6 +365,3 @@ index 85346c7..afc4c7b 100644
      /** @brief An internal mapping of thresholds and its associated log
       * entry. */
      std::map<std::tuple<pldm::utils::Level, pldm::utils::Direction>,
--- 
-2.53.0-Meta
-

@@ -1,4 +1,4 @@
-From 148167593d94272bacc49f04a71d4bb448d8197f Mon Sep 17 00:00:00 2001
+From 75fe5c8fbaa44cb5db77ecddb606a449ee776ee4 Mon Sep 17 00:00:00 2001
 From: Chau Ly <chaul@amperecomputing.com>
 Date: Wed, 25 Feb 2026 09:42:41 +0000
 Subject: [PATCH] platform-mc: NumericSensor: Remove useMetricInterface member
@@ -32,10 +32,10 @@ Signed-off-by: Chau Ly <chaul@amperecomputing.com>
  2 files changed, 76 insertions(+), 66 deletions(-)
 
 diff --git a/platform-mc/numeric_sensor.cpp b/platform-mc/numeric_sensor.cpp
-index 18ad840..3b708f0 100644
+index e0a7544..81a3a33 100644
 --- a/platform-mc/numeric_sensor.cpp
 +++ b/platform-mc/numeric_sensor.cpp
-@@ -113,7 +113,6 @@ inline double getRangeFieldValue(uint8_t range_field_format,
+@@ -114,7 +114,6 @@ inline double getRangeFieldValue(uint8_t range_field_format,
  void NumericSensor::setSensorUnit(uint8_t baseUnit)
  {
      sensorUnit = SensorUnit::DegreesC;
@@ -43,7 +43,7 @@ index 18ad840..3b708f0 100644
      switch (baseUnit)
      {
          case PLDM_SENSOR_UNIT_DEGRESS_C:
-@@ -153,11 +152,11 @@ void NumericSensor::setSensorUnit(uint8_t baseUnit)
+@@ -154,11 +153,11 @@ void NumericSensor::setSensorUnit(uint8_t baseUnit)
          case PLDM_SENSOR_UNIT_ERRORS:
          case PLDM_SENSOR_UNIT_UNCORRECTABLE_ERRORS:
              sensorNameSpace = "/xyz/openbmc_project/metric/count/";
@@ -57,7 +57,7 @@ index 18ad840..3b708f0 100644
              break;
          case PLDM_SENSOR_UNIT_BITS:
              sensorNameSpace = "/xyz/openbmc_project/metric/bytes/";
-@@ -183,11 +182,32 @@ NumericSensor::NumericSensor(const pldm_tid_t tid, const bool sensorDisabled,
+@@ -184,11 +183,32 @@ NumericSensor::NumericSensor(const pldm_tid_t tid, const bool sensorDisabled,
          throw sdbusplus::xyz::openbmc_project::Common::Error::InvalidArgument();
      }
  
@@ -93,7 +93,7 @@ index 18ad840..3b708f0 100644
      path = sensorNameSpace + sensorName;
      try
      {
-@@ -291,21 +311,6 @@ NumericSensor::NumericSensor(const pldm_tid_t tid, const bool sensorDisabled,
+@@ -292,21 +312,6 @@ NumericSensor::NumericSensor(const pldm_tid_t tid, const bool sensorDisabled,
          fatalLow = getRangeFieldValue(pdr->range_field_format, pdr->fatal_low);
      }
  
@@ -115,7 +115,7 @@ index 18ad840..3b708f0 100644
      if (!useMetricInterface)
      {
          try
-@@ -322,7 +327,7 @@ NumericSensor::NumericSensor(const pldm_tid_t tid, const bool sensorDisabled,
+@@ -323,7 +328,7 @@ NumericSensor::NumericSensor(const pldm_tid_t tid, const bool sensorDisabled,
          }
          valueIntf->maxValue(unitModifier(conversionFormula(maxValue)));
          valueIntf->minValue(unitModifier(conversionFormula(minValue)));
@@ -124,7 +124,7 @@ index 18ad840..3b708f0 100644
          valueIntf->value(std::numeric_limits<double>::quiet_NaN());
      }
      else
-@@ -341,7 +346,7 @@ NumericSensor::NumericSensor(const pldm_tid_t tid, const bool sensorDisabled,
+@@ -342,7 +347,7 @@ NumericSensor::NumericSensor(const pldm_tid_t tid, const bool sensorDisabled,
          }
          metricIntf->maxValue(unitModifier(conversionFormula(maxValue)));
          metricIntf->minValue(unitModifier(conversionFormula(minValue)));
@@ -133,7 +133,7 @@ index 18ad840..3b708f0 100644
          metricIntf->value(std::numeric_limits<double>::quiet_NaN());
      }
  
-@@ -450,11 +455,29 @@ NumericSensor::NumericSensor(
+@@ -451,11 +456,29 @@ NumericSensor::NumericSensor(
          throw sdbusplus::xyz::openbmc_project::Common::Error::InvalidArgument();
      }
  
@@ -166,7 +166,7 @@ index 18ad840..3b708f0 100644
      path = sensorNameSpace + sensorName;
      try
      {
-@@ -547,18 +570,6 @@ NumericSensor::NumericSensor(
+@@ -548,18 +571,6 @@ NumericSensor::NumericSensor(
          fatalLow = pdr->fatal_low;
      }
  
@@ -185,7 +185,7 @@ index 18ad840..3b708f0 100644
      if (!useMetricInterface)
      {
          try
-@@ -575,7 +586,7 @@ NumericSensor::NumericSensor(
+@@ -576,7 +587,7 @@ NumericSensor::NumericSensor(
          }
          valueIntf->maxValue(unitModifier(conversionFormula(maxValue)));
          valueIntf->minValue(unitModifier(conversionFormula(minValue)));
@@ -194,7 +194,7 @@ index 18ad840..3b708f0 100644
          valueIntf->value(std::numeric_limits<double>::quiet_NaN());
      }
      else
-@@ -594,7 +605,7 @@ NumericSensor::NumericSensor(
+@@ -595,7 +606,7 @@ NumericSensor::NumericSensor(
          }
          metricIntf->maxValue(unitModifier(conversionFormula(maxValue)));
          metricIntf->minValue(unitModifier(conversionFormula(minValue)));
@@ -203,7 +203,7 @@ index 18ad840..3b708f0 100644
          metricIntf->value(std::numeric_limits<double>::quiet_NaN());
      }
  
-@@ -718,22 +729,22 @@ double NumericSensor::unitModifier(double value) const
+@@ -719,22 +730,22 @@ double NumericSensor::unitModifier(double value) const
  void NumericSensor::updateReading(bool available, bool functional, double value)
  {
      if (!availabilityIntf || !operationalStatusIntf ||
@@ -231,7 +231,7 @@ index 18ad840..3b708f0 100644
      {
          curValue = metricIntf->value();
      }
-@@ -744,7 +755,7 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
+@@ -745,7 +756,7 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
          newValue = unitModifier(conversionFormula(value));
          if (std::isfinite(newValue) || std::isfinite(curValue))
          {
@@ -240,7 +240,7 @@ index 18ad840..3b708f0 100644
              {
                  valueIntf->value(newValue);
                  // Refresh timestamp only when the new value is valid
-@@ -758,7 +769,7 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
+@@ -759,7 +770,7 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
                  }
                  updateThresholds();
              }
@@ -249,7 +249,7 @@ index 18ad840..3b708f0 100644
              {
                  metricIntf->value(newValue);
              }
-@@ -769,11 +780,11 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
+@@ -770,11 +781,11 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
          if (newValue != curValue &&
              (std::isfinite(newValue) || std::isfinite(curValue)))
          {
@@ -263,7 +263,7 @@ index 18ad840..3b708f0 100644
              {
                  metricIntf->value(std::numeric_limits<double>::quiet_NaN());
              }
-@@ -783,20 +794,20 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
+@@ -784,23 +795,23 @@ void NumericSensor::updateReading(bool available, bool functional, double value)
  
  void NumericSensor::handleErrGetSensorReading()
  {
@@ -284,14 +284,17 @@ index 18ad840..3b708f0 100644
 -    if (!useMetricInterface)
 +    if (valueIntf)
      {
-         valueIntf->value(std::numeric_limits<double>::quiet_NaN());
+         if (!std::isnan(valueIntf->value()))
+         {
+             valueIntf->value(std::numeric_limits<double>::quiet_NaN());
+         }
      }
 -    else
 +    else if (metricIntf)
      {
-         metricIntf->value(std::numeric_limits<double>::quiet_NaN());
-     }
-@@ -1060,8 +1071,8 @@ void NumericSensor::createThresholdLog(
+         if (!std::isnan(metricIntf->value()))
+         {
+@@ -1067,8 +1078,8 @@ void NumericSensor::createThresholdLog(
      try
      {
          auto helper = thresholdEventMap.at({level, direction});
@@ -302,7 +305,7 @@ index 18ad840..3b708f0 100644
      }
      catch (std::exception& ec)
      {
-@@ -1080,7 +1091,7 @@ void NumericSensor::createNormalRangeLog(double value) const
+@@ -1087,7 +1098,7 @@ void NumericSensor::createNormalRangeLog(double value) const
      {
          lg2::commit(Events::SensorReadingNormalRange(
              "SENSOR_NAME", objPath, "READING_VALUE", value, "UNITS",
@@ -311,7 +314,7 @@ index 18ad840..3b708f0 100644
      }
      catch (std::exception& ec)
      {
-@@ -1129,9 +1140,9 @@ int NumericSensor::triggerThresholdEvent(
+@@ -1136,9 +1147,9 @@ int NumericSensor::triggerThresholdEvent(
  {
      if (!valueIntf)
      {
@@ -356,6 +359,3 @@ index 8db316e..85346c7 100644
  
      /** @brief An internal mapping of thresholds and its associated log
       * entry. */
--- 
-2.53.0-Meta
-

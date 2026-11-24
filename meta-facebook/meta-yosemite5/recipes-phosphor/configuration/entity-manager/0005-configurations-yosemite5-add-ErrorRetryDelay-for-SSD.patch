@@ -6,14 +6,14 @@ Subject: [PATCH] configurations: yosemite5: add ErrorRetryDelay for SSDs
 Add ErrorRetryDelay property to NVMe temperature sensor on Rio Grande
 to configure the retry poll cycles after sensor enters the error state.
 ---
- .../meta/yv5/yosemite5_rio_grande_ssd.json    | 26 +++++++++++++++++++
- 1 file changed, 26 insertions(+)
+ .../meta/yv5/yosemite5_rio_grande_ssd.json         | 24 ++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
 diff --git a/configurations/meta/yv5/yosemite5_rio_grande_ssd.json b/configurations/meta/yv5/yosemite5_rio_grande_ssd.json
-index f6badf1..faf0318 100644
+index e27df2f7974751c4e232ce89e6f2708aae8f7c86..277eeb81952acbf468ce5a37202234d3f0bbe12b 100644
 --- a/configurations/meta/yv5/yosemite5_rio_grande_ssd.json
 +++ b/configurations/meta/yv5/yosemite5_rio_grande_ssd.json
-@@ -468,6 +468,7 @@
+@@ -388,6 +388,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 40,
@@ -21,7 +21,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_0_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -508,6 +509,7 @@
+@@ -428,6 +429,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 41,
@@ -29,7 +29,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_1_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -548,6 +550,7 @@
+@@ -468,6 +470,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 42,
@@ -37,7 +37,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_2_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -588,6 +591,7 @@
+@@ -508,6 +511,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 43,
@@ -45,7 +45,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_3_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -628,6 +632,7 @@
+@@ -548,6 +552,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 44,
@@ -53,7 +53,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_4_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -668,6 +673,7 @@
+@@ -588,6 +593,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 45,
@@ -61,7 +61,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_5_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -708,6 +714,7 @@
+@@ -628,6 +634,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 46,
@@ -69,7 +69,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_6_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -748,6 +755,7 @@
+@@ -668,6 +675,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 47,
@@ -77,7 +77,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_7_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -788,6 +796,7 @@
+@@ -708,6 +716,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 48,
@@ -85,7 +85,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_8_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -828,6 +837,7 @@
+@@ -748,6 +757,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 49,
@@ -93,7 +93,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_9_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -868,6 +878,7 @@
+@@ -788,6 +798,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 50,
@@ -101,7 +101,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_10_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -908,6 +919,7 @@
+@@ -828,6 +839,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 51,
@@ -109,7 +109,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_11_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -948,6 +960,7 @@
+@@ -868,6 +880,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 52,
@@ -117,7 +117,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_12_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -988,6 +1001,7 @@
+@@ -908,6 +921,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 53,
@@ -125,7 +125,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_13_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -1028,6 +1042,7 @@
+@@ -948,6 +962,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 54,
@@ -133,7 +133,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_14_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -1068,6 +1083,7 @@
+@@ -988,6 +1003,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 55,
@@ -141,7 +141,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_15_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -1108,6 +1124,7 @@
+@@ -1028,6 +1044,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 56,
@@ -149,7 +149,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_16_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -1148,6 +1165,7 @@
+@@ -1068,6 +1085,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 57,
@@ -157,7 +157,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_17_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -1188,6 +1206,7 @@
+@@ -1108,6 +1126,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 58,
@@ -165,7 +165,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_18_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -1228,6 +1247,7 @@
+@@ -1148,6 +1167,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 59,
@@ -173,7 +173,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_19_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -1268,6 +1288,7 @@
+@@ -1188,6 +1208,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 60,
@@ -181,7 +181,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_20_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -1308,6 +1329,7 @@
+@@ -1228,6 +1249,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 61,
@@ -189,7 +189,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_21_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -1348,6 +1370,7 @@
+@@ -1268,6 +1290,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 62,
@@ -197,7 +197,7 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_22_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -1388,6 +1411,7 @@
+@@ -1308,6 +1331,7 @@
              {
                  "Address": "0x6a",
                  "Bus": 63,
@@ -205,22 +205,5 @@ index f6badf1..faf0318 100644
                  "Name": "RIO_GRANDE_SSD_23_TEMP_C",
                  "PEC": "Required",
                  "PowerState": "On",
-@@ -1428,6 +1452,7 @@
-             {
-                 "Address": "0x6a",
-                 "Bus": 38,
-+                "ErrorRetryDelay": 3,
-                 "Name": "RIO_GRANDE_SSD_24_TEMP_C",
-                 "PEC": "Required",
-                 "PowerState": "On",
-@@ -1468,6 +1493,7 @@
-             {
-                 "Address": "0x6a",
-                 "Bus": 39,
-+                "ErrorRetryDelay": 3,
-                 "Name": "RIO_GRANDE_SSD_25_TEMP_C",
-                 "PEC": "Required",
-                 "PowerState": "On",
 -- 
 2.43.0
-

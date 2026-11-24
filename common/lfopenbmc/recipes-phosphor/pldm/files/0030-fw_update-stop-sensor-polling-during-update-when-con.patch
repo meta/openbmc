@@ -1,4 +1,4 @@
-From 31fa49237bbc697570fe45a8eacb2d5adc9669c9 Mon Sep 17 00:00:00 2001
+From 0826b76ec097e3bb59d33f9ae76aace02dadc606 Mon Sep 17 00:00:00 2001
 From: Kevin Tung <kevin.tung.openbmc@gmail.com>
 Date: Mon, 17 Aug 2026 20:23:51 +0800
 Subject: [PATCH] fw_update: stop sensor polling during update when configured
@@ -72,12 +72,12 @@ index cb628b9..70f2d9e 100644
              }
          }
 diff --git a/fw-update/aggregate_update_manager.cpp b/fw-update/aggregate_update_manager.cpp
-index 821f077..c6a34fc 100644
+index b58577d..3a9cf0f 100644
 --- a/fw-update/aggregate_update_manager.cpp
 +++ b/fw-update/aggregate_update_manager.cpp
 @@ -29,7 +29,7 @@ void AggregateUpdateManager::createUpdateManager(
      const SoftwareIdentifier& softwareIdentifier,
-     const Descriptors& descriptors, const ComponentInfo& componentInfo,
+     const base::Descriptors& descriptors, const ComponentInfo& componentInfo,
      const std::string& updateObjPath, const std::string& generatedId,
 -    const ConditionPaths& conditionPathPair, const std::string& conditionArg,
 +    const ComponentCondition& condition, const std::string& conditionArg,
@@ -96,7 +96,7 @@ index 821f077..c6a34fc 100644
  
  void AggregateUpdateManager::eraseUpdateManager(
 diff --git a/fw-update/aggregate_update_manager.hpp b/fw-update/aggregate_update_manager.hpp
-index f06cd70..1873f81 100644
+index ba3e830..bb49a3d 100644
 --- a/fw-update/aggregate_update_manager.hpp
 +++ b/fw-update/aggregate_update_manager.hpp
 @@ -31,14 +31,9 @@ class AggregateUpdateManager : public UpdateManager
@@ -126,10 +126,10 @@ index f06cd70..1873f81 100644
       * @param[in] conditionArg - The condition argument associated with the
       * update manager
       * @param[in] taskCompletionCallback - The callback function to be called
-@@ -83,7 +77,7 @@ class AggregateUpdateManager : public UpdateManager
-         const SoftwareIdentifier& softwareIdentifier,
-         const Descriptors& descriptors, const ComponentInfo& componentInfo,
-         const std::string& updateObjPath, const std::string& generatedId,
+@@ -84,7 +78,7 @@ class AggregateUpdateManager : public UpdateManager
+         const base::Descriptors& descriptors,
+         const ComponentInfo& componentInfo, const std::string& updateObjPath,
+         const std::string& generatedId,
 -        const ConditionPaths& conditionPathPair = ConditionPaths{},
 +        const ComponentCondition& condition = ComponentCondition{},
          const std::string& conditionArg = std::string{},
@@ -264,7 +264,7 @@ index 79a2ee4..0d8a696 100644
  
  /**
 diff --git a/fw-update/firmware_inventory_manager.cpp b/fw-update/firmware_inventory_manager.cpp
-index 3a75a85..5150f75 100644
+index 8387141..53a64d9 100644
 --- a/fw-update/firmware_inventory_manager.cpp
 +++ b/fw-update/firmware_inventory_manager.cpp
 @@ -46,12 +46,12 @@ void FirmwareInventoryManager::createFirmwareEntry(
@@ -283,7 +283,7 @@ index 3a75a85..5150f75 100644
  
      softwareMap.insert_or_assign(softwareIdentifier,
 diff --git a/fw-update/item_update_manager.cpp b/fw-update/item_update_manager.cpp
-index 59c23b4..ec06413 100644
+index 41df189..e527218 100644
 --- a/fw-update/item_update_manager.cpp
 +++ b/fw-update/item_update_manager.cpp
 @@ -91,6 +91,12 @@ bool ItemUpdateManager::processPackage()
@@ -312,7 +312,7 @@ index 59c23b4..ec06413 100644
      // update flow starts, so neither the progress interface nor the start time
      // is necessarily available here.
 diff --git a/fw-update/item_update_manager.hpp b/fw-update/item_update_manager.hpp
-index 1f20817..f68e26e 100644
+index 0a29b29..115e356 100644
 --- a/fw-update/item_update_manager.hpp
 +++ b/fw-update/item_update_manager.hpp
 @@ -1,5 +1,6 @@
@@ -338,7 +338,7 @@ index 1f20817..f68e26e 100644
          mctp_eid_t eid, Event& event,
 @@ -66,9 +74,11 @@ class ItemUpdateManager : public UpdateManagerBase, public ItemUpdateIntf
          InstanceIdDb& instanceIdDb, const std::string& objPath,
-         const std::string& generatedId, const Descriptors& descriptors,
+         const std::string& generatedId, const base::Descriptors& descriptors,
          const ComponentInfo& componentInfo,
 -        const ConditionPaths& conditionPathPair = ConditionPaths{},
 +        const ComponentCondition& condition = ComponentCondition{},
@@ -393,7 +393,7 @@ index 1f20817..f68e26e 100644
  
      /** @brief The last progress that was calculated. Used to avoid spamming
 diff --git a/fw-update/manager.hpp b/fw-update/manager.hpp
-index cebbfd5..3e3a98f 100644
+index 0b89572..4043cf7 100644
 --- a/fw-update/manager.hpp
 +++ b/fw-update/manager.hpp
 @@ -50,6 +50,21 @@ class Manager : public pldm::MctpDiscoveryHandlerIntf
@@ -733,10 +733,10 @@ index 7144618..29ce77b 100644
 +    EXPECT_FALSE(manager.getCondition("BIC").stopSensorPolling);
  }
 diff --git a/fw-update/update_manager.cpp b/fw-update/update_manager.cpp
-index 2981132..ff8b52d 100644
+index da43865..609424e 100644
 --- a/fw-update/update_manager.cpp
 +++ b/fw-update/update_manager.cpp
-@@ -592,6 +592,14 @@ void UpdateManager::activatePackage()
+@@ -593,6 +593,14 @@ void UpdateManager::activatePackage()
          return;
      }
  
@@ -751,7 +751,7 @@ index 2981132..ff8b52d 100644
      if (!preConditionPath.empty())
      {
          SystemdInterface::getInstance(pldm::utils::DBusHandler::getBus())
-@@ -638,6 +646,14 @@ void UpdateManager::completeUpdate(bool status)
+@@ -639,6 +647,14 @@ void UpdateManager::completeUpdate(bool status)
          return;
      }
  
@@ -767,7 +767,7 @@ index 2981132..ff8b52d 100644
      auto endTime = std::chrono::steady_clock::now();
      auto dur =
 diff --git a/fw-update/update_manager.hpp b/fw-update/update_manager.hpp
-index 6a9137d..04af4dc 100644
+index b192fb9..81b8e72 100644
 --- a/fw-update/update_manager.hpp
 +++ b/fw-update/update_manager.hpp
 @@ -45,6 +45,15 @@ using DeviceUpdaterInfo =
@@ -885,7 +885,7 @@ index 6474180..6a389b3 100644
       *
       *  @param[in] request - Event message
 diff --git a/platform-mc/sensor_manager.cpp b/platform-mc/sensor_manager.cpp
-index bdae6a0..55049cf 100644
+index bb405ac..fe819d2 100644
 --- a/platform-mc/sensor_manager.cpp
 +++ b/platform-mc/sensor_manager.cpp
 @@ -120,6 +120,15 @@ void SensorManager::stopPolling(pldm_tid_t tid)
@@ -920,7 +920,7 @@ index f4cc0fa..56dbd27 100644
       *  terminus is not available for pldm request
       */
 diff --git a/platform-mc/terminus_manager.cpp b/platform-mc/terminus_manager.cpp
-index 1c31d22..d9ae42b 100644
+index a2d312d..f7af220 100644
 --- a/platform-mc/terminus_manager.cpp
 +++ b/platform-mc/terminus_manager.cpp
 @@ -52,6 +52,23 @@ std::optional<pldm_tid_t> TerminusManager::toTid(const MctpInfo& mctpInfo) const
@@ -972,10 +972,10 @@ index 4f5c9ab..35ca20c 100644
       *         Terminus TID when mctpInfo is already in the data base. Response
       *         new tid from pool when mctpInfo is new.
 diff --git a/pldmd/pldmd.cpp b/pldmd/pldmd.cpp
-index 44c9716..2865cdd 100644
+index 1030f88..bc198d9 100644
 --- a/pldmd/pldmd.cpp
 +++ b/pldmd/pldmd.cpp
-@@ -349,6 +349,32 @@ int main(int argc, char** argv)
+@@ -346,6 +346,32 @@ int main(int argc, char** argv)
      std::unique_ptr<fw_update::Manager> fwManager =
          std::make_unique<fw_update::Manager>(&dbusHandler, event, reqHandler,
                                               instanceIdDb);
@@ -1008,6 +1008,3 @@ index 44c9716..2865cdd 100644
      MctpDiscovery mctpDiscoveryHandler(
          bus, std::initializer_list<MctpDiscoveryHandlerIntf*>{
  #ifdef OEM_META
--- 
-2.53.0-Meta
-

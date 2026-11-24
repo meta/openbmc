@@ -1,4 +1,4 @@
-From 3a1f6bdf177a597ef25c4978c08b76e1cadd7108 Mon Sep 17 00:00:00 2001
+From 28aded526b15a53c7271a00f9f0c1ce1d395daca Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Thu, 6 Aug 2026 18:18:58 +0200
 Subject: [PATCH] hw/arm: yosemite5: add Facebook Yosemite 5 BMC machine
@@ -29,7 +29,7 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  create mode 100644 hw/arm/aspeed_ast2600_yosemite5.c
 
 diff --git a/docs/system/arm/aspeed.rst b/docs/system/arm/aspeed.rst
-index aa43e0d47b..e50422ac92 100644
+index f50b57513d..e8f0240717 100644
 --- a/docs/system/arm/aspeed.rst
 +++ b/docs/system/arm/aspeed.rst
 @@ -39,6 +39,7 @@ AST2600 SoC based machines :
@@ -42,7 +42,7 @@ index aa43e0d47b..e50422ac92 100644
  Supported devices
 diff --git a/hw/arm/aspeed_ast2600_yosemite5.c b/hw/arm/aspeed_ast2600_yosemite5.c
 new file mode 100644
-index 0000000000..8bfb443550
+index 0000000000..dd9bcdc9a6
 --- /dev/null
 +++ b/hw/arm/aspeed_ast2600_yosemite5.c
 @@ -0,0 +1,216 @@
@@ -263,7 +263,7 @@ index 0000000000..8bfb443550
 +
 +DEFINE_TYPES(aspeed_ast2600_yosemite5_types)
 diff --git a/hw/arm/meson.build b/hw/arm/meson.build
-index 6055c93128..69b98348c5 100644
+index 3c766f70e6..8893b06bd3 100644
 --- a/hw/arm/meson.build
 +++ b/hw/arm/meson.build
 @@ -68,6 +68,7 @@ arm_common_ss.add(when: 'CONFIG_ASPEED_SOC', if_true: files(
@@ -275,5 +275,5 @@ index 6055c93128..69b98348c5 100644
    'aspeed_ast10x0_evb.c',
    'aspeed_ast1040.c',
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

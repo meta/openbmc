@@ -1,4 +1,4 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From ac587dfa8783366cf4427a7c37217f82f90138ec Mon Sep 17 00:00:00 2001
 From: Unive Tien <unive.tien.wiwynn@gmail.com>
 Date: Tue, 17 Nov 2026 06:39:10 +0000
 Subject: [PATCH] fw-update: Make aborting on missing component index optional
@@ -20,10 +20,10 @@ on with component classification index 0, as before that commit.
  3 files changed, 36 insertions(+), 2 deletions(-)
 
 diff --git a/fw-update/device_updater.cpp b/fw-update/device_updater.cpp
-index 2e198b4..2f467c6 100644
+index 31a8234..afbd0ac 100644
 --- a/fw-update/device_updater.cpp
 +++ b/fw-update/device_updater.cpp
-@@ -272,6 +272,7 @@ void DeviceUpdater::sendPassCompTableRequest(size_t offset)
+@@ -273,6 +273,7 @@ void DeviceUpdater::sendPassCompTableRequest(size_t offset)
      auto compInfoIter = compInfo.find(compKey);
      if (compInfoIter == compInfo.end())
      {
@@ -31,7 +31,7 @@ index 2e198b4..2f467c6 100644
          updateManager->instanceIdDb.free(eid, instanceId);
          error(
              "Failed to find component classification '{CLASSIFICATION}' and identifier '{IDENTIFIER}' for endpoint ID '{EID}'",
-@@ -279,8 +280,18 @@ void DeviceUpdater::sendPassCompTableRequest(size_t offset)
+@@ -280,8 +281,18 @@ void DeviceUpdater::sendPassCompTableRequest(size_t offset)
              "EID", eid);
          updateManager->updateDeviceCompletion(eid, false);
          return;
@@ -48,10 +48,10 @@ index 2e198b4..2f467c6 100644
 +    CompClassificationIndex compClassificationIndex =
 +        compInfoIter != compInfo.end() ? compInfoIter->second
 +                                       : CompClassificationIndex{};
-     CompComparisonStamp compComparisonStamp =
+     pkg::CompComparisonStamp compComparisonStamp =
          componentInfo.component_comparison_stamp;
-     const auto& componentVersion = std::get<CompVersion>(componentTuple);
-@@ -406,6 +417,7 @@ void DeviceUpdater::sendUpdateComponentRequest(size_t offset)
+     const auto& componentVersion = std::get<pkg::CompVersion>(componentTuple);
+@@ -407,6 +418,7 @@ void DeviceUpdater::sendUpdateComponentRequest(size_t offset)
      auto compInfoIter = compInfo.find(compKey);
      if (compInfoIter == compInfo.end())
      {
@@ -59,7 +59,7 @@ index 2e198b4..2f467c6 100644
          updateManager->instanceIdDb.free(eid, instanceId);
          error(
              "Failed to find component classification '{CLASSIFICATION}' and identifier '{IDENTIFIER}' for endpoint ID '{EID}'",
-@@ -413,8 +425,18 @@ void DeviceUpdater::sendUpdateComponentRequest(size_t offset)
+@@ -414,8 +426,18 @@ void DeviceUpdater::sendUpdateComponentRequest(size_t offset)
              "EID", eid);
          updateManager->updateDeviceCompletion(eid, false);
          return;
@@ -110,6 +110,3 @@ index c21bd97..366bf00 100644
 +    value: 'enabled',
 +    description: 'Abort the firmware update of an endpoint when a package component is not in its GetFirmwareParameters component table, instead of using component classification index 0.',
 +)
--- 
-2.43.0
-

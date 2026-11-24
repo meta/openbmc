@@ -1,4 +1,4 @@
-From daf96e8b44f4861d5c8a7e586f42ea8f3a396879 Mon Sep 17 00:00:00 2001
+From 3a064800c5a63e22a3655fd2988f2ab2602f6270 Mon Sep 17 00:00:00 2001
 From: Emmanuel Blot <emmanuel.blot@free.fr>
 Date: Wed, 12 Aug 2026 15:58:44 +0200
 Subject: [PATCH] hw/arm: yosemite5: populate the FRU EEPROMs
@@ -21,7 +21,7 @@ Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
  1 file changed, 351 insertions(+), 9 deletions(-)
 
 diff --git a/hw/arm/aspeed_ast2600_yosemite5.c b/hw/arm/aspeed_ast2600_yosemite5.c
-index 6f2bb0d061..12d27197c2 100644
+index dd9bcdc9a6..bf1a5613a1 100644
 --- a/hw/arm/aspeed_ast2600_yosemite5.c
 +++ b/hw/arm/aspeed_ast2600_yosemite5.c
 @@ -39,6 +39,339 @@
@@ -422,7 +422,9 @@ index 6f2bb0d061..12d27197c2 100644
  
      /* &i2c11 */
      /* gpio-expander@21 - nxp,pca9535 (MB) */
-@@ -178,7 +518,9 @@ static void yosemite5_bmc_i2c_init(AspeedMachineState *bmc)
+@@ -176,9 +516,11 @@ static void yosemite5_bmc_i2c_init(AspeedMachineState *bmc)
+     i2c_slave_create_simple(i2c[13], TYPE_LM75B, 0x48);
+     i2c_slave_create_simple(i2c[13], TYPE_LM75B, 0x49);
      /* eeprom@51 - atmel,24c128 (MB FRU) */
 -    at24c_eeprom_init(i2c[13], 0x51, 16 * KiB);
 +    at24c_eeprom_init_rom(i2c[13], 0x51, 16 * KiB, fru_13_0051,
@@ -435,5 +437,5 @@ index 6f2bb0d061..12d27197c2 100644
      i2c_slave_create_simple(i2c[13], TYPE_DS1339, 0x68);
  
 -- 
-2.54.0
+2.53.1-Meta
 

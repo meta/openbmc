@@ -20,17 +20,15 @@ for such a report to be created.
 
 Signed-off-by: Pete O_o <pmb@meta.com>
 ---
- .../include/utils/telemetry_utils.hpp         | 22 ++++-
- redfish-core/lib/metric_report_definition.hpp | 27 ++++--
- redfish-core/lib/network_adapter.hpp          | 87 +++++++++++++++++++
- test/meson.build                              |  1 +
- .../include/utils/telemetry_utils_test.cpp    | 48 ++++++++++
- .../redfish-core/lib/network_adapter_test.cpp | 40 +++++++++
- 6 files changed, 219 insertions(+), 6 deletions(-)
- create mode 100644 test/redfish-core/lib/network_adapter_test.cpp
+ redfish-core/include/utils/telemetry_utils.hpp     | 22 +++++-
+ redfish-core/lib/metric_report_definition.hpp      | 27 +++++--
+ redfish-core/lib/network_adapter.hpp               | 86 ++++++++++++++++++++++
+ .../include/utils/telemetry_utils_test.cpp         | 48 ++++++++++++
+ test/redfish-core/lib/network_adapter_test.cpp     | 24 ++++++
+ 5 files changed, 201 insertions(+), 6 deletions(-)
 
 diff --git a/redfish-core/include/utils/telemetry_utils.hpp b/redfish-core/include/utils/telemetry_utils.hpp
-index 4490a4a4..8ff05f59 100644
+index 4490a4a4faeedc19d5eff781311d9b3f0d0a6aae..8ff05f5971a2c68d80cd25fac60a3c61e5fc5250 100644
 --- a/redfish-core/include/utils/telemetry_utils.hpp
 +++ b/redfish-core/include/utils/telemetry_utils.hpp
 @@ -20,6 +20,7 @@
@@ -79,7 +77,7 @@ index 4490a4a4..8ff05f59 100644
          // sensors exist at the moment of parsing.
          std::string ignoredSenorId;
 diff --git a/redfish-core/lib/metric_report_definition.hpp b/redfish-core/lib/metric_report_definition.hpp
-index 812ae186..aefa8fd7 100644
+index e50d4bb66c34aec642fae1aa3bcf079b521883c5..4d4356a5f01eb8c53cc246b47750f0749fcd3e46 100644
 --- a/redfish-core/lib/metric_report_definition.hpp
 +++ b/redfish-core/lib/metric_report_definition.hpp
 @@ -12,6 +12,7 @@
@@ -164,20 +162,18 @@ index 812ae186..aefa8fd7 100644
  
  inline void handleMetricReportHead(
 diff --git a/redfish-core/lib/network_adapter.hpp b/redfish-core/lib/network_adapter.hpp
-index 476c74e1..daca866b 100644
+index 32ed10034e37809f24975e57e321547d31ae8c2b..84d0ce39800040b05291bdb5ea5622cde4fa19f0 100644
 --- a/redfish-core/lib/network_adapter.hpp
 +++ b/redfish-core/lib/network_adapter.hpp
-@@ -19,7 +19,9 @@
+@@ -23,6 +23,7 @@
  #include <array>
  #include <format>
  #include <functional>
 +#include <map>
  #include <memory>
-+#include <optional>
+ #include <optional>
  #include <string>
- #include <string_view>
- #include <utility>
-@@ -55,6 +57,26 @@ static constexpr std::array<std::pair<std::string_view, std::string_view>, 21>
+@@ -60,6 +61,26 @@ static constexpr std::array<std::pair<std::string_view, std::string_view>, 21>
          {"tx_excessive_collisions", "/Networking/TXExcessiveCollisions"},
      }};
  
@@ -204,7 +200,7 @@ index 476c74e1..daca866b 100644
  inline void handleNetworkAdapterPortMetricsPathsPortMetricsGet(
      const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
      const boost::system::error_code& ec,
-@@ -428,6 +450,71 @@ inline void handleNetworkAdapterPortCollectionGet(
+@@ -492,6 +513,71 @@ inline void handleNetworkAdapterPortCollectionGet(
                                            chassisId, networkAdapterId));
  }
  
@@ -276,20 +272,8 @@ index 476c74e1..daca866b 100644
  inline void requestRoutesChassisNetworkAdapter(App& app)
  {
      BMCWEB_ROUTE(app, "/redfish/v1/Chassis/<str>/NetworkAdapters/")
-diff --git a/test/meson.build b/test/meson.build
-index 64c694ec..7a7493ac 100644
---- a/test/meson.build
-+++ b/test/meson.build
-@@ -68,6 +68,7 @@ srcfiles_unittest = files(
-     'redfish-core/lib/memory_test.cpp',
-     'redfish-core/lib/metadata_test.cpp',
-     'redfish-core/lib/metric_report_definition_test.cpp',
-+    'redfish-core/lib/network_adapter_test.cpp',
-     'redfish-core/lib/openbmc_managers_test.cpp',
-     'redfish-core/lib/pcie_slots_test.cpp',
-     'redfish-core/lib/pcie_test.cpp',
 diff --git a/test/redfish-core/include/utils/telemetry_utils_test.cpp b/test/redfish-core/include/utils/telemetry_utils_test.cpp
-index d910a1f8..6779172a 100644
+index d910a1f8a0f70c33f965b5e8c0a4cca4cbcb3624..6779172a9ca18493d2e247acad97e2ef050dc450 100644
 --- a/test/redfish-core/include/utils/telemetry_utils_test.cpp
 +++ b/test/redfish-core/include/utils/telemetry_utils_test.cpp
 @@ -3,13 +3,16 @@
@@ -368,27 +352,24 @@ index d910a1f8..6779172a 100644
  } // namespace
  } // namespace redfish::telemetry
 diff --git a/test/redfish-core/lib/network_adapter_test.cpp b/test/redfish-core/lib/network_adapter_test.cpp
-new file mode 100644
-index 00000000..f002ac70
---- /dev/null
+index 4f9b3a169713c68e4262c720c126d984fe5041d4..df39e0f9fecd0690f007ef9a9a31be0e19e5a151 100644
+--- a/test/redfish-core/lib/network_adapter_test.cpp
 +++ b/test/redfish-core/lib/network_adapter_test.cpp
-@@ -0,0 +1,40 @@
-+// SPDX-License-Identifier: Apache-2.0
-+// SPDX-FileCopyrightText: Copyright OpenBMC Authors
-+#include "network_adapter.hpp"
-+
+@@ -10,8 +10,10 @@
+ #include <boost/system/errc.hpp>
+ #include <boost/system/linux_error.hpp>
+ #include <nlohmann/json.hpp>
 +#include <sdbusplus/message/native_types.hpp>
-+
+ 
+ #include <memory>
 +#include <optional>
-+#include <string_view>
-+
-+#include <gtest/gtest.h>
-+
-+namespace redfish
-+{
-+namespace
-+{
-+
+ #include <string>
+ #include <string_view>
+ 
+@@ -120,5 +122,27 @@ TEST(AfterGetNetworkAdapterLocation, UnknownInterfaceOmitsLocation)
+     EXPECT_TRUE(response->res.jsonValue.empty());
+ }
+ 
 +TEST(GetNicMetricJsonPointer, MapsNicMetrics)
 +{
 +    EXPECT_EQ(getNicMetricJsonPointer(sdbusplus::object_path(
@@ -411,8 +392,7 @@ index 00000000..f002ac70
 +              std::nullopt);
 +}
 +
-+} // namespace
-+} // namespace redfish
+ } // namespace
+ } // namespace redfish
 -- 
-2.53.0-Meta
-
+2.43.0

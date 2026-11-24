@@ -1,4 +1,4 @@
-From 39db8062f24fbb1df3e7a4bcd5447e26781584e5 Mon Sep 17 00:00:00 2001
+From cb9372c095c320be35821d5446fcb13b0f8324a2 Mon Sep 17 00:00:00 2001
 From: Eric Yang <eric.yang.wiwynn@gmail.com>
 Date: Thu, 6 Mar 2025 16:48:20 +0800
 Subject: [PATCH] platform-mc: Add MCTP recovery option
@@ -17,7 +17,7 @@ Upstream-Status: Pending
  4 files changed, 16 insertions(+)
 
 diff --git a/common/utils.cpp b/common/utils.cpp
-index d0bd39e..0a4509a 100644
+index 9b6c8b7..8e35ec4 100644
 --- a/common/utils.cpp
 +++ b/common/utils.cpp
 @@ -588,6 +588,7 @@ int emitStateSensorEventSignal(uint8_t tid, uint16_t sensorId,
@@ -39,7 +39,7 @@ index d0bd39e..0a4509a 100644
  
  uint16_t findStateSensorId(const pldm_pdr* pdrRepo, uint8_t tid,
 diff --git a/meson.build b/meson.build
-index 1dbf6bb..4bf5d27 100644
+index 25c3cc6..5b70d14 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -118,6 +118,8 @@ elif get_option('transport-implementation') == 'af-mctp'
@@ -71,7 +71,7 @@ index 1cb9ebb..e4700e7 100644
  option(
      'fw-update-pkg-inotify',
 diff --git a/platform-mc/terminus_manager.cpp b/platform-mc/terminus_manager.cpp
-index b6ed988..35774d4 100644
+index 873be5a..48d2d65 100644
 --- a/platform-mc/terminus_manager.cpp
 +++ b/platform-mc/terminus_manager.cpp
 @@ -722,6 +722,7 @@ exec::task<int> TerminusManager::sendRecvPldmMsg(
@@ -81,7 +81,7 @@ index b6ed988..35774d4 100644
 +#ifdef MCTP_RECOVERY
      if (rc == PLDM_ERROR_NOT_READY)
      {
-         // Call Recover() to check enpoint's availability
+         // Call Recover() to check endpoint's availability
 @@ -733,6 +734,7 @@ exec::task<int> TerminusManager::sendRecvPldmMsg(
          pldm::utils::recoverMctpEndpoint(endpointObjPath);
          updateMctpEndpointAvailability(mctpInfo.value(), false);
@@ -90,6 +90,3 @@ index b6ed988..35774d4 100644
  
      co_return rc;
  }
--- 
-2.53.0-Meta
-

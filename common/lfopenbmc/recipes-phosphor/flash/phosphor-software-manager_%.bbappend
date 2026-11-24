@@ -6,7 +6,6 @@ SRC_URI:append = " \
     file://0003-common-restore-VR-page-after-update-or-CRC-access.patch \
     file://0004-i2c-vr-add-support-for-MPS-MP2940x-VR-firmware-updat.patch \
     file://0005-i2c-vr-add-support-for-TI-TPS544X27-VR-firmware-upda.patch \
-    file://0006-spi-Fix-output-pipe-creation-for-asyncSystem-call.patch \
 "
 
 SRC_URI:append:mf-fb-rainier = " \

@@ -1,4 +1,4 @@
-From 87b956d7efe15896e93e9252fe9726814c12ba87 Mon Sep 17 00:00:00 2001
+From 1660c43e1b282e1a3057aeeecc3b857b0eda347e Mon Sep 17 00:00:00 2001
 From: Potin Lai <potin.lai@quantatw.com>
 Date: Wed, 30 Sep 2026 20:03:35 +0800
 Subject: [PATCH] fru-device: fix redundant rescans on dbus property changes
@@ -31,10 +31,10 @@ Change-Id: I80eed110a5fef99df7207c9508ab2135e5554cf6
  1 file changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/src/fru_device/fru_device.cpp b/src/fru_device/fru_device.cpp
-index d8e4b4c..dfbf6b3 100644
+index e32b2ef..b6f6805 100644
 --- a/src/fru_device/fru_device.cpp
 +++ b/src/fru_device/fru_device.cpp
-@@ -1590,17 +1590,17 @@ int main()
+@@ -1592,17 +1592,17 @@ int main()
              auto findState = values.find("CurrentHostState");
              if (findState != values.end())
              {

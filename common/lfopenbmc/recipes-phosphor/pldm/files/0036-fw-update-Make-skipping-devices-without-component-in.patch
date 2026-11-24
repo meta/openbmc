@@ -1,4 +1,4 @@
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From 79ac0bff8c36d7fa2a4a539b6526b60b8fa13e67 Mon Sep 17 00:00:00 2001
 From: Unive Tien <unive.tien.wiwynn@gmail.com>
 Date: Tue, 17 Nov 2026 06:39:03 +0000
 Subject: [PATCH] fw-update: Make skipping devices without component info
@@ -23,7 +23,7 @@ empty one instead of tripping the assert.
  4 files changed, 43 insertions(+), 3 deletions(-)
 
 diff --git a/fw-update/test/update_manager_test.cpp b/fw-update/test/update_manager_test.cpp
-index 7271db7..53363d8 100644
+index bddf792..cfca45f 100644
 --- a/fw-update/test/update_manager_test.cpp
 +++ b/fw-update/test/update_manager_test.cpp
 @@ -190,6 +190,9 @@ TEST_F(UpdateManagerTest, StartsTheNextUpdateBeforeAPendingRelease)
@@ -42,7 +42,7 @@ index 7271db7..53363d8 100644
  }
 +#endif
 diff --git a/fw-update/update_manager.cpp b/fw-update/update_manager.cpp
-index ff8b52d..dbb9498 100644
+index 609424e..dc89440 100644
 --- a/fw-update/update_manager.cpp
 +++ b/fw-update/update_manager.cpp
 @@ -32,6 +32,11 @@ namespace fw_update
@@ -104,7 +104,7 @@ index ff8b52d..dbb9498 100644
              if (!inserted2)
              {
 @@ -415,7 +436,8 @@ DeviceUpdaterInfos UpdateManager::associatePkgToDevices(
-     const DownstreamDeviceIDRecords& downstreamDeviceIDRecords,
+     const pkg::DownstreamDeviceIDRecords& downstreamDeviceIDRecords,
      const DescriptorMap& descriptorMap,
      const DownstreamDescriptorMap& downstreamDescriptorMap,
 -    const ComponentInfoMap& componentInfoMap,
@@ -160,6 +160,3 @@ index b6e0712..c21bd97 100644
 +    value: 'enabled',
 +    description: 'Skip endpoints matching the firmware update package whose GetFirmwareParameters component info is missing or empty, and fail the package update for them.',
 +)
--- 
-2.43.0
-

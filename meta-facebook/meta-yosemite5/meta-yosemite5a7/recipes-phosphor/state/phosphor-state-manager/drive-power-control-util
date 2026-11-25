@@ -9,6 +9,20 @@ lock="/run/ssd_power.lock"
 SSD_REMAP_OFFSET=2
 SSD_TOTAL_NUM=26
 
+# MB CPLD drive power notify registers (i2c bus 11, address 0x0f, register
+# 0x30~0x33). Each register holds 8 SSDs, one bit per physical SSD:
+#   0x30 bit[7:0] -> physical ssd0~ssd7
+#   0x31 bit[7:0] -> physical ssd8~ssd15
+#   0x32 bit[7:0] -> physical ssd16~ssd23
+#   0x33 bit[1:0] -> physical ssd24~ssd25 (bit[7:2] unused)
+# Bit value:
+#   0 -> the SSD is powered on
+#   1 -> the SSD is powered off
+CPLD_I2C_BUS=11
+CPLD_I2C_ADDR=0x0f
+CPLD_SSD_POWER_REG_BASE=0x30
+CPLD_SSD_POWER_MAX=26
+
 # Retry configuration
 MAX_RETRIES=10
 RETRY_DELAY=0.1
@@ -69,6 +83,109 @@ get_dbus_object_retry() {
         fi
     done
 
+    return 1
+}
+
+# Read one byte from the MB CPLD, echo the value as a decimal number.
+cpld_read_byte() {
+    local reg=$1
+    local value
+
+    if ! value=$(i2ctransfer -fy "$CPLD_I2C_BUS" "w1@${CPLD_I2C_ADDR}" "${reg}" r1 2>/dev/null); then
+        error "I2C read failed, bus=${CPLD_I2C_BUS}, addr=${CPLD_I2C_ADDR}, reg=${reg}"
+        return 1
+    fi
+
+    if ! [[ "$value" =~ ^0[xX][0-9a-fA-F]+$ ]]; then
+        error "Unexpected CPLD value '$value' read from reg ${reg}"
+        return 1
+    fi
+
+    echo $(( value ))
+    return 0
+}
+
+# Write one byte to the MB CPLD. The value is a decimal number, i2c-tools
+# expects the data bytes in hexadecimal.
+cpld_write_byte() {
+    local reg=$1
+    local value=$2
+    local value_hex
+
+    value_hex=$(printf '0x%02x' "$value")
+
+    if ! i2ctransfer -fy "$CPLD_I2C_BUS" "w2@${CPLD_I2C_ADDR}" "${reg}" "${value_hex}" 2>/dev/null; then
+        error "I2C write failed, bus=${CPLD_I2C_BUS}, addr=${CPLD_I2C_ADDR}, reg=${reg}, value=${value}"
+        return 1
+    fi
+
+    return 0
+}
+
+# Read one CPLD SSD power register, update the bit of one drive and write it
+# back, so the bits of the other drives are kept. Echoes "<old> <new>" on
+# success. Caller must hold "$lock": the read-modify-write must be atomic
+# against the power control of the other drives.
+cpld_update_ssd_power_bit() {
+    local reg=$1
+    local mask=$2
+    local set_bit=$3
+    local value new_value
+
+    if ! value=$(cpld_read_byte "$reg"); then
+        return 1
+    fi
+
+    if (( set_bit == 1 )); then
+        new_value=$(( value | mask ))
+    else
+        new_value=$(( value & ~mask & 0xff ))
+    fi
+
+    if (( new_value != value )) && ! cpld_write_byte "$reg" "$new_value"; then
+        return 1
+    fi
+
+    echo "$value $new_value"
+    return 0
+}
+
+# Notify the CPLD of a drive power state change via i2c: the register is read
+# first, then the bit of this drive is cleared to 0 on power on and set back to
+# 1 on power off.
+# Caller must hold "$lock", so the CPLD bit and the power enable GPIO of the
+# drive are changed in the same critical section.
+notify_cpld_drive_power() {
+    local ssd_num=$1
+    local power_state=$2
+    local reg mask set_bit values retry=0
+
+    # only ssd0~ssd25 are connected to the CPLD power registers
+    if (( ssd_num >= CPLD_SSD_POWER_MAX )); then
+        return 0
+    fi
+
+    # 8 drives per register: ssd N -> register base + N / 8, bit N % 8
+    reg=$(printf '0x%02x' $(( CPLD_SSD_POWER_REG_BASE + ssd_num / 8 )))
+    mask=$(( 1 << (ssd_num % 8) ))
+    # power on -> 0, power off -> 1
+    set_bit=0
+    [[ "$power_state" = "off" ]] && set_bit=1
+
+    while (( retry < MAX_RETRIES )); do
+        if values=$(cpld_update_ssd_power_bit "$reg" "$mask" "$set_bit"); then
+            log "CPLD SSD power register ${reg}: 0x$(printf '%02x' "${values% *}") -> 0x$(printf '%02x' "${values#* }") for SSD $ssd_num power $power_state"
+            return 0
+        fi
+
+        error "Failed to notify CPLD of SSD $ssd_num power $power_state, retrying..."
+        retry=$(( retry + 1 ))
+        if (( retry < MAX_RETRIES )); then
+            sleep "$RETRY_DELAY"
+        fi
+    done
+
+    error "Failed to notify CPLD of SSD $ssd_num power $power_state after $MAX_RETRIES attempts"
     return 1
 }
 
@@ -176,6 +293,12 @@ single_drive_power_control() {
     if [[ "$power_state" = "on" ]]; then
         drive_power_state=$(get_gpio_retry "$power_good_pin")
         if [[ "$drive_power_state" = "1" ]]; then
+            # the CPLD register defaults to 1 (off), so still clear the bit of
+            # this drive in case the CPLD was reset while the drive stayed on
+            {
+                flock -x -w 30 100 || { error "Other power control process is running, cannot power control SSD $user_ssd_num"; exit 1; }
+                notify_cpld_drive_power "$ssd_num" "on"
+            } 100>"$lock"
             log "SSD $user_ssd_num (physical: $ssd_num) is already powered on"
             exit 0
         fi
@@ -186,21 +309,29 @@ single_drive_power_control() {
         while (( retry < MAX_RETRIES )); do
             {
                 flock -x -w 30 100 || { error "Other power control process is running, cannot power control SSD $user_ssd_num"; exit 1; }
+                # notify cpld via i2c, the bit of this
+                # drive is cleared to 0 in the CPLD power register
+                notify_cpld_drive_power "$ssd_num" "on"
+
                 # pull low the reset pin first to ensure the drive is in reset state before powering on
                 set_gpio_retry "$reset_pin" 0
-                set_gpio_retry "$power_enable_pin" 1
+                if set_gpio_retry "$power_enable_pin" 1; then
+                    # time interval between drives
+                    sleep 0.045
 
-                # time interval between drives
-                sleep 0.045
-
-                if check_gpio_state "$power_good_pin" "1"; then
-                    # wait 100ms and pull high the reset pin
-                    sleep 0.1
-                    set_gpio_retry "$reset_pin" 1
-                    log "SSD $user_ssd_num power is enabled"
-                    break
+                    if check_gpio_state "$power_good_pin" "1"; then
+                        # wait 100ms and pull high the reset pin
+                        sleep 0.1
+                        set_gpio_retry "$reset_pin" 1
+                        log "SSD $user_ssd_num power is enabled"
+                        break
+                    fi
+                    error "SSD $user_ssd_num is not ready to power on, retrying..."
+                else
+                    # the drive is not powered, set the bit of this drive back to 1
+                    error "Failed to enable SSD $user_ssd_num power, restoring CPLD power register"
+                    notify_cpld_drive_power "$ssd_num" "off"
                 fi
-                error "SSD $user_ssd_num is not ready to power on, retrying..."
                 sleep "$RETRY_DELAY"
                 retry=$(( retry + 1 ))
             } 100>"$lock"
@@ -214,8 +345,17 @@ single_drive_power_control() {
             flock -x -w 30 100 || { error "Other power control process is running, cannot power control SSD $user_ssd_num"; exit 1; }
             # pull low the reset pin first
             set_gpio_retry "$reset_pin" 0
-            set_gpio_retry "$power_enable_pin" 0
+            if ! set_gpio_retry "$power_enable_pin" 0; then
+                # the drive is still powered, keep the bit of this drive at 0
+                error "Failed to disable SSD $user_ssd_num power"
+                exit 1
+            fi
+
+            # notify cpld via i2c, the bit of this
+            # drive is set back to 1 in the CPLD power register
+            notify_cpld_drive_power "$ssd_num" "off"
         } 100>"$lock"
+
         log "SSD $user_ssd_num power is disabled"
     else
         error "Invalid power state: $power_state. Use 'on' or 'off'."

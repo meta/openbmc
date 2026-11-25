@@ -1,4 +1,4 @@
-From c09c47510431ae9ae829633bd47cd2a8fbff40dd Mon Sep 17 00:00:00 2001
+From 75f35883a0e26e81944211da2e79a88b79015e61 Mon Sep 17 00:00:00 2001
 From: Eric Yang <eric.yang.wiwynn@gmail.com>
 Date: Tue, 11 Mar 2025 13:47:42 +0800
 Subject: [PATCH] entity-manager: Add config-prefix filtering
@@ -13,13 +13,13 @@ Signed-off-by: Eric Yang <eric.yang.wiwynn@gmail.com>
 ---
  meson.build                          |  4 +-
  meson.options                        |  6 +++
- src/entity_manager/configuration.cpp |  7 +++-
- src/utils.cpp                        | 78 +++++++++++++++++++++---------------
- src/utils.hpp                        | 10 ++++-
+ src/entity_manager/configuration.cpp |  7 ++-
+ src/utils.cpp                        | 78 ++++++++++++++++------------
+ src/utils.hpp                        | 10 +++-
  5 files changed, 68 insertions(+), 37 deletions(-)
 
 diff --git a/meson.build b/meson.build
-index a45e3163fcd3cb734f343ce051d943fef2ec8322..e8d060b0c5bc9710f280e67f9168e937d0e06942 100644
+index a45e316..e8d060b 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -6,8 +6,10 @@ project(
@@ -35,7 +35,7 @@ index a45e3163fcd3cb734f343ce051d943fef2ec8322..e8d060b0c5bc9710f280e67f9168e937
  )
  
 diff --git a/meson.options b/meson.options
-index 8cdd903bdcb44b035cfa12da604439e9144e2399..efbf48c197bcaf288288ca2f451fcdbabae4b5da 100644
+index 8cdd903..efbf48c 100644
 --- a/meson.options
 +++ b/meson.options
 @@ -53,3 +53,9 @@ option(
@@ -49,7 +49,7 @@ index 8cdd903bdcb44b035cfa12da604439e9144e2399..efbf48c197bcaf288288ca2f451fcdba
 +    description: 'Comma-separated list of JSON filename prefixes to filter. Default loads all JSON files.',
 +)
 diff --git a/src/entity_manager/configuration.cpp b/src/entity_manager/configuration.cpp
-index c5026639ec452b47783c08154a732e1c3bab12e9..2092041b25fa0c9d9444bc186cf5e062895909d2 100644
+index c502663..2092041 100644
 --- a/src/entity_manager/configuration.cpp
 +++ b/src/entity_manager/configuration.cpp
 @@ -74,10 +74,15 @@ void Configuration::loadSingleConfigFile(const std::filesystem::path& jsonPath,
@@ -70,7 +70,7 @@ index c5026639ec452b47783c08154a732e1c3bab12e9..2092041b25fa0c9d9444bc186cf5e062
          for (const auto& configurationDirectory : configurationDirectories)
          {
 diff --git a/src/utils.cpp b/src/utils.cpp
-index 9f9284b2ebf9ac3b59e1ba1b702d4857e74b03f2..9237043c26ba4468c34cbf9bd29e965ef422ffd6 100644
+index 9f9284b..9237043 100644
 --- a/src/utils.cpp
 +++ b/src/utils.cpp
 @@ -50,8 +50,29 @@ std::optional<int> createInotifyWatch(const char* path, uint32_t mask)
@@ -180,7 +180,7 @@ index 9f9284b2ebf9ac3b59e1ba1b702d4857e74b03f2..9237043c26ba4468c34cbf9bd29e965e
  
      return !foundPaths.empty();
 diff --git a/src/utils.hpp b/src/utils.hpp
-index 36fc1dab1992926ed9376960a2f40695914df6ed..d278e05751cd056babc96f8d0c4a33c02ba2603a 100644
+index 36fc1da..d278e05 100644
 --- a/src/utils.hpp
 +++ b/src/utils.hpp
 @@ -31,10 +31,16 @@ std::optional<int> createInotifyWatch(const char* path, uint32_t mask);
@@ -203,4 +203,5 @@ index 36fc1dab1992926ed9376960a2f40695914df6ed..d278e05751cd056babc96f8d0c4a33c0
  bool getI2cDevicePaths(const std::filesystem::path& dirPath,
                         std::flat_map<size_t, std::filesystem::path>& busPaths);
 -- 
-2.43.0
+2.53.1-Meta
+

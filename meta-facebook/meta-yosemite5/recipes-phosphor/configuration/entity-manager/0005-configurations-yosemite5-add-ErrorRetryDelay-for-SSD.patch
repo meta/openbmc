@@ -1,4 +1,4 @@
-From f35f7765fa2c406cd442b160164290a9fe92f462 Mon Sep 17 00:00:00 2001
+From fbacf1ce590b3d72d9fa383fcdbf3b858a56ef75 Mon Sep 17 00:00:00 2001
 From: Elton Wang <elton.wang.wiwynn@gmail.com>
 Date: Thu, 3 Sep 2026 05:55:03 +0000
 Subject: [PATCH] configurations: yosemite5: add ErrorRetryDelay for SSDs
@@ -6,11 +6,11 @@ Subject: [PATCH] configurations: yosemite5: add ErrorRetryDelay for SSDs
 Add ErrorRetryDelay property to NVMe temperature sensor on Rio Grande
 to configure the retry poll cycles after sensor enters the error state.
 ---
- .../meta/yv5/yosemite5_rio_grande_ssd.json         | 24 ++++++++++++++++++++++
+ .../meta/yv5/yosemite5_rio_grande_ssd.json    | 24 +++++++++++++++++++
  1 file changed, 24 insertions(+)
 
 diff --git a/configurations/meta/yv5/yosemite5_rio_grande_ssd.json b/configurations/meta/yv5/yosemite5_rio_grande_ssd.json
-index e27df2f7974751c4e232ce89e6f2708aae8f7c86..277eeb81952acbf468ce5a37202234d3f0bbe12b 100644
+index e27df2f..277eeb8 100644
 --- a/configurations/meta/yv5/yosemite5_rio_grande_ssd.json
 +++ b/configurations/meta/yv5/yosemite5_rio_grande_ssd.json
 @@ -388,6 +388,7 @@
@@ -206,4 +206,5 @@ index e27df2f7974751c4e232ce89e6f2708aae8f7c86..277eeb81952acbf468ce5a37202234d3
                  "PEC": "Required",
                  "PowerState": "On",
 -- 
-2.43.0
+2.53.1-Meta
+

@@ -1,4 +1,4 @@
-From 233caffcaaef33132179c32ff13742c2199d449d Mon Sep 17 00:00:00 2001
+From 9a5713aa05b8aec00ea43074f7917de6ff9bb971 Mon Sep 17 00:00:00 2001
 From: Elton Wang <elton.wang.wiwynn@gmail.com>
 Date: Thu, 1 Oct 2026 05:58:15 +0000
 Subject: [PATCH] configurations: yosemite5: add Item.Drive interface
@@ -9,11 +9,11 @@ can control drive power.
 
 [1] https://gerrit.openbmc.org/c/openbmc/phosphor-state-manager/+/89401
 ---
- .../meta/yv5/yosemite5_rio_grande_ssd.json         | 72 ++++++++++++++--------
+ .../meta/yv5/yosemite5_rio_grande_ssd.json    | 72 ++++++++++++-------
  1 file changed, 48 insertions(+), 24 deletions(-)
 
 diff --git a/configurations/meta/yv5/yosemite5_rio_grande_ssd.json b/configurations/meta/yv5/yosemite5_rio_grande_ssd.json
-index e34007691966479a3b09f1c7acc438dce922011d..e27df2f7974751c4e232ce89e6f2708aae8f7c86 100644
+index e340076..e27df2f 100644
 --- a/configurations/meta/yv5/yosemite5_rio_grande_ssd.json
 +++ b/configurations/meta/yv5/yosemite5_rio_grande_ssd.json
 @@ -414,7 +414,8 @@
@@ -256,4 +256,5 @@ index e34007691966479a3b09f1c7acc438dce922011d..e27df2f7974751c4e232ce89e6f2708a
      }
  ]
 -- 
-2.43.0
+2.53.1-Meta
+

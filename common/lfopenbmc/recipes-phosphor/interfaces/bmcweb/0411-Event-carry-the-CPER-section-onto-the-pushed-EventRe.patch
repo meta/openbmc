@@ -1,4 +1,4 @@
-From 78de081b1c7f42ec270820663ae94ac773172014 Mon Sep 17 00:00:00 2001
+From fc633fa253a5cb433e9fae936300f664b61355c4 Mon Sep 17 00:00:00 2001
 From: Pete O_o <pmb@meta.com>
 Date: Wed, 2 Sep 2026 14:00:00 -0700
 Subject: [PATCH] Event: carry the CPER section onto the pushed EventRecord
@@ -54,10 +54,10 @@ no-CPER path leaves the record untouched.
  7 files changed, 141 insertions(+), 15 deletions(-)
 
 diff --git a/docs/Redfish.md b/docs/Redfish.md
-index af317156..d88cccfb 100644
+index 46eb8a4a..d94628c7 100644
 --- a/docs/Redfish.md
 +++ b/docs/Redfish.md
-@@ -641,7 +641,12 @@ Fields common to all schemas
+@@ -643,7 +643,12 @@ Fields common to all schemas
  #### Event
  
  - @odata.type
@@ -347,5 +347,5 @@ index 15cc4e76..a35b08fc 100644
 +
  } // namespace redfish
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

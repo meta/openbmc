@@ -171,7 +171,7 @@ index 2a1e529..ba3e830 100644
      {}
  
 diff --git a/fw-update/device_updater.cpp b/fw-update/device_updater.cpp
-index 14ba313..31a8234 100644
+index bb51ea7..9c86809 100644
 --- a/fw-update/device_updater.cpp
 +++ b/fw-update/device_updater.cpp
 @@ -11,6 +11,9 @@
@@ -485,8 +485,8 @@ index 14ba313..31a8234 100644
 +        padBytes = static_cast<uint64_t>(offset) + length - compImageSize;
      }
  
-     if (componentIndex < progress.size())
-@@ -667,11 +656,8 @@ Response DeviceUpdater::requestFwData(const pldm_msg* request,
+     const auto dataBytes = length - padBytes;
+@@ -669,11 +658,8 @@ Response DeviceUpdater::requestFwData(const pldm_msg* request,
  
      response.resize(sizeof(pldm_msg_hdr) + sizeof(completionCode) + length);
      responseMsg = new (response.data()) pldm_msg;
@@ -494,13 +494,13 @@ index 14ba313..31a8234 100644
 -    package.read(
 -        reinterpret_cast<char*>(
 -            response.data() + sizeof(pldm_msg_hdr) + sizeof(completionCode)),
--        length - padBytes);
+-        dataBytes);
 +    memcpy(response.data() + sizeof(pldm_msg_hdr) + sizeof(completionCode),
-+           componentImage.data() + offset, length - padBytes);
++           componentImage.data() + offset, dataBytes);
      rc = encode_request_firmware_data_resp(
          request->hdr.instance_id, completionCode, responseMsg,
          sizeof(completionCode));
-@@ -740,23 +726,22 @@ Response DeviceUpdater::transferComplete(const pldm_msg* request,
+@@ -742,23 +728,22 @@ Response DeviceUpdater::transferComplete(const pldm_msg* request,
          return response;
      }
  
@@ -529,7 +529,7 @@ index 14ba313..31a8234 100644
              transferResult);
          events::generateTransferFailed(targetPath, pkgVersion);
          updateManager->updateDeviceCompletion(eid, false);
-@@ -803,10 +788,9 @@ Response DeviceUpdater::verifyComplete(const pldm_msg* request,
+@@ -805,10 +790,9 @@ Response DeviceUpdater::verifyComplete(const pldm_msg* request,
          return response;
      }
  
@@ -543,7 +543,7 @@ index 14ba313..31a8234 100644
      if (componentIndex < progress.size())
      {
          progress[componentIndex].updateState(UpdateProgress::state::Verify);
-@@ -819,14 +803,14 @@ Response DeviceUpdater::verifyComplete(const pldm_msg* request,
+@@ -821,14 +805,14 @@ Response DeviceUpdater::verifyComplete(const pldm_msg* request,
      {
          info(
              "Component endpoint ID '{EID}' and version '{COMPONENT_VERSION}' verification complete.",
@@ -560,7 +560,7 @@ index 14ba313..31a8234 100644
              verifyResult);
          events::generateVerificationFailed(targetPath, pkgVersion);
          updateManager->updateDeviceCompletion(eid, false);
-@@ -875,17 +859,16 @@ Response DeviceUpdater::applyComplete(const pldm_msg* request,
+@@ -877,17 +861,16 @@ Response DeviceUpdater::applyComplete(const pldm_msg* request,
          return response;
      }
  
@@ -582,7 +582,7 @@ index 14ba313..31a8234 100644
          if (componentIndex < progress.size())
          {
              progress[componentIndex].updateState(UpdateProgress::state::Apply);
-@@ -926,7 +909,8 @@ Response DeviceUpdater::applyComplete(const pldm_msg* request,
+@@ -928,7 +911,8 @@ Response DeviceUpdater::applyComplete(const pldm_msg* request,
      {
          error(
              "Failed to apply component endpoint ID '{EID}' and version '{COMPONENT_VERSION}', error - {ERROR}",
@@ -592,7 +592,7 @@ index 14ba313..31a8234 100644
          if (updateManager != nullptr)
          {
              events::generateActivateFailed(targetPath, pkgVersion);
-@@ -1107,8 +1091,6 @@ void DeviceUpdater::cancelUpdateComponent(
+@@ -1115,8 +1099,6 @@ void DeviceUpdater::cancelUpdateComponent(
          return;
      }
  
@@ -1496,7 +1496,7 @@ index a804ff4..5094307 100644
  } // namespace pkg
  
 diff --git a/fw-update/test/device_updater_test.cpp b/fw-update/test/device_updater_test.cpp
-index 6b19aea..93086d2 100644
+index 78591f4..f2966d4 100644
 --- a/fw-update/test/device_updater_test.cpp
 +++ b/fw-update/test/device_updater_test.cpp
 @@ -11,7 +11,6 @@
@@ -1677,8 +1677,8 @@ index 6b19aea..93086d2 100644
  
      constexpr std::array<uint8_t, sizeof(pldm_msg_hdr) +
                                        sizeof(pldm_request_firmware_data_req)>
-@@ -314,3 +330,20 @@ TEST_F(DeviceUpdaterTest, FullUpdateProgress)
-     deviceUpdater.activateFirmware(0, activateMsg, 3);
+@@ -370,3 +386,20 @@ TEST_F(DeviceUpdaterTest, ActivationNotRequired)
+         activateFirmwareResp.size() - sizeof(pldm_msg_hdr));
      EXPECT_EQ(deviceUpdater.getProgress(), 100);
  }
 +

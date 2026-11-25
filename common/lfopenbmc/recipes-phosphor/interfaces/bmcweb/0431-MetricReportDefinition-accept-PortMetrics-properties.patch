@@ -1,4 +1,4 @@
-From 373fbc1987a842e258d78e25e8d0c68b77cbf159 Mon Sep 17 00:00:00 2001
+From fae196b324c2fd764fa5c36c072b207d1c1d96d8 Mon Sep 17 00:00:00 2001
 From: Pete O_o <pmb@meta.com>
 Date: Wed, 21 Oct 2026 15:26:58 -0700
 Subject: [PATCH] MetricReportDefinition: accept PortMetrics properties
@@ -20,15 +20,15 @@ for such a report to be created.
 
 Signed-off-by: Pete O_o <pmb@meta.com>
 ---
- redfish-core/include/utils/telemetry_utils.hpp     | 22 +++++-
- redfish-core/lib/metric_report_definition.hpp      | 27 +++++--
- redfish-core/lib/network_adapter.hpp               | 86 ++++++++++++++++++++++
- .../include/utils/telemetry_utils_test.cpp         | 48 ++++++++++++
- test/redfish-core/lib/network_adapter_test.cpp     | 24 ++++++
+ .../include/utils/telemetry_utils.hpp         | 22 ++++-
+ redfish-core/lib/metric_report_definition.hpp | 27 ++++--
+ redfish-core/lib/network_adapter.hpp          | 86 +++++++++++++++++++
+ .../include/utils/telemetry_utils_test.cpp    | 48 +++++++++++
+ .../redfish-core/lib/network_adapter_test.cpp | 24 ++++++
  5 files changed, 201 insertions(+), 6 deletions(-)
 
 diff --git a/redfish-core/include/utils/telemetry_utils.hpp b/redfish-core/include/utils/telemetry_utils.hpp
-index 4490a4a4faeedc19d5eff781311d9b3f0d0a6aae..8ff05f5971a2c68d80cd25fac60a3c61e5fc5250 100644
+index 4490a4a4..8ff05f59 100644
 --- a/redfish-core/include/utils/telemetry_utils.hpp
 +++ b/redfish-core/include/utils/telemetry_utils.hpp
 @@ -20,6 +20,7 @@
@@ -77,7 +77,7 @@ index 4490a4a4faeedc19d5eff781311d9b3f0d0a6aae..8ff05f5971a2c68d80cd25fac60a3c61
          // sensors exist at the moment of parsing.
          std::string ignoredSenorId;
 diff --git a/redfish-core/lib/metric_report_definition.hpp b/redfish-core/lib/metric_report_definition.hpp
-index e50d4bb66c34aec642fae1aa3bcf079b521883c5..4d4356a5f01eb8c53cc246b47750f0749fcd3e46 100644
+index e50d4bb6..4d4356a5 100644
 --- a/redfish-core/lib/metric_report_definition.hpp
 +++ b/redfish-core/lib/metric_report_definition.hpp
 @@ -12,6 +12,7 @@
@@ -162,7 +162,7 @@ index e50d4bb66c34aec642fae1aa3bcf079b521883c5..4d4356a5f01eb8c53cc246b47750f074
  
  inline void handleMetricReportHead(
 diff --git a/redfish-core/lib/network_adapter.hpp b/redfish-core/lib/network_adapter.hpp
-index 32ed10034e37809f24975e57e321547d31ae8c2b..84d0ce39800040b05291bdb5ea5622cde4fa19f0 100644
+index 32ed1003..84d0ce39 100644
 --- a/redfish-core/lib/network_adapter.hpp
 +++ b/redfish-core/lib/network_adapter.hpp
 @@ -23,6 +23,7 @@
@@ -273,7 +273,7 @@ index 32ed10034e37809f24975e57e321547d31ae8c2b..84d0ce39800040b05291bdb5ea5622cd
  {
      BMCWEB_ROUTE(app, "/redfish/v1/Chassis/<str>/NetworkAdapters/")
 diff --git a/test/redfish-core/include/utils/telemetry_utils_test.cpp b/test/redfish-core/include/utils/telemetry_utils_test.cpp
-index d910a1f8a0f70c33f965b5e8c0a4cca4cbcb3624..6779172a9ca18493d2e247acad97e2ef050dc450 100644
+index d910a1f8..6779172a 100644
 --- a/test/redfish-core/include/utils/telemetry_utils_test.cpp
 +++ b/test/redfish-core/include/utils/telemetry_utils_test.cpp
 @@ -3,13 +3,16 @@
@@ -352,7 +352,7 @@ index d910a1f8a0f70c33f965b5e8c0a4cca4cbcb3624..6779172a9ca18493d2e247acad97e2ef
  } // namespace
  } // namespace redfish::telemetry
 diff --git a/test/redfish-core/lib/network_adapter_test.cpp b/test/redfish-core/lib/network_adapter_test.cpp
-index 4f9b3a169713c68e4262c720c126d984fe5041d4..df39e0f9fecd0690f007ef9a9a31be0e19e5a151 100644
+index 4f9b3a16..df39e0f9 100644
 --- a/test/redfish-core/lib/network_adapter_test.cpp
 +++ b/test/redfish-core/lib/network_adapter_test.cpp
 @@ -10,8 +10,10 @@
@@ -395,4 +395,5 @@ index 4f9b3a169713c68e4262c720c126d984fe5041d4..df39e0f9fecd0690f007ef9a9a31be0e
  } // namespace
  } // namespace redfish
 -- 
-2.43.0
+2.53.1-Meta
+

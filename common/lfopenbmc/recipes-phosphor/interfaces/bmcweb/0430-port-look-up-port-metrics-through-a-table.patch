@@ -1,4 +1,4 @@
-From 479b9dd3a4730484ffca3d875797d3ce3c6c88bd Mon Sep 17 00:00:00 2001
+From 4dfb724b193fa506d81417fbc161106ea3045305 Mon Sep 17 00:00:00 2001
 From: Ender Hsieh <andhsieh@nvidia.com>
 Date: Thu, 13 Aug 2026 23:51:37 +0900
 Subject: [PATCH] port: look up port metrics through a table
@@ -23,10 +23,10 @@ Signed-off-by: Ender Hsieh <andhsieh@nvidia.com>
  2 files changed, 61 insertions(+), 156 deletions(-)
 
 diff --git a/redfish-core/lib/network_adapter.hpp b/redfish-core/lib/network_adapter.hpp
-index 9619c244..476c74e1 100644
+index ca02d1d7..32ed1003 100644
 --- a/redfish-core/lib/network_adapter.hpp
 +++ b/redfish-core/lib/network_adapter.hpp
-@@ -30,6 +30,31 @@ static constexpr std::array<std::string_view, 1> networkAdapterInterface = {
+@@ -35,6 +35,31 @@ static constexpr std::array<std::string_view, 1> networkAdapterInterface = {
  namespace redfish
  {
  
@@ -58,7 +58,7 @@ index 9619c244..476c74e1 100644
  inline void handleNetworkAdapterPortMetricsPathsPortMetricsGet(
      const std::shared_ptr<bmcweb::AsyncResp>& asyncResp,
      const boost::system::error_code& ec,
-@@ -59,114 +84,8 @@ inline void handleNetworkAdapterPortMetricsPathsPortMetricsGet(
+@@ -64,114 +89,8 @@ inline void handleNetworkAdapterPortMetricsPathsPortMetricsGet(
              continue;
          }
  
@@ -283,5 +283,5 @@ index 1327b3e0..a4e8aad0 100644
  }
  
 -- 
-2.53.0-Meta
+2.53.1-Meta
 

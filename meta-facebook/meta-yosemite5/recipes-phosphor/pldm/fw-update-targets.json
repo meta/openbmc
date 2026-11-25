@@ -11,6 +11,14 @@
         {
             "Component": "NIC0_Component_1",
             "StopSensorPolling": true
+        },
+        {
+            "Component": "NIC1_Component_0",
+            "StopSensorPolling": true
+        },
+        {
+            "Component": "NIC1_Component_1",
+            "StopSensorPolling": true
         }
     ]
 }

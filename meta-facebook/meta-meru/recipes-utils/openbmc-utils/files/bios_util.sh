@@ -10,15 +10,16 @@ trap cleanup INT TERM QUIT EXIT
 
 SPI_CHANNEL="1.0"
 DRIVER=""
+BIOS_UTIL_NAME="$0"
 
 usage() {
-    program=$(basename "$0")
+    program=$(basename "$BIOS_UTIL_NAME")
     echo "Usage:"
-    echo "$program <action> [<bios file>] [--partition <partition>]"
+    echo "$program <action> [<bios file>] [--partition <partition 0> ... <partition N>]"
     echo "      <action> : read, write, verify, erase, fullread, fullwrite"
     echo "      [<bios file>] : file to read to/write from"
     echo "          Required for all actions except erase"
-    echo "      [<partition>] : partition of layout file; defaults to image"
+    echo "      [<partition>] : partition(s) of layout file; defaults to image"
     echo "          If <partition> is given, <action> must be"
     echo "          read, write, program, verify, or erase"
 }
@@ -33,8 +34,13 @@ disconnect_program_paths() {
     unbind_spi_nor_driver "$SPI_CHANNEL"
     gpio_set_value ABOOT_GRAB 0
     gpio_set_value SW_CPLD_JTAG_SEL 0
-    gpio_set_value SW_JTAG_SEL 0
     gpio_set_value SW_SPI_SEL 0
+
+    if wedge_cpu_needs_extra_spi_gpios; then
+        gpio_set_value SW_SPI_WP_L 0
+        gpio_set_value SW_SPI_HOLD_L 1
+    fi
+
     if [ "$ORIG_POWER_STATE" -eq 0 ]; then
         userver_power_on
     fi
@@ -47,15 +53,20 @@ connect_spi() {
     fi
     gpio_set_value ABOOT_GRAB 1
     gpio_set_value SW_CPLD_JTAG_SEL 0
-    gpio_set_value SW_JTAG_SEL 0
     gpio_set_value SW_SPI_SEL 0
+
+    if wedge_cpu_needs_extra_spi_gpios; then
+        gpio_set_value SW_SPI_WP_L 1
+        gpio_set_value SW_SPI_HOLD_L 1
+    fi
 }
 
 select_spi_driver() {
     # Select the SPI driver
     # For GD25LQ - we want to use flashrom, otherwise spinor
     unbind_spi_nor_driver "$SPI_CHANNEL"
-    if do_spi_image "gd25lq256d" "FLASHROM" "$SPI_CHANNEL" "BIOS" "image" "IDENTIFY"; then
+    local partitions=("image")
+    if do_spi_image "gd25lq256d" "FLASHROM" "$SPI_CHANNEL" "BIOS" "IDENTIFY" "${partitions[@]}"; then
         DRIVER="FLASHROM"
         unbind_spi_nor_driver "$SPI_CHANNEL"
     else
@@ -70,30 +81,38 @@ narg_err() {
     exit 1
 }
 
-case "${1^^}" in
+BIOS_PARTITIONS=("image")
+if wedge_cpu_needs_extra_spi_gpios; then
+    BIOS_PARTITIONS=("psp" "bios")
+fi
+
+bios_action="$1"
+case "${bios_action^^}" in
     FULLREAD|FULLWRITE)
         if [ $# -ne 2 ]; then
             narg_err
         fi
-        partition="total"
+        partitions=("total")
         target_image="$2"
         ;;
     READ|VERIFY|WRITE|PROGRAM)
         if [ $# -eq 2 ]; then
-            partition="image"
+            partitions=("${BIOS_PARTITIONS[@]}")
             target_image="$2"
-        elif [ $# -eq 4 ] && [ "$3" == "--partition" ]; then
-            partition="$4"
+        elif [ $# -ge 4 ] && [ "$3" == "--partition" ]; then
             target_image="$2"
+            shift 3
+            partitions=("$@")
         else
             narg_err
         fi
         ;;
     ERASE)
         if [ $# -eq 1 ]; then
-            partition="image"
-        elif [ $# -eq 3 ] && [ "$2" == "--partition" ]; then
-            partition="$3"
+            partitions=("${BIOS_PARTITIONS[@]}")
+        elif [ $# -ge 3 ] && [ "$2" == "--partition" ]; then
+            shift 2
+            partitions=("$@")
         else
             narg_err
         fi
@@ -108,4 +127,4 @@ esac
 
 connect_spi
 select_spi_driver
-do_spi_image "$target_image" "$DRIVER" "$SPI_CHANNEL" "BIOS" "$partition" "$1"
+do_spi_image "$target_image" "$DRIVER" "$SPI_CHANNEL" "BIOS" "$bios_action" "${partitions[@]}"

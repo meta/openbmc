@@ -85,13 +85,23 @@ wait_sysfs_file_present "$SMB_NONSTDBY_PWR_SYSFS" 10
 smb_power_on
 
 i2c_device_add 9 0x23 smbcpld # SMBCPLD
-i2c_device_add 9 0x52 24c512 # SMB EEPROM
+
+# SMB_EEPROM
+if wedge_variable_smb_eeprom_addr; then
+   if ! i2cget -f -y 9 0x57 0x0; then
+      echo "Failed to detect SMB EEPROM at 0x57, trying address 0x52"
+      i2c_device_add 9 0x52 24c512
+   else
+      i2c_device_add 9 0x57 24c512
+   fi
+else
+   i2c_device_add 9 0x52 24c512
+fi
 
 # CHASSIS_EEPROM
 if i2cget -y 9 0x53 0x0 &>/dev/null; then
    i2c_device_add 9 0x53 24c512
 fi
-
 
 # Wait for the SMB EEPROM and CPLD drivers to load
 modprobe at24

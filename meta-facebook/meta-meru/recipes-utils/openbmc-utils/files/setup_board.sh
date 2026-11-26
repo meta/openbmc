@@ -22,11 +22,19 @@
 
 NETWORK_CONF_FILE="/etc/systemd/network/10-eth0.network"
 
+if wedge_variable_smb_eeprom_addr; then
+    # Adjust the smb target device address if alternate address is in use
+    if [ -f "/sys/bus/i2c/drivers/at24/9-0057/eeprom" ]; then
+        echo "Found SMB eeprom at 0x57, adjusting eeprom.json"
+        sed -i 's|9-0052/eeprom|9-0057/eeprom|g' /etc/weutil/eeprom.json
+    fi
+fi
+
 cpu_id=$(wedge_cpu_id)
 
 if [[ "$cpu_id" == "$BOARD_ID_RUGGLES" || \
       "$cpu_id" == "$BOARD_ID_ICECUBE" ]]; then
-    # On ICECUBE systems, alias smb to 9-0050.
+    # On Ruggles and Marconi, alias smb to 9-0050.
     sed -i '/"name" : "smb"/ {N; s/9-0052/9-0050/}' /etc/weutil/eeprom.json
 fi
 

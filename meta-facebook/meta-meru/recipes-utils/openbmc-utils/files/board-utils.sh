@@ -48,6 +48,7 @@ DS4520_IO0_REG=0xf8
 
 # Board IDs
 BOARD_ID_MERU800B=5
+BOARD_ID_M4061ANW=7
 BOARD_ID_RUGGLES=8
 BOARD_ID_ICECUBE=11
 
@@ -110,7 +111,16 @@ wedge_cpu_id() {
 
 wedge_cpu_needs_extra_spi_gpios() {
     cpu_id=$(wedge_cpu_id)
-    if [ "${cpu_id}" == "4" ] || [ "${cpu_id}" == "7" ]; then
+    if [ "${cpu_id}" == "${BOARD_ID_M4061ANW}" ]; then
+        return 0
+    fi
+
+    return 1
+}
+
+wedge_variable_smb_eeprom_addr() {
+    cpu_id=$(wedge_cpu_id)
+    if [ "${cpu_id}" == "${BOARD_ID_M4061ANW}" ]; then
         return 0
     fi
 
@@ -119,13 +129,19 @@ wedge_cpu_needs_extra_spi_gpios() {
 
 smb_eeprom_sysfs_path() {
     driver="/sys/bus/i2c/drivers/at24"
-    sysfs_path="${driver}/9-0052/eeprom"
+    addr="9-0052"
+    sysfs_path="${driver}/${addr}/eeprom"
 
     cpu_id=$(wedge_cpu_id)
     if [[ "$cpu_id" == "$BOARD_ID_RUGGLES" || \
           "$cpu_id" == "$BOARD_ID_ICECUBE" ]]; then
-        # On ICECUBE systems, alias smb to 9-0050.
+        # On Ruggles and Marconi, alias smb to 9-0050.
         sysfs_path="${driver}/9-0050/eeprom"
+    elif wedge_variable_smb_eeprom_addr; then
+        alt_addr="9-0057"
+        if [ -f "${driver}/${alt_addr}/eeprom" ]; then
+            sysfs_path="${driver}/${alt_addr}/eeprom"
+        fi
     fi
 
     echo "$sysfs_path"
@@ -201,7 +217,7 @@ wedge_power_asic() {
             echo "$power_state" > "$ASIC_0_ASIC_PCIE_RESET_SYSFS"
             echo "$power_state" > "$ASIC_0_ASIC_SYS_RESET_SYSFS"
             ;;
-        GLATH05A-64O)
+        M4050ANW)
             echo "$power_state" > "$R3_ASIC_0_ASIC_PCIE_RESET_SYSFS"
             echo "$power_state" > "$R3_ASIC_0_ASIC_SYS_RESET_SYSFS"
             ;;
@@ -302,7 +318,6 @@ userver_power_on() {
         # Power on using the SLG gpio
         i2cset -f -y 14 0x28 0x2e 0x1
     fi
-    wedge_power_asic 0
     local deadline=$(( SECONDS + 15 ))
     wait_until "$deadline" "userver failed to power on" userver_power_is_on
 }
@@ -323,7 +338,6 @@ userver_power_off() {
 }
 
 userver_reset() {
-    wedge_power_asic 1
     userver_power_off || return $?
     userver_power_on
 }
@@ -464,9 +478,10 @@ do_spi_image() {
     TARGET_IMAGE="$1"   # Target Image path
     DRIVER="${2^^}"     # SPI driver used
     SPI_NAME="$3"       # SPI CHANNEL name: e.g 1.1
-    SECTOR="${4^^}"     # SPI partition used
-    PARTITION="$5"      # Layout file section
-    ACTION="${6^^}"     # SPI action: e.g program/verify/read
+    SECTOR="${4^^}"     # SPI partitions used
+    ACTION="${5^^}"     # SPI action: e.g program/verify/read
+    shift 5
+    PARTITIONS=("$@") # Layout file sections
 
     case "$DRIVER" in # Selects spi driver used
         FLASHROM)
@@ -518,18 +533,24 @@ do_spi_image() {
 
     local layout_file
     layout_file=$(get_layout_file)
-    echo "Selected partition $PARTITION to $ACTION with layout file $layout_file"
+    echo "Selected partition ${PARTITIONS[*]} to $ACTION with layout file $layout_file"
+
+    local partition_args=()
+    for partition in "${PARTITIONS[@]}"; do
+        partition_args+=("--include" "$partition")
+    done
 
     # If we are reading or erasing, simply do the operation and return
     if [ "$OPERATION" == "-r" ]; then
-        flashrom -p "$DRIVER" --layout "$layout_file" --image "$PARTITION" \
+        flashrom -p "$DRIVER" --layout "$layout_file" "${partition_args[@]}" \
            -r "$TARGET_IMAGE" || return 1
         sleep 1
-        flashrom -p "$DRIVER" --layout "$layout_file" --image "$PARTITION" \
+        flashrom -p "$DRIVER" --layout "$layout_file" "${partition_args[@]}" \
            -v "$TARGET_IMAGE" || return 1
         return 0
     elif [ "$OPERATION" == "-E" ]; then
-        flashrom -p "$DRIVER" --layout "$layout_file" --image "$PARTITION" \
+        flash_unlock "/dev/mtd${SMB_MTD}"
+        flashrom -p "$DRIVER" --layout "$layout_file" "${partition_args[@]}" \
            -E || return 1
         return 0
     fi
@@ -537,10 +558,11 @@ do_spi_image() {
     # Retry the programming if it fails up to 3 times
     n=1
     max=3
+    flash_unlock "/dev/mtd${SMB_MTD}"
     while true; do
         # Program the spi image
         if flashrom -p "$DRIVER" -N --layout "$layout_file" \
-            --image "$PARTITION" $OPERATION "$TARGET_IMAGE" ; then
+           "${partition_args[@]}" $OPERATION "$TARGET_IMAGE" ; then
             break
         else
             if [ $n -lt $max ]; then
@@ -555,7 +577,7 @@ do_spi_image() {
 }
 
 maybe_fix_dmi_config() {
-   $WEUTIL_CMD smb > "$TEMP_WEUTIL_OUTPUT" 2>&1
+   $WEUTIL_CMD chassis_eeprom > "$TEMP_WEUTIL_OUTPUT" 2>&1
    serial_num=$(awk -F': ' '/Product Serial Number:/ {print $2}' "$TEMP_WEUTIL_OUTPUT")
    if [ -z "$serial_num" ]; then
       # weutil likely failed to read the serial number. May not yet be programmed.
@@ -578,7 +600,11 @@ maybe_fix_dmi_config() {
       return
    fi
 
-   if ! [[ "${product^^}" =~ "MERU" ]] && ! [[ "${product^^}" =~ "BLACKWOLF" ]] && ! [[ "${product^^}" =~ "SAINTPAUL" ]] && ! [[ "${product^^}" =~ "GLA" ]]; then
+   if ! [[ "${product^^}" =~ "MERU" ]] && \
+      ! [[ "${product^^}" =~ "BLACKWOLF" ]] && \
+      ! [[ "${product^^}" =~ "ICECUBE" ]] && \
+      ! [[ "${product^^}" =~ "SAINTPAUL" ]] && \
+      ! [[ "${product^^}" =~ "ANW" ]]; then
       echo "Not fixing aboot_conf DMI_BOARD_NAME as weutil product is not valid"
       return
    fi

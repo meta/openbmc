@@ -3,6 +3,7 @@
 # shellcheck disable=SC1091
 # shellcheck disable=SC2012
 # shellcheck disable=SC2034
+# shellcheck disable=SC2329
 . /usr/local/bin/openbmc-utils.sh
 
 # Check if another fw upgrade is ongoing
@@ -37,9 +38,8 @@ connect_scm_jtag() {
 }
 
 check_revision() {
-    meru800b_cpu_id=5
     cpu_id=$(wedge_cpu_id)
-    if [ "${cpu_id}" != "${meru800b_cpu_id}" ]; then
+    if [ "${cpu_id}" != "${BOARD_ID_MERU800B}" ]; then
         return
     fi
 

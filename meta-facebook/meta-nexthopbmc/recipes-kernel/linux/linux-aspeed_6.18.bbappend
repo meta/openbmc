@@ -15,7 +15,7 @@
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/patches_6.12:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/patches_6.18:"
 
 #
 # Include patches from nexthopbmc machine layer.
@@ -26,4 +26,13 @@ SRC_URI:append = " \
     file://1003-ARM-dts-aspeed-fblite-r1-fix-usb-device.patch \
     file://1004-ARM-dts-aspeed-fblite-r1-Add-ssif.patch \
     file://1005-i2c-aspeed-Acknowledge-Tx-ack-late-when-in-SLAVE_REA.patch \
+    file://1006-ARM-dts-aspeed-fblite-r1-enable-MDIO3.patch \
+    file://1007-ARM-dts-aspeed-fblite-r1-add-FPGA-on-SPI1-CS0.patch \
+"
+
+# The host CPU's SB-RMI (rev 0x10) only answers 1-byte register addresses.
+# The common APML driver probes with a 2-byte address first, after which
+# the 1-byte fallback fails as well.
+SRC_URI:append = " \
+    file://1030-misc-amd-apml-sbrmi-probe-1-byte-register-address-si.patch \
 "

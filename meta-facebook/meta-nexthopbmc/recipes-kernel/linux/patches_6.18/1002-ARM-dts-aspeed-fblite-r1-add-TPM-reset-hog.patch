@@ -1,4 +1,4 @@
-From bb82c0a519e4a4b9a3c98426a79636a379661132 Mon Sep 17 00:00:00 2001
+From 3e840e26a75395afa03d684a06c3523e43d0aff8 Mon Sep 17 00:00:00 2001
 From: Nate White <nate@nexthop.ai>
 Date: Thu, 28 May 2026 17:08:11 +0100
 Subject: [PATCH] ARM: dts: aspeed: fblite-r1: add TPM reset hog
@@ -11,11 +11,11 @@ Signed-off-by: Nate White <nate@nexthop.ai>
  1 file changed, 11 insertions(+)
 
 diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
-index 0a9dc481a..2312a12b1 100644
+index 691e883fd..a32edb83a 100644
 --- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
 +++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
-@@ -85,3 +85,14 @@ &vhub {
- &udc {
+@@ -77,3 +77,14 @@ fixed-link {
+ &uart3 {
  	status = "okay";
  };
 +

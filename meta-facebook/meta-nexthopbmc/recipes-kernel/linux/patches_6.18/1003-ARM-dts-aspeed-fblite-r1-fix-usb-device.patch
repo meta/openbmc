@@ -1,4 +1,4 @@
-From 741a379ebca6f1309cccebc4bfc48515dd762238 Mon Sep 17 00:00:00 2001
+From 3020bfe7dd652a9ebec0b15abd7c8ba33b1512cc Mon Sep 17 00:00:00 2001
 From: Nate White <nate@nexthop.ai>
 Date: Thu, 28 May 2026 14:38:16 +0100
 Subject: [PATCH] ARM: dts: aspeed: fblite-r1: fix usb device
@@ -19,14 +19,13 @@ Signed-off-by: Nate White <nate@nexthop.ai>
  1 file changed, 8 insertions(+)
 
 diff --git a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
-index 691e883fd..0a9dc481a 100644
+index a32edb83a..2312a12b1 100644
 --- a/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
 +++ b/arch/arm/boot/dts/aspeed/aspeed-bmc-facebook-fblite-r1.dts
-@@ -77,3 +77,11 @@ fixed-link {
- &uart3 {
+@@ -78,6 +78,14 @@ &uart3 {
  	status = "okay";
  };
-+
+ 
 +&vhub {
 +	status = "disabled";
 +};
@@ -34,3 +33,7 @@ index 691e883fd..0a9dc481a 100644
 +&udc {
 +	status = "okay";
 +};
++
+ &gpio0 {
+ 	status = "okay";
+ 

@@ -1,0 +1,60 @@
+From 26a336e2b431df65377acb666dd620a4cf0856fa Mon Sep 17 00:00:00 2001
+From: Nate White <nate@nexthop.ai>
+Date: Wed, 11 Nov 2026 18:07:39 +0000
+Subject: [PATCH] misc: amd-apml: sbrmi: probe 1-byte register address size
+ first
+
+The common APML driver identifies the SB-RMI register address size by
+reading the revision register with a 2-byte address and only then
+falling back to 1 byte. On nexthopbmc the host CPU (EPYC Embedded 2875,
+SB-RMI rev 0x10) NAKs the 2-byte access and the 1-byte fallback right
+after it fails too, so every hwmon read returns -ENXIO.
+
+Try the 1-byte size first and fall back to 2 bytes, matching what the
+6.12 nexthopbmc kernel does.
+---
+ drivers/misc/amd-apml/sbrmi.c | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/misc/amd-apml/sbrmi.c b/drivers/misc/amd-apml/sbrmi.c
+index f68cd4111..2f7580f19 100644
+--- a/drivers/misc/amd-apml/sbrmi.c
++++ b/drivers/misc/amd-apml/sbrmi.c
+@@ -646,12 +646,15 @@ static int sbrmi_i2c_identify_reg_addr_size(struct i2c_client *i2c, u32 *size, u
+ 	u32 reg_size;
+ 	int ret, i;
+ 
+-	reg_size = SBRMI_REG_ADDR_SIZE_TWO_BYTE;
+-
+ 	/*
+-	 * Sending 1 byte address size in Turin cause unrecoverable error
+-	 * Before trying to switch to 1 bytes, retry. 
++	 * The EPYC Embedded 2875 (SB-RMI rev 0x10) on nexthopbmc only answers
++	 * 1-byte register addresses. Probing with a 2-byte address first, as
++	 * the common driver does to protect Turin, is NAKed and leaves the
++	 * following 1-byte read failing as well, so start with the 1-byte
++	 * size here and only fall back to 2 bytes.
+ 	 */
++	reg_size = SBRMI_REG_ADDR_SIZE_DEF;
++
+ 	for (i = 0; i < MAX_RETRY; i++) {
+ 		ret = sbrmi_i2c_reg_read(i2c, reg_size, rev);
+ 		if (ret != I3C_I2C_MSG_XFER_SIZE) {
+@@ -662,13 +665,8 @@ static int sbrmi_i2c_identify_reg_addr_size(struct i2c_client *i2c, u32 *size, u
+ 		}
+ 	}
+ 
+-	/*
+-	 * Validate the rev value is not 0xFF, as this value can be incorrectly cached
+-	 * when executing 2-byte address operations on SBRMI rev 0x10.
+-	 * For SBRMI rev 0x20 an error is returned.
+-	 */
+ 	if (ret != I3C_I2C_MSG_XFER_SIZE || *rev == 0xFF) {
+-		reg_size = SBRMI_REG_ADDR_SIZE_DEF;
++		reg_size = SBRMI_REG_ADDR_SIZE_TWO_BYTE;
+ 		ret = sbrmi_i2c_reg_read(i2c, reg_size, rev);
+ 		if (ret != I3C_I2C_MSG_XFER_SIZE) {
+ 			pr_err("I2C reg read failed with return value:%d\n", ret);
+-- 
+2.51.2
+

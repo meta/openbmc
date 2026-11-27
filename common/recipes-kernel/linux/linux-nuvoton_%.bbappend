@@ -1,0 +1,6 @@
+FILESEXTRAPATHS:prepend := "${THISDIR}/6.6:"
+
+LINUX_NUVOTON_PATCHES_INC ?= ""
+LINUX_NUVOTON_PATCHES_INC:openbmc-fb-lf = "linux-patches-6.6.inc"
+
+include ${LINUX_NUVOTON_PATCHES_INC}

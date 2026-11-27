@@ -1,0 +1,39 @@
+From 35bbd92f2cf5fa7044b9ee4d06beee24e0ebaa4b Mon Sep 17 00:00:00 2001
+From: Tyrone Ting <kfting@nuvoton.com>
+Date: Wed, 17 Aug 2022 16:13:36 +0800
+Subject: [PATCH 4/6] i2c: npcm: Modify the client address assignment
+
+Store the client address earlier since it's used in the i2c_recover_bus
+logic flow.
+
+This change was pushed upstream and under reviewing:
+https://lore.kernel.org/all/20240913101445.16513-5-kfting@nuvoton.com/
+
+Signed-off-by: Tyrone Ting <kfting@nuvoton.com>
+---
+ drivers/i2c/busses/i2c-npcm7xx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/i2c/busses/i2c-npcm7xx.c b/drivers/i2c/busses/i2c-npcm7xx.c
+index 0c239c75bdd9..3f7a3a00e28e 100644
+--- a/drivers/i2c/busses/i2c-npcm7xx.c
++++ b/drivers/i2c/busses/i2c-npcm7xx.c
+@@ -2220,6 +2220,7 @@ static int npcm_i2c_master_xfer(struct i2c_adapter *adap, struct i2c_msg *msgs,
+ 
+ 	} while (time_is_after_jiffies(time_left) && bus_busy);
+ 
++	bus->dest_addr = slave_addr << 1;
+ 	if (bus_busy || bus->ber_state) {
+ 		iowrite8(NPCM_I2CCST_BB, bus->reg + NPCM_I2CCST);
+ 		npcm_i2c_reset(bus);
+@@ -2228,7 +2229,6 @@ static int npcm_i2c_master_xfer(struct i2c_adapter *adap, struct i2c_msg *msgs,
+ 	}
+ 
+ 	npcm_i2c_init_params(bus);
+-	bus->dest_addr = slave_addr;
+ 	bus->msgs = msgs;
+ 	bus->msgs_num = num;
+ 	bus->cmd_err = 0;
+-- 
+2.34.1
+

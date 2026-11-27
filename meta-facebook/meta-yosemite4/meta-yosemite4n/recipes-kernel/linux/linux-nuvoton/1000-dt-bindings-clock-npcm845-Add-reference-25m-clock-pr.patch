@@ -1,0 +1,89 @@
+From 9f903328f2169a1d058418a2e49cbe164584b9d9 Mon Sep 17 00:00:00 2001
+From: Tomer Maimon <tmaimon77@gmail.com>
+Date: Mon, 1 Jul 2024 10:10:44 +0300
+Subject: [PATCH] dt-bindings: clock: npcm845: Add reference 25m clock property
+
+The NPCM8XX clock driver uses a 25Mhz external clock, therefore adding
+clock property.
+
+The new required clock property does not break the NPCM8XX clock ABI
+since the NPCM8XX clock driver hasn't merged yet to the Linux vanilla.
+
+This change was pushed upstream and under reviewing:
+https://lore.kernel.org/all/20240701071048.751863-3-tmaimon77@gmail.com/
+
+Signed-off-by: Tomer Maimon <tmaimon77@gmail.com>
+---
+ arch/arm64/boot/dts/nuvoton/nuvoton-common-npcm8xx.dtsi | 9 +++++----
+ arch/arm64/boot/dts/nuvoton/nuvoton-npcm845-evb.dts     | 7 +++++++
+ 2 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/nuvoton/nuvoton-common-npcm8xx.dtsi b/arch/arm64/boot/dts/nuvoton/nuvoton-common-npcm8xx.dtsi
+index ecd171b2feba..41d345448430 100644
+--- a/arch/arm64/boot/dts/nuvoton/nuvoton-common-npcm8xx.dtsi
++++ b/arch/arm64/boot/dts/nuvoton/nuvoton-common-npcm8xx.dtsi
+@@ -52,6 +52,7 @@ rstc: reset-controller@f0801000 {
+ 			reg = <0x0 0xf0801000 0x0 0x78>;
+ 			#reset-cells = <2>;
+ 			nuvoton,sysgcr = <&gcr>;
++			clocks = <&refclk>;
+ 		};
+ 
+ 		clk: clock-controller@f0801000 {
+@@ -81,7 +82,7 @@ timer0: timer@8000 {
+ 				compatible = "nuvoton,npcm845-timer";
+ 				interrupts = <GIC_SPI 32 IRQ_TYPE_LEVEL_HIGH>;
+ 				reg = <0x8000 0x1C>;
+-				clocks = <&clk NPCM8XX_CLK_REFCLK>;
++				clocks = <&refclk>;
+ 				clock-names = "refclk";
+ 			};
+ 
+@@ -153,7 +154,7 @@ watchdog0: watchdog@801c {
+ 				interrupts = <GIC_SPI 47 IRQ_TYPE_LEVEL_HIGH>;
+ 				reg = <0x801c 0x4>;
+ 				status = "disabled";
+-				clocks = <&clk NPCM8XX_CLK_REFCLK>;
++				clocks = <&refclk>;
+ 				syscon = <&gcr>;
+ 			};
+ 
+@@ -162,7 +163,7 @@ watchdog1: watchdog@901c {
+ 				interrupts = <GIC_SPI 48 IRQ_TYPE_LEVEL_HIGH>;
+ 				reg = <0x901c 0x4>;
+ 				status = "disabled";
+-				clocks = <&clk NPCM8XX_CLK_REFCLK>;
++				clocks = <&refclk>;
+ 				syscon = <&gcr>;
+ 			};
+ 
+@@ -171,7 +172,7 @@ watchdog2: watchdog@a01c {
+ 				interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH>;
+ 				reg = <0xa01c 0x4>;
+ 				status = "disabled";
+-				clocks = <&clk NPCM8XX_CLK_REFCLK>;
++				clocks = <&refclk>;
+ 				syscon = <&gcr>;
+ 			};
+ 		};
+diff --git a/arch/arm64/boot/dts/nuvoton/nuvoton-npcm845-evb.dts b/arch/arm64/boot/dts/nuvoton/nuvoton-npcm845-evb.dts
+index a5ab2bc0f835..83c2f4e138e5 100644
+--- a/arch/arm64/boot/dts/nuvoton/nuvoton-npcm845-evb.dts
++++ b/arch/arm64/boot/dts/nuvoton/nuvoton-npcm845-evb.dts
+@@ -19,6 +19,13 @@ chosen {
+ 	memory {
+ 		reg = <0x0 0x0 0x0 0x40000000>;
+ 	};
++
++	refclk: refclk-25mhz {
++		compatible = "fixed-clock";
++		clock-output-names = "ref";
++		clock-frequency = <25000000>;
++		#clock-cells = <0>;
++	};
+ };
+ 
+ &serial0 {
+-- 
+2.34.1
+

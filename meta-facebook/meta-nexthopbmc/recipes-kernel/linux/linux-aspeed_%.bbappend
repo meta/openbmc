@@ -15,11 +15,12 @@
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 
-LINUX_VERSION_EXTENSION = "-nexthopbmc"
+# meta-nexthopbmca7c (AST2720-A2) nests inside this layer and sees these
+# appends too, so keep the nexthopbmc settings behind the machine override.
+LINUX_VERSION_EXTENSION:nexthopbmc = "-nexthopbmc"
 
-COMPATIBLE_MACHINE = "nexthopbmc"
+COMPATIBLE_MACHINE:nexthopbmc = "nexthopbmc"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/board_config:"
 
-SRC_URI += "file://nexthopbmc.cfg \
-           "
+SRC_URI:append:nexthopbmc = " file://nexthopbmc.cfg"

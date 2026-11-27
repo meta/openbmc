@@ -15,9 +15,4 @@
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 
-require recipes-core/images/fboss-lite-image.inc
-
-IMAGE_INSTALL += " \
-  apml \
-  ssifd \
-  "
+require recipes-core/images/nexthopbmc-image-common.inc

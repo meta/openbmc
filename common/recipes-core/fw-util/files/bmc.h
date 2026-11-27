@@ -11,6 +11,7 @@ class BmcComponent : public Component {
     size_t _skip_offset;
     std::string get_bmc_version(void);
     std::string get_bmc_version(const std::string &mtd);
+    std::string get_version_from_image_meta(const std::string &mtd, off_t offset);
   public:
     BmcComponent(const std::string& fru, const std::string& comp, const std::string& mtd, const std::string& vers = "", size_t w_offset = 0, size_t skip_offset = 0)
       : Component(fru, comp), _mtd_name(mtd), _vers_mtd(vers), _writable_offset(w_offset), _skip_offset(skip_offset) {}

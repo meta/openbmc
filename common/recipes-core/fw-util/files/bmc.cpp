@@ -17,6 +17,9 @@ using namespace std;
 #define BMC_RW_OFFSET               (64 * 1024)
 #define ROMX_SIZE                   (84 * 1024)
 #define META_SIZE                   (64 * 1024)
+// image-meta offset within a full flash image; fixed for every platform by
+// FBOBMC_IMAGE_META_OFFSET in meta-facebook/classes/fbobmc-image.bbclass.
+#define META_OFFSET                 (960 * 1024)
 
 int BmcComponent::update(const string& image)
 {
@@ -133,6 +136,42 @@ int BmcComponent::update(const string& image)
   return ret;
 }
 
+// Parse the FBOBMC image-meta JSON blob at "offset" of "mtd" and return
+// version_infos.fw_ver, or "NA" if it is absent or malformed.
+std::string BmcComponent::get_version_from_image_meta(const std::string &mtd, off_t offset)
+{
+  std::string bmc_ver = "NA";
+  FILE *fp = NULL;
+  char *line = NULL;
+
+  do {
+    if (!(fp = fopen(mtd.c_str(), "r")))
+      break;
+
+    if (offset > 0 && fseeko(fp, offset, SEEK_SET) != 0)
+      break;
+
+    if (!(line = (char *)malloc(META_SIZE)))
+      break;
+
+    if (fgets(line, META_SIZE, fp)) {
+      try {
+        json meta = json::parse(string(line));
+        bmc_ver = meta["version_infos"]["fw_ver"];
+      } catch (json::exception& e) {
+        syslog(LOG_ERR, "%s: no valid image-meta at offset 0x%llx: %s",
+               mtd.c_str(), (unsigned long long)offset, e.what());
+      }
+    }
+  } while (0);
+  if (fp)
+    fclose(fp);
+  if (line)
+    free(line);
+
+  return bmc_ver;
+}
+
 std::string BmcComponent::get_bmc_version()
 {
   std::string bmc_ver = "NA";
@@ -140,34 +179,21 @@ std::string BmcComponent::get_bmc_version()
 
   if ((_vers_mtd == "u-bootro" && sys().get_mtd_name(string("metaro"), mtd)) ||
       (_vers_mtd == "u-boot" && sys().get_mtd_name(string("meta"), mtd))) {
-    FILE *fp = NULL;
-    char *line = NULL;
-    do {
-      if (!(fp = fopen(mtd.c_str(), "r")))
-        break;
-
-      if (!(line = (char *)malloc(META_SIZE)))
-        break;
-
-      if (fgets(line, META_SIZE, fp)) {
-        try {
-          json meta = json::parse(string(line));
-          bmc_ver = meta["version_infos"]["fw_ver"];
-        } catch (json::exception& e) {
-          syslog(LOG_ERR, "%s", e.what());
-        }
-      }
-    } while (0);
-    if (fp)
-      fclose(fp);
-    if (line)
-      free(line);
-
+    bmc_ver = get_version_from_image_meta(mtd, 0);
     if (bmc_ver != "NA")
       return bmc_ver;
   }
 
   if (!sys().get_mtd_name(_vers_mtd, mtd)) {
+    // The version partition does not exist. Some platforms expose the
+    // second flash only as a flat "flash1" partition with no "u-bootx"/"metax"
+    // children. Fall back to reading the image-meta json blob at its fixed
+    // offset within the flash.
+    // Returns "NA" if the flash has no image-meta there.
+    if (_vers_mtd != "" && _mtd_name != "" &&
+        sys().get_mtd_name(_mtd_name, mtd)) {
+      bmc_ver = get_version_from_image_meta(mtd, META_OFFSET);
+    }
     return bmc_ver;
   }
   return get_bmc_version(mtd);

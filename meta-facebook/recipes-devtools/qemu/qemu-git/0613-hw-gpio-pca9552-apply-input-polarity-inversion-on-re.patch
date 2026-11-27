@@ -1,0 +1,81 @@
+From b453bb2a289775e075538c0ae5ea7c0e7c7d43e4 Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 9 Jul 2026 17:23:45 +0200
+Subject: [PATCH 613/631] hw/gpio: pca9552: apply input polarity inversion on
+ read
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The PCA9535 polarity inversion register inverts the value read back from
+the input port for every pin, regardless of its direction, and does not
+affect the output drive or the physical pin level.
+
+Store the raw pin level in the input register and apply the polarity
+inversion when the input port is read, instead of XORing it into the
+stored value of output-configured pins only. The interrupt output now
+reflects the raw pin level, matching the datasheet.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
+Link: https://lore.kernel.org/qemu-devel/20260709-catalina-upgrade-v1-7-814575bc076b@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ hw/gpio/pca9552.c | 25 ++++++++++++++++++-------
+ 1 file changed, 18 insertions(+), 7 deletions(-)
+
+diff --git a/hw/gpio/pca9552.c b/hw/gpio/pca9552.c
+index 66f699bf6a0..24f64654158 100644
+--- a/hw/gpio/pca9552.c
++++ b/hw/gpio/pca9552.c
+@@ -167,9 +167,12 @@ static void pca955x_update_pin_input(PCA955xState *s)
+             /* PCA9535: Simple GPIO behavior */
+             uint8_t config_reg = PCA9535_CONFIG0 + (i / 8);
+             uint8_t output_reg = PCA9535_OUTPUT0 + (i / 8);
+-            uint8_t polarity_reg = PCA9535_POLARITY0 + (i / 8);
+ 
+-            /* Check if pin is configured as input */
++            /*
++             * The input register holds the raw pin logic level; the
++             * polarity inversion register is only applied when the input
++             * port is read (see pca955x_read()).
++             */
+             if (s->regs[config_reg] & bit_mask) {
+                 /* Input mode - reflect external state */
+                 if (s->ext_state[i] == PCA9552_PIN_LOW) {
+@@ -179,12 +182,8 @@ static void pca955x_update_pin_input(PCA955xState *s)
+                 }
+             } else {
+                 /* Output mode - reflect output register value */
+-                uint8_t output_bit = s->regs[output_reg] & bit_mask;
+-                uint8_t polarity_bit = s->regs[polarity_reg] & bit_mask;
+-
+-                /* Apply polarity inversion if set */
+                 s->regs[input_reg] = (s->regs[input_reg] & ~bit_mask) |
+-                                    ((output_bit ^ polarity_bit) & bit_mask);
++                                     (s->regs[output_reg] & bit_mask);
+             }
+         }
+ 
+@@ -206,6 +205,18 @@ static uint8_t pca955x_read(PCA955xState *s, uint8_t reg)
+         return 0xFF;
+     }
+ 
++    /*
++     * On the GPIO variants, reading an input port returns the raw pin
++     * levels XORed with the polarity inversion register, as specified by
++     * the datasheet.
++     */
++    if (!k->has_led_support &&
++        (reg == PCA9535_INPUT0 || reg == PCA9535_INPUT1)) {
++        uint8_t polarity_reg = PCA9535_POLARITY0 + (reg - PCA9535_INPUT0);
++
++        return s->regs[reg] ^ s->regs[polarity_reg];
++    }
++
+     return s->regs[reg];
+ }
+ 
+-- 
+2.50.1
+

@@ -1,0 +1,127 @@
+From 607c0cfcef71ad2d2dbd1803eb85c3e62d1748fa Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 9 Jul 2026 17:23:06 +0200
+Subject: [PATCH 620/631] tests/qtest: pca9552: test behaviour specific to the
+ LED variant
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The PCA9552 shares its device model with the PCA9535/PCA9555 GPIO
+expanders but decodes registers differently. Add tests for the behaviour
+that is specific to the LED variant and diverges from the PCA9555:
+
+  - the power-on reset defaults of the prescaler, PWM and LED-selector
+    registers;
+  - the prescaler/PWM registers (2-5), which are OUTPUT/POLARITY on the
+    PCA9555, as plain read/write storage;
+  - the auto-increment, which only advances when the AI command bit is set
+    and wraps modulo the full 10-register map (rather than toggling bit 0
+    within a register pair);
+  - the 4-bit command decode, where an out-of-range register reads back
+    0xFF instead of aliasing into the register window.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
+Link: https://lore.kernel.org/qemu-devel/20260709-catalina-upgrade-v1-14-82a63fead90c@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ tests/qtest/pca9552-test.c | 76 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 76 insertions(+)
+
+diff --git a/tests/qtest/pca9552-test.c b/tests/qtest/pca9552-test.c
+index 74749576923..3718dfbd227 100644
+--- a/tests/qtest/pca9552-test.c
++++ b/tests/qtest/pca9552-test.c
+@@ -77,6 +77,76 @@ static void send_and_receive(void *obj, void *data, QGuestAllocator *alloc)
+     g_assert_cmphex(value, ==, 0xEF);
+ }
+ 
++/* Verify the power-on reset defaults. */
++static void test_reset_defaults(void *obj, void *data, QGuestAllocator *alloc)
++{
++    QI2CDevice *i2cdev = (QI2CDevice *)obj;
++
++    /* Prescalers, PWM duty cycles and LED selectors (all LEDs off) */
++    g_assert_cmphex(i2c_get8(i2cdev, PCA9552_PSC0), ==, 0xFF);
++    g_assert_cmphex(i2c_get8(i2cdev, PCA9552_PWM0), ==, 0x80);
++    g_assert_cmphex(i2c_get8(i2cdev, PCA9552_PSC1), ==, 0xFF);
++    g_assert_cmphex(i2c_get8(i2cdev, PCA9552_PWM1), ==, 0x80);
++    g_assert_cmphex(i2c_get8(i2cdev, PCA9552_LS0), ==, 0x55);
++    g_assert_cmphex(i2c_get8(i2cdev, PCA9552_LS1), ==, 0x55);
++    g_assert_cmphex(i2c_get8(i2cdev, PCA9552_LS2), ==, 0x55);
++    g_assert_cmphex(i2c_get8(i2cdev, PCA9552_LS3), ==, 0x55);
++
++    /* All LEDs off, so every pin floats high through its pull-up */
++    g_assert_cmphex(i2c_get8(i2cdev, PCA9552_INPUT0), ==, 0xFF);
++    g_assert_cmphex(i2c_get8(i2cdev, PCA9552_INPUT1), ==, 0xFF);
++}
++
++/*
++ * The PCA9552 only advances the command pointer when the AI bit is set, and
++ * it wraps modulo the full 10-register map.
++ */
++static void test_autoinc_requires_ai_bit(void *obj, void *data,
++                                         QGuestAllocator *alloc)
++{
++    QI2CDevice *i2cdev = (QI2CDevice *)obj;
++    uint8_t reg;
++    uint8_t resp;
++
++    /*
++     * With the AI bit, reading from LS3 (register 9) rolls over to INPUT0
++     * (register 0), not to a sibling in a register pair. All LEDs are off
++     * after reset so the input ports read 0xFF.
++     */
++    reg = PCA9552_LS3 | PCA9552_AUTOINC;
++    qi2c_send(i2cdev, &reg, 1);
++    qi2c_recv(i2cdev, &resp, 1); /* LS3 */
++    g_assert_cmphex(resp, ==, 0x55);
++    qi2c_recv(i2cdev, &resp, 1); /* wraps to INPUT0 */
++    g_assert_cmphex(resp, ==, 0xFF);
++    qi2c_recv(i2cdev, &resp, 1); /* INPUT1 */
++    g_assert_cmphex(resp, ==, 0xFF);
++
++    /*
++     * Without the AI bit the pointer must not advance: repeated reads keep
++     * returning the same register.
++     */
++    i2c_set8(i2cdev, PCA9552_LS0, 0x54);
++    reg = PCA9552_LS0;
++    qi2c_send(i2cdev, &reg, 1);
++    qi2c_recv(i2cdev, &resp, 1);
++    g_assert_cmphex(resp, ==, 0x54);
++    qi2c_recv(i2cdev, &resp, 1);
++    g_assert_cmphex(resp, ==, 0x54);
++}
++
++/*
++ * The PCA9552 decodes a 4-bit command and has no register past LS3 (9), so
++ * addressing register 0x0A reads back 0xFF.
++ */
++static void test_command_out_of_range(void *obj, void *data,
++                                      QGuestAllocator *alloc)
++{
++    QI2CDevice *i2cdev = (QI2CDevice *)obj;
++
++    g_assert_cmphex(i2c_get8(i2cdev, 0x0A), ==, 0xFF);
++}
++
+ static void pca9552_register_nodes(void)
+ {
+     QOSGraphEdgeOptions opts = {
+@@ -89,5 +159,11 @@ static void pca9552_register_nodes(void)
+ 
+     qos_add_test("tx-rx", "pca9552", send_and_receive, NULL);
+     qos_add_test("rx-autoinc", "pca9552", receive_autoinc, NULL);
++    qos_add_test("reset-defaults", "pca9552", test_reset_defaults, NULL);
++    qos_add_test("autoinc-requires-ai-bit", "pca9552",
++                 test_autoinc_requires_ai_bit, NULL);
++    qos_add_test("command-out-of-range", "pca9552", test_command_out_of_range,
++                 NULL);
+ }
++
+ libqos_init(pca9552_register_nodes);
+-- 
+2.50.1
+

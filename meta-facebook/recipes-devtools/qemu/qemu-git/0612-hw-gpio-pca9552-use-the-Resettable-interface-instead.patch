@@ -1,0 +1,79 @@
+From 2d505427f7c14f4fc8dc0ac4cb9601b5bcac0e5c Mon Sep 17 00:00:00 2001
+From: Emmanuel Blot <emmanuel.blot@free.fr>
+Date: Thu, 9 Jul 2026 17:23:44 +0200
+Subject: [PATCH 612/631] hw/gpio: pca9552: use the Resettable interface
+ instead of legacy reset
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Convert the PCA9552 and PCA9535/PCA9555 reset handlers from the legacy
+device reset hook to the Resettable interface: move each reset body into
+a ResettableHoldPhase handler and register it through the class's
+ResettableClass::phases.hold instead of device_class_set_legacy_reset().
+
+No functional change.
+
+Signed-off-by: Emmanuel Blot <emmanuel.blot@free.fr>
+Reviewed-by: Glenn Miles <milesg@linux.ibm.com>
+Link: https://lore.kernel.org/qemu-devel/20260709-catalina-upgrade-v1-6-814575bc076b@free.fr
+Signed-off-by: Cédric Le Goater <clg@redhat.com>
+---
+ hw/gpio/pca9552.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/hw/gpio/pca9552.c b/hw/gpio/pca9552.c
+index 3b9b63eb176..66f699bf6a0 100644
+--- a/hw/gpio/pca9552.c
++++ b/hw/gpio/pca9552.c
+@@ -406,9 +406,9 @@ static const VMStateDescription pca9552_vmstate = {
+     }
+ };
+ 
+-static void pca9552_reset(DeviceState *dev)
++static void pca9552_reset_hold(Object *obj, ResetType type)
+ {
+-    PCA955xState *s = PCA955X(dev);
++    PCA955xState *s = PCA955X(obj);
+ 
+     s->regs[PCA9552_PSC0] = 0xFF;
+     s->regs[PCA9552_PWM0] = 0x80;
+@@ -426,9 +426,9 @@ static void pca9552_reset(DeviceState *dev)
+     s->len = 0;
+ }
+ 
+-static void pca9535_reset(DeviceState *dev)
++static void pca9535_reset_hold(Object *obj, ResetType type)
+ {
+-    PCA955xState *s = PCA955X(dev);
++    PCA955xState *s = PCA955X(obj);
+ 
+     s->regs[PCA9535_INPUT0] = 0xFF;   /* All inputs high (pull-ups) */
+     s->regs[PCA9535_INPUT1] = 0xFF;   /* All inputs high (pull-ups) */
+@@ -514,9 +514,10 @@ static void pca955x_class_init(ObjectClass *klass, const void *data)
+ static void pca9552_class_init(ObjectClass *oc, const void *data)
+ {
+     DeviceClass *dc = DEVICE_CLASS(oc);
++    ResettableClass *rc = RESETTABLE_CLASS(oc);
+     PCA955xClass *pc = PCA955X_CLASS(oc);
+ 
+-    device_class_set_legacy_reset(dc, pca9552_reset);
++    rc->phases.hold = pca9552_reset_hold;
+     dc->vmsd = &pca9552_vmstate;
+     pc->max_reg = PCA9552_LS3;
+     pc->pin_count = 16;
+@@ -526,9 +527,10 @@ static void pca9552_class_init(ObjectClass *oc, const void *data)
+ static void pca95x5_class_init(ObjectClass *oc, const void *data)
+ {
+     DeviceClass *dc = DEVICE_CLASS(oc);
++    ResettableClass *rc = RESETTABLE_CLASS(oc);
+     PCA955xClass *pc = PCA955X_CLASS(oc);
+ 
+-    device_class_set_legacy_reset(dc, pca9535_reset);
++    rc->phases.hold = pca9535_reset_hold;
+     dc->vmsd = &pca9552_vmstate;
+     pc->max_reg = PCA9535_CONFIG1;
+     pc->pin_count = 16;
+-- 
+2.50.1
+

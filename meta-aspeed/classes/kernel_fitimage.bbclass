@@ -17,6 +17,10 @@ require recipes-bsp/u-boot/verified-boot.inc
 # Changing the image compression from gz to lzma achieves 30% saving (~3M).
 IMAGE_FSTYPES += "cpio.lzma.u-boot"
 
+# Algorithm used to compress the kernel in the FIT: "none", "gzip" or "lzma".
+# Ignored for zImage, uImage and bzImage, which decompress themselves.
+FIT_KERNEL_COMP_ALG ??= "none"
+
 # U-Boot is placed at an absolute position relative to the start of the first
 # U-Boot FIT. This value, like most others, depends on U-Boot machine
 # configurations.
@@ -178,12 +182,39 @@ oe_mkimage() {
       RAMDISK_FILE="${IMGDEPLOYDIR}/$1"
     fi
 
+    # Self-decompressing kernels (zImage, uImage, bzImage) go into the FIT as
+    # is. A raw kernel such as the arm64 "Image" is compressed with
+    # FIT_KERNEL_COMP_ALG, and U-Boot decompresses it at boot.
+    KERNEL_COMPRESSION="none"
+    case "${KERNEL_IMAGETYPE}" in
+    zImage|uImage|bzImage)
+        ;;
+    *)
+        KERNEL_COMPRESSION="${FIT_KERNEL_COMP_ALG}"
+        ;;
+    esac
+    if [ "${KERNEL_COMPRESSION}" != "none" ]; then
+        KERNEL_FILE_COMP="${WORKDIR}/fit-kernel.${KERNEL_COMPRESSION}"
+        case "${KERNEL_COMPRESSION}" in
+        gzip)
+            gzip -9 -n -c "${KERNEL_FILE}" > "${KERNEL_FILE_COMP}"
+            ;;
+        lzma)
+            lzma -9 -c "${KERNEL_FILE}" > "${KERNEL_FILE_COMP}"
+            ;;
+        *)
+            bbfatal "FIT_KERNEL_COMP_ALG ${KERNEL_COMPRESSION} is not supported"
+            ;;
+        esac
+        KERNEL_FILE="${KERNEL_FILE_COMP}"
+    fi
+
     rm -f ${FIT_SOURCE}
     fitimage_emit_fit_header ${FIT_SOURCE}
 
     # Step 1: Prepare a kernel image section
     fitimage_emit_section_maint ${FIT_SOURCE} imagestart
-    fitimage_emit_section_kernel ${FIT_SOURCE} 1 "${KERNEL_FILE}" "none" \
+    fitimage_emit_section_kernel ${FIT_SOURCE} 1 "${KERNEL_FILE}" "${KERNEL_COMPRESSION}" \
         ${UBOOT_LOADADDRESS} ${UBOOT_ENTRYPOINT}
 
     # Step 2: Prepare a ramdisk image section

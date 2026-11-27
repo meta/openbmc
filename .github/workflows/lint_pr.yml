@@ -8,7 +8,7 @@ jobs:
         # Unfortunately some shell files don't have an extension.
         # This means we need to checkout the entire repo just to see if we need
         # to lint anything...
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         name: Checkout Repo
 
       - name: Get PR File List
@@ -74,7 +74,7 @@ jobs:
           echo "Errors Found:"
           cat /tmp/shellcheck.log
 
-      - uses: actions/upload-artifact@master
+      - uses: actions/upload-artifact@v6
         name: Upload shellcheck error log
         if: env.contains_shell_files == 'true'
         with:
@@ -95,7 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
         name: Checkout Repo
 
       - uses: reviewdog/action-setup@v1
@@ -103,7 +103,7 @@ jobs:
           reviewdog_version: latest
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: /tmp/artifacts
 

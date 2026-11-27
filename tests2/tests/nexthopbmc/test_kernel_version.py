@@ -19,4 +19,4 @@ from common.base_kernel_version_test import BaseKernelVersionTest
 
 class KernelVersionTest(BaseKernelVersionTest, unittest.TestCase):
     def set_kernel_version(self):
-        self.kernel_version = "6.12"
+        self.kernel_version = "6.18"

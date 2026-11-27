@@ -1,4 +1,4 @@
-# Copyright 2020-present Facebook. All Rights Reserved.
+# Copyright (c) Meta Platforms, Inc. and affiliates. (http://www.meta.com)
 #
 # This program file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the
@@ -15,15 +15,10 @@
 # 51 Franklin Street, Fifth Floor,
 # Boston, MA 02110-1301 USA
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/patches_6.12:"
+# Override the layer's oob-mdio-util.sh and oob-status.sh with nexthopbmc
+# specific versions (OOB MDIO bus per SoC, auto-detected Marvell 88E6341 /
+# 88E6191X OOB switch), and i2c_scan.sh to skip the SSIF slave bus.
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-#
-# Include patches from nexthopbmc machine layer.
-#
-SRC_URI:append = " \
-    file://1001-ARM-dts-aspeed-fblite-r1-fixup-device-settings.patch \
-    file://1002-ARM-dts-aspeed-fblite-r1-add-TPM-reset-hog.patch \
-    file://1003-ARM-dts-aspeed-fblite-r1-fix-usb-device.patch \
-    file://1004-ARM-dts-aspeed-fblite-r1-Add-ssif.patch \
-    file://1005-i2c-aspeed-Acknowledge-Tx-ack-late-when-in-SLAVE_REA.patch \
-"
+# oob-status.sh delegates its 'counters' subcommand to the compiled helper.
+RDEPENDS:${PN} += "oob-switch-util"
